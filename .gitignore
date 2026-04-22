@@ -1,0 +1,18 @@
+# Dependencies — downloaded by npm, no need to save in Git
+node_modules/
+
+# Test output — generated fresh every time tests run
+test-results/
+playwright-report/
+
+# Environment files — may contain passwords or API keys, never commit these
+.env
+.env.*
+*.env
+
+# TypeScript build output
+dist/
+
+# OS junk files
+.DS_Store
+Thumbs.db
