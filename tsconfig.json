@@ -7,5 +7,5 @@
     "esModuleInterop": true,
     "outDir": "./dist"
   },
-  "include": ["tests/**/*.ts", "playwright.config.ts"]
+  "include": ["tests/**/*.ts", "pages/**/*.ts", "playwright.config.ts"]
 }

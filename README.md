@@ -25,8 +25,8 @@ Make sure you have the following installed before you begin:
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/kaxmedia/Regression.git
-cd Regression
+git clone https://github.com/kaxmedia/Playwright-Tests.git
+cd Playwright-Tests
 ```
 
 ### 2. Install dependencies
