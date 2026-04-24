@@ -9,6 +9,7 @@ export default defineConfig({
   workers: 1,
   reporter: 'html',
   use: {
+    baseURL: 'https://www.gambling.com',
     trace: 'on-first-retry',
     navigationTimeout: 90000,
   },
