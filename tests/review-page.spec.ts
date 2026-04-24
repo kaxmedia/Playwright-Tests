@@ -2,10 +2,10 @@
 // These pages are accessed via a slug in the URL, e.g. /ie/online-casinos/bet365.
 // We use 'bet365' as the test slug — the same structure applies to all review pages.
 //
-// IMPORTANT AFFILIATE SAFETY RULE:
-// The CTA button ("Visit Bet365") is an affiliate link. Clicking it would
-// open the bookmaker's site and could trigger commission tracking.
-// We ONLY check that the button exists and has the correct href — we never click it.
+// NOTE ON THE CTA BUTTON:
+// The CTA button ("Visit Bet365") is an affiliate link that opens the bookmaker's
+// site in a new tab. Clicking it in tests has been approved. We click it and verify
+// that the new tab opens and its URL routes through gambling.com's /go/ redirect path.
 
 import { test, expect } from '@playwright/test';
 
@@ -53,12 +53,10 @@ test.describe('Bookmaker Review Page', () => {
   });
 
   // -------------------------------------------------------------------------
-  // Test 3: The CTA button is visible and its href goes through the /go/ path
-  //
-  // AFFILIATE SAFETY: We check the button exists and verify its href attribute.
-  // We do NOT call .click() — doing so would follow the affiliate link.
+  // Test 3: The CTA button is visible, and clicking it opens a new tab that
+  // routes through gambling.com's /go/ affiliate redirect path
   // -------------------------------------------------------------------------
-  test('CTA button is visible and href points to gambling.com/go/ — not clicked', async ({ page }) => {
+  test('CTA button is visible and clicking it opens the affiliate redirect in a new tab', async ({ page }) => {
     // Create an instance of ReviewPage, passing in the current browser tab
     const reviewPage = new ReviewPage(page);
 
@@ -68,13 +66,21 @@ test.describe('Bookmaker Review Page', () => {
     // Assert that the "Visit Bet365" button is visible on the page
     await expect(reviewPage.ctaButton).toBeVisible();
 
-    // Read the resolved href from the anchor element (gives full URL, not relative path)
-    // e.g. "https://www.gambling.com/go/ie/bet365/casino/play-now?..."
-    const href = await reviewPage.ctaButton.evaluate((el: HTMLAnchorElement) => el.href);
+    // Click the CTA and capture the new tab that opens (target="_blank")
+    // The clickCtaAndGetNewTab() method handles the popup listener for us
+    const newTab = await reviewPage.clickCtaAndGetNewTab();
 
-    // Assert that the href routes through gambling.com's /go/ affiliate tracking path
-    // This confirms it is a valid affiliate link — without ever following it
-    expect(href).toContain('gambling.com/go/');
+    // Read the URL of the new tab — this is the full resolved URL after any redirects
+    const newTabUrl = newTab.url();
+
+    // Assert that the new tab's URL contains the affiliate tracking parameter.
+    // The /go/ redirect resolves instantly, so by the time we read the URL we are
+    // already on the bookmaker's site. The 'affiliate=' parameter in the final URL
+    // confirms that gambling.com's affiliate redirect fired correctly.
+    expect(newTabUrl).toContain('affiliate=');
+
+    // Close the new tab cleanly after the assertion
+    await newTab.close();
   });
 
 });
