@@ -23,7 +23,6 @@ export class ReviewPage {
 
   // The main "Visit" CTA button — an affiliate link that opens the bookmaker's site
   // Two exist in the DOM (mobile + desktop); .last() targets the desktop-visible one
-  // IMPORTANT: This link must NEVER be clicked in tests — it is an affiliate link
   readonly ctaButton: Locator;
 
   constructor(page: Page) {
@@ -44,6 +43,25 @@ export class ReviewPage {
   async goto(slug: string) {
     // Build the full URL from the base + the bookmaker's slug
     await this.page.goto(`${this.baseUrl}/${slug}`);
+  }
+
+  // Clicks the CTA button and returns the new tab that opens.
+  // The CTA has target="_blank" so it opens in a popup (new browser tab).
+  // We listen for the popup event BEFORE clicking — otherwise we could miss it.
+  async clickCtaAndGetNewTab() {
+    // Set up a listener for the new tab before triggering the click
+    const popupPromise = this.page.context().waitForEvent('page');
+
+    // Click the CTA button — this opens the bookmaker's site in a new tab
+    await this.ctaButton.click();
+
+    // Wait for the new tab to open and return it so the test can make assertions on it
+    const newTab = await popupPromise;
+
+    // Wait for the new tab to finish loading before returning
+    await newTab.waitForLoadState('domcontentloaded');
+
+    return newTab;
   }
 
 }
