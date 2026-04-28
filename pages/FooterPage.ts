@@ -48,6 +48,28 @@ export class FooterPage {
     await this.footer.scrollIntoViewIfNeeded();
   }
 
+  // TODO (follow-up PR): Add regulatory logo locators and landing-page liveness checks.
+  //
+  // Each geographic variant of the footer carries its own set of regulatory/responsible-gambling
+  // logos. These are image links (<a><img></a>) and are intentionally NOT tested in this PR.
+  // They will be covered in a dedicated follow-up PR with per-geo assertions and HTTP 200 checks
+  // on each logo's destination URL.
+  //
+  // Logos confirmed present per geo (explored 2026-04-28):
+  //   Global  — Gamcare (gamcare.org.uk), Gambling Care (gamblingcare.ie),
+  //              Extern Problem Gambling (problemgambling.ie), GPWA
+  //   US      — NCP Gambling (ncpgambling.org), 800 Gambler (800gambler.org), GPWA
+  //   UK      — Gamstop (gamstop.co.uk), Gamcare, GambleAware (gambleaware.org), GPWA
+  //   DE      — Spiel nicht bis zur Glücksspielsucht (spielen-mit-verantwortung.de), GPWA
+  //   GR      — Keoea / ΚΕΘΕΑ (kethea.gr), EEEP / Greek Gaming Commission
+  //              (gamingcommission.gov.gr), GambleAware, GPWA
+  //
+  // GPWA Approved Portal (certify.gpwa.org/verify/gambling.com) is the only logo present
+  // on every geo and should be the first assertion written in the follow-up PR.
+  //
+  // Note: DE has no country flag/geo selector in its footer — all other geos do.
+  // Locator pattern for logo links: footer.locator('a:has(img)')
+
   // Returns any compliance link inside the footer by its display text.
   // Used by geo tests where the link label differs by language — e.g. "Responsible Gambling"
   // in English becomes "Verantwortungsvolles Spielen" in German. Passing the text as an
