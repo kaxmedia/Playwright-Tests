@@ -154,6 +154,53 @@ test.describe('Footer', () => {
     }
   });
 
+  // Test 9: Regulatory logos are present in the global footer and their landing pages are live.
+  // These logos are a compliance requirement — a missing logo or a dead link is a legal risk.
+  test('@smoke regulatory logos are present and landing pages return 200', async ({ request }) => {
+    // External regulatory and government websites can be slow to respond.
+    // 120 s gives even sluggish servers enough time without failing on latency alone.
+    test.setTimeout(120000);
+    // Logos confirmed in the global (gambling.com) footer — explored 2026-04-28
+    const logos = [
+      { alt: 'Gamcare',                 href: 'http://www.gamcare.org.uk'                   },
+      { alt: 'Gambling Care',           href: 'https://gamblingcare.ie/'                     },
+      { alt: 'Extern Problem Gambling', href: 'https://www.problemgambling.ie'               },
+      { alt: 'GPWA Approved Portal',    href: 'https://certify.gpwa.org/verify/gambling.com' },
+    ];
+
+    // Step 1: Check every logo is present in the footer DOM with the correct href.
+    // a:has(img[alt="..."]) finds the <a> wrapping the logo <img> by the image's alt text.
+    // toBeAttached() is used instead of toBeVisible() because logos sit at the very bottom of
+    // the footer and may be below the visible viewport — they are in the DOM but not on-screen.
+    for (const logo of logos) {
+      const link = footerPage.footer.locator(`a:has(img[alt="${logo.alt}"])`);
+      await expect(link, `Expected logo "${logo.alt}" to be in the footer`).toBeAttached();
+      const href = await link.getAttribute('href');
+      expect(href, `Expected correct href for logo "${logo.alt}"`).toBe(logo.href);
+    }
+
+    // Step 2: Fetch all logo landing pages in parallel and check they are reachable.
+    // ignoreHTTPSErrors: true handles third-party sites with cert issues (expired cert or
+    // TLS hostname mismatch) — these are external partner sites gambling.com cannot fix,
+    // but we still want to know whether the page itself is there.
+    // We assert !== 404 and < 500 rather than === 200 because some regulatory sites (e.g.
+    // GamCare) return 403 to non-browser requests due to bot detection. 403 means the site
+    // is alive; 404 means the page is gone; 5xx means the server is broken.
+    const results = await Promise.all(
+      logos.map(async ({ alt, href }) => {
+        const response = await request.get(href, { timeout: 15000, ignoreHTTPSErrors: true });
+        return { alt, href, status: response.status() };
+      })
+    );
+
+    for (const { alt, href, status } of results) {
+      // A 404 means the logo destination page no longer exists — a compliance failure
+      expect(status, `"${alt}" logo at ${href} returned 404 — broken link`).not.toBe(404);
+      // A 5xx means the destination server is erroring — also a compliance concern
+      expect(status, `"${alt}" logo at ${href} returned ${status} — server error`).toBeLessThan(500);
+    }
+  });
+
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -193,6 +240,12 @@ const geoVariants = [
     privacyText: 'Privacy and Cookies Policy',
     privacyHref: '/us/privacy-policy',
     copyrightContains: 'GDC Media America Inc',
+    // Regulatory logos confirmed in the US footer — explored 2026-04-28
+    logos: [
+      { alt: 'NCP Gambling',         href: 'https://www.ncpgambling.org'                    },
+      { alt: '800 Gambler',          href: 'https://800gambler.org'                          },
+      { alt: 'GPWA Approved Portal', href: 'https://certify.gpwa.org/verify/gambling.com'    },
+    ],
   },
   {
     // United Kingdom — same English link labels as the global site.
@@ -206,6 +259,13 @@ const geoVariants = [
     privacyText: 'Privacy and Cookies Policy',
     privacyHref: '/uk/privacy-policy',
     copyrightContains: 'GDC Media Limited',
+    // Regulatory logos confirmed in the UK footer — Gamstop and GambleAware are UKGC requirements
+    logos: [
+      { alt: 'Gamstop',              href: 'https://www.gamstop.co.uk'                       },
+      { alt: 'Gamcare',              href: 'http://www.gamcare.org.uk'                        },
+      { alt: 'GambleAware',          href: 'https://www.gambleaware.org'                      },
+      { alt: 'GPWA Approved Portal', href: 'https://certify.gpwa.org/verify/gambling.com'     },
+    ],
   },
   {
     // Germany — footer is fully translated into German.
@@ -219,6 +279,11 @@ const geoVariants = [
     privacyText: 'Datenschutz',
     privacyHref: '/de/datenschutz',
     copyrightContains: 'GDC Media Limited',
+    // Regulatory logos confirmed in the DE footer — DE has no geo flag selector unlike other geos
+    logos: [
+      { alt: 'Spiel nicht bis zur Glücksspielsucht', href: 'https://www.spielen-mit-verantwortung.de'    },
+      { alt: 'GPWA Approved Portal',                 href: 'https://certify.gpwa.org/verify/gambling.com' },
+    ],
   },
   {
     // Greece — footer is fully translated into Greek.
@@ -233,6 +298,13 @@ const geoVariants = [
     privacyText: 'Πολιτική απορρήτου και Cookies',
     privacyHref: '/gr/privacy-policy',
     copyrightContains: 'GDC Media Limited',
+    // Regulatory logos confirmed in the GR footer — EEEP is the Greek gaming regulator
+    logos: [
+      { alt: 'Keoea',                href: 'https://www.kethea.gr/'                           },
+      { alt: 'EEEP',                 href: 'https://www.gamingcommission.gov.gr/'              },
+      { alt: 'GambleAware',          href: 'https://www.gambleaware.org'                       },
+      { alt: 'GPWA Approved Portal', href: 'https://certify.gpwa.org/verify/gambling.com'      },
+    ],
   },
 ];
 
@@ -301,6 +373,38 @@ for (const geo of geoVariants) {
       const copyright = footerPage.footer.locator('p').filter({ hasText: '©' }).first();
       await copyright.scrollIntoViewIfNeeded();
       await expect(copyright).toContainText(geo.copyrightContains);
+    });
+
+    // Test G6: Regulatory logos are present on this geo's footer and their landing pages are live.
+    // geo.logos comes from the geoVariants data above — each geo has its own required set.
+    // This is the same pattern as Test 9 in the global Footer block, but driven by geo data.
+    test('@smoke regulatory logos are present and landing pages return 200', async ({ request }) => {
+      // External regulatory and government websites can be slow — 120 s prevents false timeouts
+      test.setTimeout(120000);
+      // Step 1: Check every logo is in the footer DOM with the correct href
+      for (const logo of geo.logos) {
+        // a:has(img[alt="..."]) finds the <a> that wraps the logo image by alt text
+        const link = footerPage.footer.locator(`a:has(img[alt="${logo.alt}"])`);
+        // toBeAttached rather than toBeVisible — logos are below the fold but still in the DOM
+        await expect(link, `Expected logo "${logo.alt}" to be in the footer`).toBeAttached();
+        const href = await link.getAttribute('href');
+        expect(href, `Expected correct href for logo "${logo.alt}"`).toBe(logo.href);
+      }
+
+      // Step 2: Fetch all landing pages in parallel and check they are reachable.
+      // Same strategy as the global logo test above: ignoreHTTPSErrors handles external
+      // sites with cert issues; !== 404 catches dead links; < 500 catches server errors.
+      const results = await Promise.all(
+        geo.logos.map(async ({ alt, href }) => {
+          const response = await request.get(href, { timeout: 15000, ignoreHTTPSErrors: true });
+          return { alt, href, status: response.status() };
+        })
+      );
+
+      for (const { alt, href, status } of results) {
+        expect(status, `"${alt}" logo at ${href} returned 404 — broken link`).not.toBe(404);
+        expect(status, `"${alt}" logo at ${href} returned ${status} — server error`).toBeLessThan(500);
+      }
     });
 
   });
