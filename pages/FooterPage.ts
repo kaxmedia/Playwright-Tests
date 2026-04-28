@@ -47,4 +47,14 @@ export class FooterPage {
   async scrollToFooter() {
     await this.footer.scrollIntoViewIfNeeded();
   }
+
+  // Returns any compliance link inside the footer by its display text.
+  // Used by geo tests where the link label differs by language — e.g. "Responsible Gambling"
+  // in English becomes "Verantwortungsvolles Spielen" in German. Passing the text as an
+  // argument means the same test code works for every language without branching.
+  // exact:true prevents partial matches (e.g. "Terms" matching "Rewards Terms").
+  // .first() is a safety net for cases where the same label appears more than once in the footer.
+  complianceLink(text: string): Locator {
+    return this.footer.getByRole('link', { name: text, exact: true }).first();
+  }
 }
