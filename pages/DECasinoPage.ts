@@ -18,8 +18,6 @@ export class DECasinoPage {
     readonly logo: Locator;
     readonly mainNav: Locator;
 
-    readonly geoSwitcher: Locator;
-
     readonly operatorList: Locator;
     readonly operatorRows: Locator;
     readonly operatorLogos: Locator;
@@ -41,9 +39,6 @@ export class DECasinoPage {
         this.logo = page.locator('img.global-nav-logo').nth(1);
         this.mainNav = page.locator('nav').first();
 
-        this.geoSwitcher = page.locator('[class*="geo"], [class*="country"], [class*="region"], [data-testid*="geo"]').first();
-
-        const deOfferCta = 'a[data-gtm_ctalocation="offer"][href*="/go/de/"]';
         this.operatorList = page.locator('main .operator-list').first();
         this.operatorRows = page.locator('main .operator-list:not([data-disabled]) .operator-item');
         this.operatorLogos = this.operatorRows.locator('a[href*="/go/de/"] > img');

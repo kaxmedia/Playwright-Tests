@@ -95,11 +95,19 @@ test.describe('Category Landing — UK Online Casinos', () => {
             const href = await cta.evaluate((el: HTMLAnchorElement) => el.href);
             expect(href).toContain('/go/');
             expect(href).not.toBe('');
-            // Only the first rows are guaranteed on-screen (tabs / expanded rows may hide lower links)
-            if (i < 3) {
-                await cta.scrollIntoViewIfNeeded();
-                await expect(cta).toBeVisible();
-            }
+        }
+
+        // One primary CTA per operator row — flat `operatorCTAs` includes duplicate tab-panel links (nth(1) can be hidden).
+        const rowLimit = Math.min(await ukPage.operatorRows.count(), 3);
+        for (let r = 0; r < rowLimit; r++) {
+            const rowCta = ukPage.operatorRows
+                .nth(r)
+                .locator(
+                    'a[data-gtm*="gtm-operator-content"][href*="/go/uk/"], a[data-gtm*="gtm-operator-content"][href*="/go/ie/"]'
+                )
+                .first();
+            await rowCta.evaluate((el: HTMLElement) => el.scrollIntoView({ block: 'center' }));
+            await expect(rowCta).toBeVisible({ timeout: 8000 });
         }
     });
 
@@ -168,6 +176,7 @@ test.describe('Category Landing — UK Online Casinos', () => {
     });
 
     test('@regression ticking a compare checkbox does not throw an error', async () => {
+        await ukPage.goto();
         const cbCount = await ukPage.compareCheckboxes.count();
         if (cbCount > 0) {
             await ukPage.tickCompareCheckbox(0);
@@ -177,6 +186,7 @@ test.describe('Category Landing — UK Online Casinos', () => {
     });
 
     test('@regression compare bar appears after ticking 2 operators', async () => {
+        await ukPage.goto();
         const cbCount = await ukPage.compareCheckboxes.count();
         if (cbCount >= 2) {
             await ukPage.tickCompareCheckbox(0);
@@ -189,16 +199,24 @@ test.describe('Category Landing — UK Online Casinos', () => {
     // ── 5. Compare modal ─────────────────────────────────────────────────────
 
     test('@smoke clicking Compare opens a modal', async () => {
+        await ukPage.goto();
         const cbCount = await ukPage.compareCheckboxes.count();
-        test.skip(cbCount < 2, 'Not enough compare checkboxes found to open modal');
+        expect(
+            cbCount,
+            'UK online casinos category page must expose at least two compare checkboxes'
+        ).toBeGreaterThanOrEqual(2);
 
         await ukPage.openCompareModal();
         await expect(ukPage.compareModal).toBeVisible();
     });
 
     test('@regression compare modal contains operator logos', async () => {
+        await ukPage.goto();
         const cbCount = await ukPage.compareCheckboxes.count();
-        test.skip(cbCount < 2, 'Not enough compare checkboxes found to open modal');
+        expect(
+            cbCount,
+            'UK online casinos category page must expose at least two compare checkboxes'
+        ).toBeGreaterThanOrEqual(2);
 
         await ukPage.openCompareModal();
 
@@ -214,8 +232,12 @@ test.describe('Category Landing — UK Online Casinos', () => {
     });
 
     test('@regression compare modal contains CTA buttons with valid /go/ hrefs', async () => {
+        await ukPage.goto();
         const cbCount = await ukPage.compareCheckboxes.count();
-        test.skip(cbCount < 2, 'Not enough compare checkboxes found to open modal');
+        expect(
+            cbCount,
+            'UK online casinos category page must expose at least two compare checkboxes'
+        ).toBeGreaterThanOrEqual(2);
 
         await ukPage.openCompareModal();
 
@@ -231,27 +253,45 @@ test.describe('Category Landing — UK Online Casinos', () => {
     });
 
     test('@regression expanding an attribute section in the compare modal reveals content', async () => {
+        await ukPage.goto();
         const cbCount = await ukPage.compareCheckboxes.count();
-        test.skip(cbCount < 2, 'Not enough compare checkboxes found to open modal');
+        expect(
+            cbCount,
+            'UK online casinos category page must expose at least two compare checkboxes'
+        ).toBeGreaterThanOrEqual(2);
 
         await ukPage.openCompareModal();
 
         const sectionCount = await ukPage.compareModalSections.count();
-        test.skip(sectionCount === 0, 'No expandable sections found in compare modal');
+        expect(sectionCount, 'Compare modal must include at least one expandable attribute section').toBeGreaterThan(0);
+
+        // Modal opens with comparison rows visible; first header click collapses that section, second expands it again.
+        const bonusGridLabel = ukPage.compareModal.getByText(/Minimum Deposit to Qualify/i);
+        await expect(bonusGridLabel).toBeVisible();
 
         await ukPage.expandModalSection(0);
-        await expect(
-            ukPage.compareModal.locator('dd, [class*="collapsible-body"]').first()
-        ).toBeVisible({ timeout: 8000 });
+        await expect(bonusGridLabel).toBeHidden({ timeout: 8000 });
+
+        await ukPage.expandModalSection(0);
+        await expect(bonusGridLabel).toBeVisible({ timeout: 8000 });
     });
 
     test('@regression compare modal exposes a dismiss control', async () => {
+        await ukPage.goto();
         const cbCount = await ukPage.compareCheckboxes.count();
-        test.skip(cbCount < 2, 'Not enough compare checkboxes found to open modal');
+        expect(
+            cbCount,
+            'UK online casinos category page must expose at least two compare checkboxes'
+        ).toBeGreaterThanOrEqual(2);
 
         await ukPage.openCompareModal();
         await expect(ukPage.compareModal).toBeVisible();
         await expect(ukPage.compareModalCloseBtn).toBeVisible();
+
+        await ukPage.closeCompareModal();
+        // Micromodal keeps the container in the DOM; closing sets aria-hidden and hides the overlay.
+        await expect(ukPage.compareModal).toHaveAttribute('aria-hidden', 'true', { timeout: 15000 });
+        await expect(ukPage.compareModal).toBeHidden();
     });
 
     // ── 6. FAQ ───────────────────────────────────────────────────────────────
@@ -336,7 +376,16 @@ test.describe('Category Landing — DE Online Casinos', () => {
         await expect(dePage.mainNav).toBeVisible();
     });
 
-    // DE category pages do not surface the UK-style header geo modal trigger (see footer.spec DE notes).
+    // DE category pages do not surface the UK-style header geo flag / modal trigger (see footer.spec DE notes).
+    test('@regression header geo switcher is not present in nav (DE has no UK-style geo control)', async ({
+        page,
+    }) => {
+        const headerGeo = page
+            .locator('nav')
+            .locator('[class*="geo"], [class*="country"], [class*="region"], [data-testid*="geo"]');
+        await expect(headerGeo).toHaveCount(0);
+    });
+
     test('@smoke URL stays on German casino category path', async ({ page }) => {
         await expect(page).toHaveURL(/\/de\/online-casinos/);
     });
@@ -379,8 +428,8 @@ test.describe('Category Landing — DE Online Casinos', () => {
             expect(href).toContain('/go/');
             expect(href).not.toBe('');
             if (i < 3) {
-                await cta.scrollIntoViewIfNeeded();
-                await expect(cta).toBeVisible();
+                await cta.evaluate((el: HTMLElement) => el.scrollIntoView({ block: 'center' }));
+                await expect(cta).toBeVisible({ timeout: 8000 });
             }
         }
     });

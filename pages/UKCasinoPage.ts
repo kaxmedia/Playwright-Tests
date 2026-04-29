@@ -89,9 +89,8 @@ export class UKCasinoPage {
             .locator('img')
             .filter({ hasNot: page.locator('[class*="arrow"], [alt*="Arrow" i]') });
         this.compareModalCTAs = this.compareModal.locator('a[href*="/go/"]');
-        this.compareModalSections = this.compareModal.locator(
-            '[class*="collapsible-header"], dt, [class*="comparison"] button'
-        );
+        // Accordion section toggles in the comparison modal (IDs/list IDs vary by deployment)
+        this.compareModalSections = this.compareModal.locator('button[id^="category-header-"]');
         this.compareModalCloseBtn = this.compareModal.getByRole('button', { name: /close modal/i });
 
         // FAQ — UK page uses a long-form "What is an Online Casino?" block with h3 sub-questions (no .automation-faq)
@@ -143,6 +142,14 @@ export class UKCasinoPage {
         await expect(this.compareButton).toBeVisible({ timeout: 15000 });
         await this.compareButton.click({ force: true });
         await expect(this.compareModal).toBeVisible({ timeout: 10000 });
+    }
+
+    /**
+     * Clicks the modal header Close control via the DOM. Third-party promo layers sometimes
+     * sit above the modal and intercept real pointer events; a direct element click still runs the handler.
+     */
+    async closeCompareModal(): Promise<void> {
+        await this.compareModalCloseBtn.evaluate((el: HTMLElement) => el.click());
     }
 
     /** Clicks the nth expandable section inside the compare modal (0-indexed) */
