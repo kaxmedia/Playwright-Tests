@@ -157,6 +157,20 @@ export class SlotsGamesPage {
         return this.gameCards.count();
     }
 
+    /**
+     * Clicks **Play for Real** on a game tile (typically `target="_blank"`). Returns the new browser tab.
+     */
+    async openPlayForRealAffiliateTab(cardIndex = 0): Promise<Page> {
+        const cta = this.playRealButtons.nth(cardIndex);
+        await cta.scrollIntoViewIfNeeded();
+
+        const popupPromise = this.page.context().waitForEvent('page');
+        await cta.click();
+        const newPage = await popupPromise;
+        await newPage.waitForLoadState('domcontentloaded');
+        return newPage;
+    }
+
     /** Log in from Play Demo, reopen overlay; set `launchDemo: false` to assert modal CTAs without starting the iframe. */
     async playFreeDemoFlow(cardIndex = 0, options?: { launchDemo?: boolean }): Promise<void> {
         const launchDemo = options?.launchDemo ?? true;

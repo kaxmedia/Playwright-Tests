@@ -11,7 +11,7 @@ import { SlotsGamesPage, SLOTS_PAGE, TEST_USER } from '../pages/SlotsGamesPage';
 //   3. Filters & sort
 //   4. Search
 //   5. Pagination
-//   6. Play for Real — CTA redirect
+//   6. Play for Real — hrefs, and click-through to /go/ in a new tab
 //   7. Play Free Demo — full login flow + game iframe
 //   8. Game name → review page navigation
 //   9. Compare modal — same pattern as brand compare
@@ -262,6 +262,32 @@ test.describe('Slots Games Widget — UK', () => {
             const href = await slotsPage.playRealButtons.nth(i).getAttribute('href');
             expect(href).not.toBe('#');
         }
+    });
+
+    test('@regression clicking Play for Real opens the affiliate /go/ flow in a new tab', async ({ page }) => {
+        const cta = slotsPage.playRealButtons.first();
+        await expect(cta).toBeVisible();
+
+        const href = await cta.getAttribute('href');
+        expect(href).toBeTruthy();
+        expect(href).toContain('/go/');
+
+        const affiliateTab = await slotsPage.openPlayForRealAffiliateTab(0);
+
+        await expect
+            .poll(() => affiliateTab.url(), { timeout: 20000 })
+            .not.toMatch(/^about:blank$/);
+
+        const url = affiliateTab.url();
+        expect(url).not.toContain('/uk/online-casinos/slots/games');
+        if (url.includes('gambling.com')) {
+            expect(url, 'On-site affiliate hops must stay on /go/').toContain('/go/');
+        } else {
+            expect(url, 'Off-site redirect should be https').toMatch(/^https:\/\//);
+        }
+
+        await affiliateTab.close();
+        await expect(page).toHaveURL(SLOTS_PAGE.url);
     });
 
     // ── 7. Play Free Demo — full login flow ────────────────────────────────────
