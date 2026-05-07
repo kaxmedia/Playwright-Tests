@@ -33,7 +33,7 @@ export interface ComparisonPageConfig {
 
   // Age restriction shown in the per-card terms-and-conditions text.
   // US is 21+ (state gambling law); all other confirmed geos are 18+.
-  ageLimit: '18+' | '21+';
+  ageLimit: '18+' | '19+' | '21+';
 
   // Label text for the "Our Rating" row in the expandable details panel.
   // English-language pages use "Our Rating" — omit this field and the test
@@ -54,7 +54,8 @@ export interface ComparisonPageConfig {
 // ─────────────────────────────────────────────────────────────────────────────
 // comparisonPages — canonical list of all live comparison pages under test.
 //
-// 15 entries: Global Casino + 7 geo pairs (UK, US, IE, DE, GR, IT, ES).
+// 28 entries: Global Casino + 13 geo pairs (UK, US, IE, DE, GR, IT, ES, IN,
+// RO, NZ, MX, SE, CA-EN) + CA-FR Casino.
 // Global Sports does not exist as a standalone comparison page — the site's
 // Betting nav links go directly to geo-specific URLs with no global root.
 //
@@ -216,6 +217,151 @@ export const comparisonPages: ComparisonPageConfig[] = [
     hasRating: false,
     hasBadge: false,
     ageLimit: '18+',
+  },
+  // ── IN ──────────────────────────────────────────────────────────────────────
+  // No national gambling regulator (OGAI covers online gaming, not casino/betting).
+  // Both pages server-rendered with Our Rating score present.
+  {
+    name: 'IN Casino',
+    url: 'https://www.gambling.com/in/online-casinos',
+    category: 'casino',
+    expectedCardCountMin: 20,
+    hasRating: true,
+    hasBadge: false,
+    ageLimit: '18+',
+    hasLazyRating: true,
+  },
+  {
+    name: 'IN Sports',
+    url: 'https://www.gambling.com/in/betting-sites',
+    category: 'sports',
+    expectedCardCountMin: 10,
+    hasRating: true,
+    hasBadge: false,
+    ageLimit: '18+',
+    hasLazyRating: true,
+  },
+  // ── RO ──────────────────────────────────────────────────────────────────────
+  // ONJN-regulated EU market — hasBadge: true. Details panel absent from DOM
+  // on both pages; no rating score exposed.
+  {
+    name: 'RO Casino',
+    url: 'https://www.gambling.com/ro/cazino-online',
+    category: 'casino',
+    expectedCardCountMin: 15,
+    hasRating: false,
+    hasBadge: true,
+    ageLimit: '18+',
+  },
+  {
+    name: 'RO Sports',
+    url: 'https://www.gambling.com/ro/pariuri-sportive',
+    category: 'sports',
+    expectedCardCountMin: 10,
+    hasRating: false,
+    hasBadge: true,
+    ageLimit: '18+',
+  },
+  // ── NZ ──────────────────────────────────────────────────────────────────────
+  // No regulator badge. Casino has Our Rating (server-rendered); Sports panel
+  // absent from DOM entirely.
+  {
+    name: 'NZ Casino',
+    url: 'https://www.gambling.com/nz/online-casinos',
+    category: 'casino',
+    expectedCardCountMin: 20,
+    hasRating: true,
+    hasBadge: false,
+    ageLimit: '18+',
+    hasLazyRating: true,
+  },
+  {
+    name: 'NZ Sports',
+    url: 'https://www.gambling.com/nz/betting-sites',
+    category: 'sports',
+    expectedCardCountMin: 20,
+    hasRating: false,
+    hasBadge: false,
+    ageLimit: '18+',
+  },
+  // ── MX ──────────────────────────────────────────────────────────────────────
+  // No regulator badge. Casino details panel present but exposes RTP stats,
+  // not an editorial rating score. Sports panel absent from DOM.
+  {
+    name: 'MX Casino',
+    url: 'https://www.gambling.com/mx/casino-online',
+    category: 'casino',
+    expectedCardCountMin: 20,
+    hasRating: false,
+    hasBadge: false,
+    ageLimit: '18+',
+  },
+  {
+    name: 'MX Sports',
+    url: 'https://www.gambling.com/mx/apuestas-deportivas',
+    category: 'sports',
+    expectedCardCountMin: 15,
+    hasRating: false,
+    hasBadge: false,
+    ageLimit: '18+',
+  },
+  // ── SE ──────────────────────────────────────────────────────────────────────
+  // Spelinspektionen-regulated but badge not rendered on either page.
+  // Casino panel exposes wagering/RTP stats, not a rating score.
+  // Sports URL is /se/betting — convention-based slugs (/se/sportsbetting etc.) all 404.
+  {
+    name: 'SE Casino',
+    url: 'https://www.gambling.com/se/online-casinon',
+    category: 'casino',
+    expectedCardCountMin: 15,
+    hasRating: false,
+    hasBadge: false,
+    ageLimit: '18+',
+  },
+  {
+    name: 'SE Sports',
+    url: 'https://www.gambling.com/se/betting',
+    category: 'sports',
+    expectedCardCountMin: 15,
+    hasRating: false,
+    hasBadge: false,
+    ageLimit: '18+',
+  },
+  // ── CA ──────────────────────────────────────────────────────────────────────
+  // Provincial age minimum is 19+ across all three CA entries.
+  // No regulator badge. EN Casino has Our Rating (server-rendered).
+  // Sports panel absent from DOM; sports URL is /ca/sportsbooks
+  // (/ca/sports-betting redirects there — use the canonical final URL).
+  // CA-FR Casino is a distinct French-language page with ratingLabel in French.
+  {
+    name: 'CA EN Casino',
+    url: 'https://www.gambling.com/ca/online-casinos',
+    category: 'casino',
+    expectedCardCountMin: 20,
+    hasRating: true,
+    hasBadge: false,
+    ageLimit: '19+',
+    hasLazyRating: true,
+  },
+  {
+    name: 'CA EN Sports',
+    url: 'https://www.gambling.com/ca/sportsbooks',
+    category: 'sports',
+    expectedCardCountMin: 20,
+    hasRating: false,
+    hasBadge: false,
+    ageLimit: '19+',
+  },
+  {
+    name: 'CA FR Casino',
+    url: 'https://www.gambling.com/ca/fr/casinos-en-ligne',
+    category: 'casino',
+    expectedCardCountMin: 20,
+    hasRating: true,
+    hasBadge: false,
+    ageLimit: '19+',
+    ratingLabel: 'Notre Évaluation',
+    hasLazyRating: true,
   },
 ];
 
