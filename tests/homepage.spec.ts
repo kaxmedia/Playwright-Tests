@@ -32,4 +32,46 @@ test.describe('Homepage', () => {
     await expect(homePage.mainHeading).toBeVisible();
   });
 
+  // Background: a cache release bug on Friday caused the global homepage CTA buttons (Verified Bonuses section)
+  // to render German text ('Jetzt Spielen') instead of English. Hotfixed by Carlos.
+  //
+  // This test catches future regressions of the same class — wrong-locale content leaking onto the global
+  // English homepage.
+  //
+  // The deny-list covers known UI/CTA phrases from other gambling.com supported locales. When new
+  // wrong-language phrases are discovered, add them to the array.
+  //
+  // What this test does NOT catch:
+  // - Brand names, operator names, or game titles (uncontrolled content)
+  // - New languages not yet in the deny-list
+  // - Wrong-language content on other pages (this is global homepage only)
+  test('@smoke No non-English content leaks on global homepage', async ({ page }) => {
+    const homePage = new HomePage(page);
+    await homePage.goto();
+    await page.waitForLoadState('networkidle');
+
+    const bodyText = await page.locator('body').innerText();
+
+    const nonEnglishPhrases: string[] = [
+      // German
+      'Jetzt Spielen', 'Hier Spielen', 'Bonus holen', 'Mehr erfahren',
+      // Spanish
+      'Jugar Ahora', 'Visitar Casino', 'Reclamar Bono',
+      // Italian
+      'Gioca Ora', 'Visita Casino', 'Reclama Bonus',
+      // French
+      'Jouer Maintenant', 'Visiter Casino',
+      // Greek
+      'Παίξε Τώρα', 'Επισκεφθείτε',
+      // Portuguese
+      'Jogar Agora',
+      // Nordic and Dutch
+      'Spela Nu', 'Spille Nå', 'Spil Nu', 'Speel Nu',
+    ];
+
+    for (const phrase of nonEnglishPhrases) {
+      expect(bodyText).not.toContain(phrase);
+    }
+  });
+
 });
