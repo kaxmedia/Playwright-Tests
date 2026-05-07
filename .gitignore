@@ -1,9 +1,12 @@
 # Dependencies — downloaded by npm, no need to save in Git
 node_modules/
 
-# Test output — generated fresh every time tests run
+# Test output — generated fresh every time tests run (includes raw-html-audit-issues.txt)
 test-results/
 playwright-report/
+
+# Local-only audit spec (not tracked)
+tests/audit/raw-html-injection.spec.ts
 
 # Environment files — may contain passwords or API keys, never commit these
 .env
