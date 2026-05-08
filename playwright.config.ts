@@ -10,7 +10,9 @@ export default defineConfig({
   reporter: 'html',
   use: {
     baseURL: 'https://www.gambling.com',
-    trace: 'on-first-retry',
+    screenshot: 'only-on-failure',
+    video: 'retain-on-failure',
+    trace: 'retain-on-failure',  // was 'on-first-retry'
     navigationTimeout: 90000,
   },
   projects: [
