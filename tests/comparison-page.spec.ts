@@ -142,7 +142,7 @@ for (const config of comparisonPages) {
       await cp.goto(config.url);
       for (let i = 0; i < 5; i++) {
         const card = cp.nthCard(i);
-        const ratingText = await card.locator('div.more-info-table div.attribute-value').first().textContent();
+        const ratingText = await cp.detailAttributeValue(card, config.ratingLabel ?? 'Our Rating').first().textContent();
         const rating = parseFloat((ratingText ?? '').trim());
         expect(rating).toBeGreaterThanOrEqual(0);
         expect(rating).toBeLessThanOrEqual(10);
