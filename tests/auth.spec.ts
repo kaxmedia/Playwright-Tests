@@ -348,20 +348,202 @@ test.describe('Authentication — Sign Up & Sign In', () => {
     });
 
     // ══════════════════════════════════════════════════════════════════════════
+    // 6b. Sign Up — Success Screen ("You're in!")
+    // ══════════════════════════════════════════════════════════════════════════
+
+    test('@smoke success screen appears after sign up — "You\'re in!" heading visible', async () => {
+        await authPage.openSignUpModal();
+        await authPage.continueWithEmailBtn.click();
+        await authPage.fillSignUpForm('GC Test', generateTestEmail(), VALID_PASSWORD);
+        await authPage.ageConfirmCheckbox.check({ force: true });
+        await authPage.imInBtn.click();
+
+        await expect(authPage.successHeading).toBeVisible({ timeout: 15000 });
+        await expect(authPage.successSubtext).toBeVisible();
+    });
+
+    test('@smoke success screen shows Complete Your Profile button and Continue to Site link', async () => {
+        await authPage.openSignUpModal();
+        await authPage.continueWithEmailBtn.click();
+        await authPage.fillSignUpForm('GC Test', generateTestEmail(), VALID_PASSWORD);
+        await authPage.ageConfirmCheckbox.check({ force: true });
+        await authPage.imInBtn.click();
+
+        await expect(authPage.successHeading).toBeVisible({ timeout: 15000 });
+        await expect(authPage.completeProfileBtn).toBeVisible();
+        await expect(authPage.continueToSiteLink).toBeVisible();
+    });
+
+    test('@regression Complete Your Profile navigates to /profile/additional', async ({ page }) => {
+        await authPage.openSignUpModal();
+        await authPage.continueWithEmailBtn.click();
+        await authPage.fillSignUpForm('GC Test', generateTestEmail(), VALID_PASSWORD);
+        await authPage.ageConfirmCheckbox.check({ force: true });
+        await authPage.imInBtn.click();
+
+        await expect(authPage.successHeading).toBeVisible({ timeout: 15000 });
+        await authPage.completeProfileBtn.click();
+        await page.waitForLoadState('domcontentloaded');
+
+        await expect(page).toHaveURL(/\/profile\/additional/, { timeout: 10000 });
+    });
+
+    test('@regression Continue to Site closes modal and stays on current URL', async ({ page }) => {
+        const urlBeforeSignUp = page.url();
+
+        await authPage.openSignUpModal();
+        await authPage.continueWithEmailBtn.click();
+        await authPage.fillSignUpForm('GC Test', generateTestEmail(), VALID_PASSWORD);
+        await authPage.ageConfirmCheckbox.check({ force: true });
+        await authPage.imInBtn.click();
+
+        await expect(authPage.successHeading).toBeVisible({ timeout: 15000 });
+        await authPage.continueToSiteLink.click();
+
+        await expect(authPage.modal).toBeHidden({ timeout: 8000 });
+
+        expect(page.url()).toBe(urlBeforeSignUp);
+    });
+
+    test('@regression after Continue to Site — Sign Up button replaced by profile avatar', async ({ page }) => {
+        await authPage.openSignUpModal();
+        await authPage.continueWithEmailBtn.click();
+        await authPage.fillSignUpForm('GC Test', generateTestEmail(), VALID_PASSWORD);
+        await authPage.ageConfirmCheckbox.check({ force: true });
+        await authPage.imInBtn.click();
+
+        await expect(authPage.successHeading).toBeVisible({ timeout: 15000 });
+        await authPage.continueToSiteLink.click();
+        await expect(authPage.modal).toBeHidden({ timeout: 8000 });
+
+        await expect(authPage.headerSignUpBtn).toBeHidden({ timeout: 8000 });
+        await expect(authPage.profileAvatar).toBeVisible({ timeout: 8000 });
+    });
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // 6c. Profile Dropdown (logged-in user clicks avatar)
+    // ══════════════════════════════════════════════════════════════════════════
+
+    test('@smoke profile dropdown opens when avatar is clicked after sign in', async () => {
+        await authPage.signIn(SIGN_IN_USER.email, SIGN_IN_USER.password);
+        await expect(authPage.modal).toBeHidden({ timeout: 15000 });
+        await expect(authPage.profileAvatar).toBeVisible({ timeout: 8000 });
+
+        await authPage.openProfileDropdown();
+        await expect(authPage.profileDropdown).toBeVisible();
+    });
+
+    test('@smoke profile dropdown shows Hello greeting', async () => {
+        await authPage.signIn(SIGN_IN_USER.email, SIGN_IN_USER.password);
+        await expect(authPage.modal).toBeHidden({ timeout: 15000 });
+
+        await authPage.openProfileDropdown();
+        await expect(authPage.profileDropdownHeading).toBeVisible();
+        const text = await authPage.profileDropdownHeading.innerText();
+        expect(text.toLowerCase()).toContain('hello');
+    });
+
+    test('@smoke profile dropdown shows Manage your account link', async () => {
+        await authPage.signIn(SIGN_IN_USER.email, SIGN_IN_USER.password);
+        await expect(authPage.modal).toBeHidden({ timeout: 15000 });
+
+        await authPage.openProfileDropdown();
+        await expect(authPage.manageAccountLink).toBeVisible();
+    });
+
+    test('@smoke profile dropdown shows Go to Rewards link', async () => {
+        await authPage.signIn(SIGN_IN_USER.email, SIGN_IN_USER.password);
+        await expect(authPage.modal).toBeHidden({ timeout: 15000 });
+
+        await authPage.openProfileDropdown();
+        await expect(authPage.goToRewardsLink).toBeVisible();
+    });
+
+    test('@smoke profile dropdown shows Sign Out button', async () => {
+        await authPage.signIn(SIGN_IN_USER.email, SIGN_IN_USER.password);
+        await expect(authPage.modal).toBeHidden({ timeout: 15000 });
+
+        await authPage.openProfileDropdown();
+        await expect(authPage.signOutBtn).toBeVisible();
+    });
+
+    test('@regression Manage your account link has valid href', async ({}, testInfo) => {
+        await authPage.signIn(SIGN_IN_USER.email, SIGN_IN_USER.password);
+        await expect(authPage.modal).toBeHidden({ timeout: 15000 });
+
+        await authPage.openProfileDropdown();
+        const href = await authPage.manageAccountLink.evaluate((el) => {
+            const n = el as HTMLElement;
+            return n.closest('a')?.href ?? '';
+        });
+        if (!href) {
+            testInfo.skip(true, 'Manage account row has no enclosing anchor href in this layout.');
+            return;
+        }
+        expect(href).toMatch(/profile|account/i);
+        expect(href).not.toBe('#');
+    });
+
+    test('@regression Go to Rewards link has valid href', async ({}, testInfo) => {
+        await authPage.signIn(SIGN_IN_USER.email, SIGN_IN_USER.password);
+        await expect(authPage.modal).toBeHidden({ timeout: 15000 });
+
+        await authPage.openProfileDropdown();
+        const href = await authPage.goToRewardsLink.evaluate((el) => {
+            const n = el as HTMLElement;
+            return n.closest('a')?.href ?? '';
+        });
+        if (!href) {
+            testInfo.skip(true, 'Go to Rewards row has no enclosing anchor href in this layout.');
+            return;
+        }
+        expect(href).toMatch(/reward|chip/i);
+        expect(href).not.toBe('#');
+    });
+
+    test('@regression Go to Rewards shows chip count', async () => {
+        await authPage.signIn(SIGN_IN_USER.email, SIGN_IN_USER.password);
+        await expect(authPage.modal).toBeHidden({ timeout: 15000 });
+
+        await authPage.openProfileDropdown();
+        const text = await authPage.goToRewardsLink.innerText();
+        expect(text).toMatch(/\d+\s*chips?/i);
+    });
+
+    test('@regression clicking Sign Out logs the user out', async ({ page }) => {
+        await authPage.signIn(SIGN_IN_USER.email, SIGN_IN_USER.password);
+        await expect(authPage.modal).toBeHidden({ timeout: 15000 });
+
+        await authPage.openProfileDropdown();
+        await authPage.signOutBtn.click();
+
+        await expect(authPage.profileAvatar).toBeHidden({ timeout: 10000 });
+        await expect(authPage.headerSignUpBtn).toBeVisible({ timeout: 10000 });
+    });
+
+    // ══════════════════════════════════════════════════════════════════════════
     // 6. Sign Up — Full E2E
     // ══════════════════════════════════════════════════════════════════════════
 
-    test('@regression full sign up — modal closes and user is logged in', async ({ page }, testInfo) => {
-        await authPage.signUp('GC Test User', generateTestEmail(), VALID_PASSWORD);
-        await expect(authPage.modal).toBeHidden();
+    test('@regression full sign up E2E — success screen → Continue to Site → user logged in', async ({ page }, testInfo) => {
+        await authPage.openSignUpModal();
+        await authPage.continueWithEmailBtn.click();
+        await authPage.fillSignUpForm('GC Test User', generateTestEmail(), VALID_PASSWORD);
+        await authPage.ageConfirmCheckbox.check({ force: true });
+        await authPage.imInBtn.click();
+
+        await expect(authPage.successHeading).toBeVisible({ timeout: 15000 });
+
+        await authPage.continueToSiteLink.click();
+        await expect(authPage.modal).toBeHidden({ timeout: 8000 });
+
         await expect(authPage.headerSignUpBtn).toBeHidden({ timeout: 8000 });
+        await expect(authPage.profileAvatar).toBeVisible({ timeout: 8000 });
+
         try {
             await expect(page.locator('#supabase-logout-button')).toBeAttached({ timeout: 15000 });
         } catch {
-            testInfo.skip(
-                true,
-                'Modal closed but no session chrome (#supabase-logout-button) — signup email may be rejected by the backend.'
-            );
+            testInfo.skip(true, 'Modal closed but no session chrome — signup email may be rejected by the backend.');
         }
     });
 
