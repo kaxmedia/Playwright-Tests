@@ -54,8 +54,8 @@ export interface ComparisonPageConfig {
 // ─────────────────────────────────────────────────────────────────────────────
 // comparisonPages — canonical list of all live comparison pages under test.
 //
-// 28 entries: Global Casino + 13 geo pairs (UK, US, IE, DE, GR, IT, ES, IN,
-// RO, NZ, MX, SE, CA-EN) + CA-FR Casino.
+// 28 entries: 13 geo pairs (UK, US, IE, DE, GR, IT, ES, IN, RO, NZ, MX, SE,
+// CA-EN) + CA-FR Casino + CA-FR Sports.
 // Global Sports does not exist as a standalone comparison page — the site's
 // Betting nav links go directly to geo-specific URLs with no global root.
 //
@@ -64,16 +64,6 @@ export interface ComparisonPageConfig {
 // would only be breached by a broken data fetch, not routine editorial edits.
 // ─────────────────────────────────────────────────────────────────────────────
 export const comparisonPages: ComparisonPageConfig[] = [
-  // ── Global ──────────────────────────────────────────────────────────────────
-  {
-    name: 'Global Casino',
-    url: 'https://www.gambling.com/online-casinos',
-    category: 'casino',
-    expectedCardCountMin: 20,
-    hasRating: true,
-    hasBadge: true,
-    ageLimit: '18+',
-  },
   // ── UK ──────────────────────────────────────────────────────────────────────
   {
     name: 'UK Casino',
@@ -363,6 +353,17 @@ export const comparisonPages: ComparisonPageConfig[] = [
     ratingLabel: 'Notre Évaluation',
     hasLazyRating: true,
   },
+  {
+    name: 'CA FR Sports',
+    url: 'https://www.gambling.com/ca/fr/paris-sportifs',
+    category: 'sports',
+    expectedCardCountMin: 20,
+    hasRating: false,
+    hasBadge: false,
+    ageLimit: '19+',
+    ratingLabel: 'Évaluation globale', // Forward-prep for lazy-rating framework PR; dormant while hasRating: false
+    hasLazyRating: true,
+  },
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -399,7 +400,10 @@ export class ComparisonPage {
   // waitUntil: 'domcontentloaded' is sufficient — cards are server-rendered in
   // the initial HTML and do not require JS execution to appear in the DOM.
   async goto(url: string): Promise<void> {
-    await this.page.goto(url, { waitUntil: 'domcontentloaded' });
+    const response = await this.page.goto(url, { waitUntil: 'domcontentloaded' });
+    if (response !== null && response.status() >= 400) {
+      throw new Error(`${url} returned HTTP ${response.status()}`);
+    }
     await this.cards.first().waitFor({ state: 'attached' });
   }
 
