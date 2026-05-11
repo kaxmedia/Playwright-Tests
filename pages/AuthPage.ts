@@ -19,9 +19,9 @@ export function generateTestEmail(): string {
     return `testpot209+gctest${Date.now()}@gmail.com`;
 }
 
-/** Matches signup steps, email sign-in intro, *and* returning-user “Welcome back” (Google hint may vary). */
+/** Matches signup steps, email sign-in intro, returning-user "Welcome back", *and* post-signup success ("You're in!"). */
 const AUTH_MODAL_TEXT =
-    /Step\s+[123]\s+of\s+3|Sign\s+in\s+to\s+your\s+account|Welcome\s+to\s+Gambling\.com|Welcome\s+back/i;
+    /Step\s+[123]\s+of\s+3|Sign\s+in\s+to\s+your\s+account|Welcome\s+to\s+Gambling\.com|Welcome\s+back|You'?re\s+in|successfully\s+created\s+your\s+account/i;
 
 export class AuthPage {
     readonly page: Page;
@@ -29,6 +29,8 @@ export class AuthPage {
     // Header (scoped to fixed global nav so we don’t hit duplicate CTAs inside dialogs)
     readonly headerSignUpBtn: Locator;
     readonly headerSignInBtn: Locator;
+    /** Nav avatar after login (same element as `userAvatar`). */
+    readonly profileAvatar: Locator;
     readonly userAvatar: Locator;
 
     // Auth modal core
@@ -72,15 +74,28 @@ export class AuthPage {
     readonly signInSubmitBtn: Locator;
     readonly forgotPasswordLink: Locator;
 
+    // Sign up success ("You're in!") — modal stays open until profile or continue
+    readonly successHeading: Locator;
+    readonly successSubtext: Locator;
+    readonly completeProfileBtn: Locator;
+    readonly continueToSiteLink: Locator;
+
+    // Profile menu (avatar in nav)
+    readonly profileDropdown: Locator;
+    readonly profileDropdownHeading: Locator;
+    readonly manageAccountLink: Locator;
+    readonly goToRewardsLink: Locator;
+    readonly signOutBtn: Locator;
+
     constructor(page: Page) {
         this.page = page;
 
         // Header CTAs: stable ids where present (text-only nav hits duplicate/hidden nodes inside dialogs).
         this.headerSignUpBtn = page.locator('nav').first().getByText(/^sign up$/i).first();
         this.headerSignInBtn = page.locator('#login-button');
-        this.userAvatar = page.locator(
-            'button[aria-label*="account" i], button[aria-label*="profile" i], [class*="avatar" i]'
-        ).first();
+        /** Post–sign-in initials chip in the global nav (prod: `#logged-in-user-icon`). */
+        this.profileAvatar = page.locator('nav').first().locator('#logged-in-user-icon');
+        this.userAvatar = this.profileAvatar;
 
         this.modal = page.locator('[role="dialog"]').filter({ hasText: AUTH_MODAL_TEXT });
         this.modalCloseBtn = this.modal.locator(
@@ -133,6 +148,26 @@ export class AuthPage {
         this.signInSubmitBtn = this.modal.locator('form:has(#signin-email)').getByRole('button', { name: /^sign in$/i });
         /** Password reset control is a `<button>` on current layout (not an `<a href>`). */
         this.forgotPasswordLink = this.modal.getByRole('button', { name: /forgot password/i }).first();
+
+        this.successHeading = this.modal.getByText(/you're in/i).first();
+        this.successSubtext = this.modal.getByText(/successfully created your account/i).first();
+        this.completeProfileBtn = this.modal
+            .getByRole('button', { name: /complete your profile/i })
+            .or(this.modal.getByRole('link', { name: /complete your profile/i }))
+            .first();
+        // Prod uses a `<button>` for this CTA (not an `<a>`).
+        this.continueToSiteLink = this.modal
+            .getByRole('button', { name: /continue to site/i })
+            .or(this.modal.getByRole('link', { name: /continue to site/i }))
+            .first();
+
+        /** Logged-in account menu reuses `#signup-modal` with `user-logged-in` (see `modal-authentication-content`). */
+        this.profileDropdown = page.locator('#signup-modal.user-logged-in');
+        this.profileDropdownHeading = this.profileDropdown.getByText(/hello/i).first();
+        // Rows are often clickable wrappers around copy (link role not always exposed).
+        this.manageAccountLink = this.profileDropdown.getByText(/^manage your account$/i).first();
+        this.goToRewardsLink = this.profileDropdown.getByText(/go to rewards/i).first();
+        this.signOutBtn = this.profileDropdown.getByRole('button', { name: /sign out/i }).first();
     }
 
     async goto(): Promise<void> {
@@ -209,6 +244,12 @@ export class AuthPage {
         await this.signInEmailInput.fill(email);
         await this.signInPasswordInput.fill(password);
         await this.signInSubmitBtn.click();
+    }
+
+    /** Opens the profile dropdown by clicking the avatar in the nav bar. */
+    async openProfileDropdown(): Promise<void> {
+        await this.profileAvatar.click();
+        await this.profileDropdown.waitFor({ state: 'visible', timeout: 8000 });
     }
 
     /** Ends session via UI (prefer when cookie-clear would drop returning-user hints you need to keep). */
