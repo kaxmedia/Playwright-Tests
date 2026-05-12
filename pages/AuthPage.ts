@@ -2,7 +2,7 @@ import { type Locator, type Page } from '@playwright/test';
 
 export const SIGN_IN_USER = {
     email: 'testpot209@gmail.com',
-    password: 'MyTest123',
+    password: 'MyTest123!',
 };
 
 export const VALID_PASSWORD = 'MyTest123!';
@@ -33,7 +33,8 @@ export class AuthPage {
     readonly profileAvatar: Locator;
     readonly userAvatar: Locator;
 
-    // Auth modal core
+    // Auth modal core (`#signup-modal` is stable; inner view swaps between auth steps and logged-in menu)
+    readonly signupModal: Locator;
     readonly modal: Locator;
     readonly modalCloseBtn: Locator;
     readonly modalBackBtn: Locator;
@@ -97,8 +98,9 @@ export class AuthPage {
         this.profileAvatar = page.locator('nav').first().locator('#logged-in-user-icon');
         this.userAvatar = this.profileAvatar;
 
+        this.signupModal = page.locator('#signup-modal');
         this.modal = page.locator('[role="dialog"]').filter({ hasText: AUTH_MODAL_TEXT });
-        this.modalCloseBtn = this.modal.locator(
+        this.modalCloseBtn = this.signupModal.locator(
             'button[aria-label*="close" i], [data-testid*="close" i], button:has-text("×")'
         ).first();
         this.modalBackBtn = this.modal.getByRole('button', { name: /back/i }).first();
@@ -240,10 +242,23 @@ export class AuthPage {
 
     async signIn(email: string, password: string): Promise<void> {
         await this.openSignInModal();
-        await this.continueWithEmailBtn.click();
+        if (await this.continueWithEmailBtn.isVisible().catch(() => false)) {
+            await this.continueWithEmailBtn.click();
+        }
         await this.signInEmailInput.fill(email);
         await this.signInPasswordInput.fill(password);
         await this.signInSubmitBtn.click();
+    }
+
+    /** After `signIn`, prod may leave `#signup-modal` open — close so profile UI is usable. */
+    async dismissSignupModalIfOpen(): Promise<void> {
+        if (!(await this.signupModal.isVisible().catch(() => false))) return;
+        if (await this.modalCloseBtn.isVisible().catch(() => false)) {
+            await this.modalCloseBtn.click({ timeout: 5000 }).catch(() => { });
+        } else {
+            await this.page.keyboard.press('Escape');
+        }
+        await this.signupModal.waitFor({ state: 'hidden', timeout: 8000 }).catch(() => { });
     }
 
     /** Opens the profile dropdown by clicking the avatar in the nav bar. */
