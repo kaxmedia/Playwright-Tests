@@ -18,7 +18,7 @@ export const TEST_USER = {
             return u.includes('@') ? u : `${u}@gmail.com`;
         })(),
     username: process.env.SLOTS_TEST_USER ?? 'testpot209',
-    password: process.env.SLOTS_TEST_PASSWORD ?? 'MyTest123',
+    password: process.env.SLOTS_TEST_PASSWORD ?? 'MyTest123!',
 };
 
 /**

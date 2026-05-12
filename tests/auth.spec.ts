@@ -50,7 +50,7 @@ async function expectImInReady(imIn: Locator): Promise<void> {
 // Google flows: redirect to Google OAuth — we assert navigation away from gambling.com
 //
 // Sign Up uses a fresh generated email per run.
-// Sign In uses testpot209@gmail.com / MyTest123.
+// Sign In uses testpot209@gmail.com / MyTest123!
 // ─────────────────────────────────────────────────────────────────────────────
 
 test.describe('Authentication — Sign Up & Sign In', () => {
