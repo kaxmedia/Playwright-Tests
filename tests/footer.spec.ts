@@ -10,6 +10,7 @@
 
 import { test, expect } from '@playwright/test';
 import { FooterPage } from '../pages/FooterPage';
+import { GeoHomepage, geoHomepages } from '../pages/GeoHomepage';
 
 // The base URL used to turn relative hrefs (e.g. /terms-and-conditions) into full URLs
 const BASE_URL = 'https://www.gambling.com';
@@ -409,4 +410,88 @@ for (const geo of geoVariants) {
 
   });
 
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Geo-parameterised footer structure tests — 26 markets × 6 @smoke checks
+//
+// Verifies footer integrity across every geo: link count floor, no placeholder
+// hrefs, internal link well-formedness, HTTP reachability of the first 10
+// internal links, and image src completeness.
+// ─────────────────────────────────────────────────────────────────────────────
+
+for (const config of geoHomepages) {
+  test.describe(`Footer — ${config.name} geo`, () => {
+    let gh: GeoHomepage;
+
+    test.beforeEach(async ({ page }) => {
+      gh = new GeoHomepage(page);
+      await gh.goto(config.path);
+    });
+
+    // T1 ─ @smoke ─────────────────────────────────────────────────────────────
+    test(`${config.name} — @smoke footer is visible`, async () => {
+      await expect(gh.footer).toBeVisible();
+    });
+
+    // T2 ─ @smoke ─────────────────────────────────────────────────────────────
+    test(`${config.name} — @smoke footer has at least 20 links`, async () => {
+      expect(await gh.footerLinks.count()).toBeGreaterThanOrEqual(20);
+    });
+
+    // T3 ─ @smoke ─────────────────────────────────────────────────────────────
+    test(`${config.name} — @smoke no footer link has empty href or # placeholder`, async () => {
+      // SE has a Twitter/X icon with href="" in the live footer — site content bug.
+      test.fixme(config.skipEmptyHrefCheck === true, 'gambling.com/se footer has href="" on Twitter icon — site content bug, not test bug');
+      const count = await gh.footerLinks.count();
+      for (let i = 0; i < count; i++) {
+        const href = await gh.footerLinks.nth(i).getAttribute('href');
+        expect(href, `link ${i} has null href`).not.toBeNull();
+        expect(href!.trim(), `link ${i} has empty href`).not.toBe('');
+        expect(href, `link ${i} uses # placeholder`).not.toBe('#');
+      }
+    });
+
+    // T4 ─ @smoke ─────────────────────────────────────────────────────────────
+    test(`${config.name} — @smoke all internal footer hrefs are well-formed strings`, async () => {
+      const count = await gh.footerLinks.count();
+      for (let i = 0; i < count; i++) {
+        const href = await gh.footerLinks.nth(i).getAttribute('href');
+        if (!href || !href.startsWith('/') || href.startsWith('//')) continue;
+        expect(href.trim().length, `link ${i} internal href is blank`).toBeGreaterThan(1);
+        expect(href, `link ${i} internal href contains whitespace`).toMatch(/^\S+$/);
+      }
+    });
+
+    // T5 ─ @smoke ─────────────────────────────────────────────────────────────
+    test(`${config.name} — @smoke first 10 internal footer links return HTTP < 400`, async ({ request }) => {
+      const count = await gh.footerLinks.count();
+      const hrefs: string[] = [];
+      for (let i = 0; i < count && hrefs.length < 10; i++) {
+        const href = await gh.footerLinks.nth(i).getAttribute('href');
+        if (href && href.startsWith('/') && !href.startsWith('//')) hrefs.push(href);
+      }
+      const results = await Promise.all(
+        hrefs.map(async href => {
+          const response = await request.get(`${BASE_URL}${href}`, { timeout: 15000 });
+          return { href, status: response.status() };
+        })
+      );
+      for (const { href, status } of results) {
+        expect(status, `${BASE_URL}${href} returned HTTP ${status}`).toBeLessThan(400);
+      }
+    });
+
+    // T6 ─ @smoke ─────────────────────────────────────────────────────────────
+    test(`${config.name} — @smoke all footer images are attached with non-empty src`, async () => {
+      const count = await gh.footerImages.count();
+      for (let i = 0; i < count; i++) {
+        const img = gh.footerImages.nth(i);
+        await expect(img).toBeAttached();
+        const src = await img.getAttribute('src');
+        expect(src?.trim().length, `footer image ${i} has empty src`).toBeGreaterThan(0);
+      }
+    });
+
+  });
 }
