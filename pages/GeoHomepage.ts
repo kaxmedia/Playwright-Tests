@@ -22,6 +22,10 @@ export interface GeoHomepageConfig {
   // live site (e.g. SE Twitter/X icon). Marks the empty-href T3 assertion as fixme
   // so CI stays green until the site content bug is resolved.
   skipEmptyHrefCheck?: boolean;
+
+  // Set true when the geo's nav uses no href="#" dropdown triggers.
+  // Marks the T2 dropdown-trigger assertion as fixme for that geo.
+  skipNavTriggerCheck?: boolean;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -56,8 +60,10 @@ export const geoHomepages: GeoHomepageConfig[] = [
   { name: 'CA-FR',   path: '/ca/fr',  expectedLang: 'fr-CA' },
   { name: 'BE-NL',   path: '/be',     expectedLang: 'nl-BE' },
   { name: 'BE-FR',   path: '/be/fr',  expectedLang: 'fr-BE' },
-  { name: 'IS-IS',   path: '/is',     expectedLang: 'is-IS' },
-  { name: 'IS-EN',   path: '/is/en',  expectedLang: 'en-IS' },
+  // Iceland geos use a flat nav structure with no href="#" dropdown triggers
+  // (verified via recon). Market-specific structural difference, not a content bug.
+  { name: 'IS-IS',   path: '/is',     expectedLang: 'is-IS', skipNavTriggerCheck: true },
+  { name: 'IS-EN',   path: '/is/en',  expectedLang: 'en-IS', skipNavTriggerCheck: true },
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -86,6 +92,12 @@ export class GeoHomepage {
   // Individual navigation link items within the primary nav.
   readonly navItems: Locator;
 
+  // Top-level nav dropdown triggers — anchors with href="#" (Casino, Slots, Betting, etc.).
+  readonly navDropdownTriggers: Locator;
+
+  // Real path links within the nav — anchors with a "/" href, excluding "#" triggers.
+  readonly navRealLinks: Locator;
+
   // Page H1 heading.
   readonly h1: Locator;
 
@@ -103,15 +115,17 @@ export class GeoHomepage {
   readonly html: Locator;
 
   constructor(page: Page) {
-    this.page     = page;
-    this.logo     = page.locator('img[alt="gambling.com"]:visible').first();
-    this.nav      = page.locator('nav:has([data-gtm="global-nav"])').first();
-    this.navItems = this.nav.locator('a');
-    this.h1       = page.locator('h1').first();
-    this.footer       = page.locator('footer').last();
-    this.footerLinks  = this.footer.locator('a');
-    this.footerImages = this.footer.locator('img');
-    this.html         = page.locator('html');
+    this.page                 = page;
+    this.logo                 = page.locator('img[alt="gambling.com"]:visible').first();
+    this.nav                  = page.locator('nav:has([data-gtm="global-nav"])').first();
+    this.navItems             = this.nav.locator('a');
+    this.navDropdownTriggers  = this.nav.locator('a[href="#"]');
+    this.navRealLinks         = this.nav.locator('a[href^="/"]:not([href="#"])');
+    this.h1                   = page.locator('h1').first();
+    this.footer               = page.locator('footer').last();
+    this.footerLinks          = this.footer.locator('a');
+    this.footerImages         = this.footer.locator('img');
+    this.html                 = page.locator('html');
   }
 
   // Navigate to a geo homepage and wait until the H1 is attached.
