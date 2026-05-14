@@ -64,7 +64,7 @@ for (const geoKey of ['nl', 'es'] as const) {
             expect(btnText).toMatch(avPage.geo.rejectBtnText);
         });
 
-        test('@regression modal blocks page content until dismissed', async ({ page }) => {
+        test('@regression modal blocks page content until dismissed', async () => {
             // Modal should be visible and the page behind it should be inaccessible
             await expect(avPage.modal).toBeVisible({ timeout: 10000 });
 

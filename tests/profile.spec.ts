@@ -88,7 +88,7 @@ test.describe('Profile Section', () => {
     // Tab navigation
     // ══════════════════════════════════════════════════════════════════════════
 
-    test('@smoke all 6 profile tabs are visible', async ({ page }) => {
+    test('@smoke all 6 profile tabs are visible', async () => {
         await profilePage.gotoTab('rewards');
         await expect(profilePage.tabRewards).toBeVisible();
         await expect(profilePage.tabDetails).toBeVisible();

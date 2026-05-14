@@ -22,16 +22,24 @@ export class SearchPage {
 
   constructor(page: Page) {
     this.page           = page;
-    this.searchIcon     = page.locator('img.search-icon');
+    // SSR adds #search-icon-placeholder; the live nav uses another img.search-icon. Algolia embeds
+    // a separate control named "Search icon" — avoid ambiguous role locators. The nav img is offset
+    // in CSS so Playwright’s pointer click can fail; openSearch() uses a DOM click via evaluate().
+    this.searchIcon     = page.locator('img.search-icon:not(#search-icon-placeholder)');
     this.searchInput    = page.locator('input.search-input');
     this.resultsContainer = page.locator('div.search-result');
     this.resultItems    = page.locator('div.search-result a');
   }
 
+  /** Activates the header search control (DOM click — the img is positioned outside Playwright’s hit viewport). */
+  async openSearch() {
+    await this.searchIcon.evaluate((el) => (el as HTMLElement).click());
+  }
+
   // Opens the search box by clicking the nav icon, then types the search term.
   // Call this instead of clicking and typing manually in every test.
   async searchFor(term: string) {
-    await this.searchIcon.click();
+    await this.openSearch();
     await this.searchInput.waitFor({ state: 'visible' });
     await this.searchInput.fill(term);
   }

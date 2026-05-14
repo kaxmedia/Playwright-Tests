@@ -61,7 +61,6 @@ export class UKCasinoPage {
         this.geoSwitcher = page.locator('[class*="geo"], [class*="country"], [class*="region"], [data-testid*="geo"]').first();
 
         // Operator list — `.operator-item` rows + primary ranking CTAs (matches live oplist markup)
-        const ukOfferCta = 'a[data-gtm_ctalocation="offer"][href*="/go/uk/"], a[data-gtm_ctalocation="offer"][href*="/go/ie/"]';
         this.operatorList = page.locator('main .operator-list').first();
         this.operatorRows = page.locator('main .operator-list:not([data-disabled]) .operator-item');
         this.operatorLogos = this.operatorRows.locator('a[href*="/go/uk/"] > img, a[href*="/go/ie/"] > img');

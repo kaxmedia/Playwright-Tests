@@ -405,7 +405,7 @@ test.describe('Authentication — Sign Up & Sign In', () => {
         expect(page.url()).toBe(urlBeforeSignUp);
     });
 
-    test('@regression after Continue to Site — Sign Up button replaced by profile avatar', async ({ page }) => {
+    test('@regression after Continue to Site — Sign Up button replaced by profile avatar', async () => {
         await authPage.openSignUpModal();
         await authPage.continueWithEmailBtn.click();
         await authPage.fillSignUpForm('GC Test', generateTestEmail(), VALID_PASSWORD);
@@ -510,7 +510,7 @@ test.describe('Authentication — Sign Up & Sign In', () => {
         expect(text).toMatch(/\d+\s*chips?/i);
     });
 
-    test('@regression clicking Sign Out logs the user out', async ({ page }) => {
+    test('@regression clicking Sign Out logs the user out', async () => {
         await authPage.signIn(SIGN_IN_USER.email, SIGN_IN_USER.password);
         await expect(authPage.modal).toBeHidden({ timeout: 15000 });
 
