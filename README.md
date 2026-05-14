@@ -58,6 +58,8 @@ All test commands are run from inside the project folder in your terminal.
 | `npm test` | Runs all tests silently in Chrome — no browser window opens. Use this for a quick pass/fail check. |
 | `npm run test:headed` | Runs all tests with the Chrome window visible. Great for watching what Playwright is doing or debugging a failing test. |
 | `npm run test:report` | Opens the last test run's HTML report in your browser. Shows a full breakdown of passed, failed, and skipped tests with screenshots. |
+| `npm run lint` | Runs ESLint on `tests/`, `pages/`, `playwright.config.ts` (TypeScript + Playwright rules). Warnings are allowed; fix errors before merging if CI enforces lint. |
+| `npm run lint:fix` | Same as lint, with safe auto-fixes applied where ESLint can fix issues automatically. |
 
 ### Running a single test file
 

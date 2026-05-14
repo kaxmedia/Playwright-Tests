@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { ComparisonPage, comparisonPages } from '../pages/ComparisonPage';
+import { FirstPartyPageGuards } from './helpers/firstPartyPageGuards';
 
 // Parameterised suite — one describe block per entry in comparisonPages.
 // To add a new geo or category: add an entry to comparisonPages in
@@ -87,39 +88,36 @@ for (const config of comparisonPages) {
     });
 
     // T8 ─ @regression ────────────────────────────────────────────────────────
-    // Console errors: known-noisy third-party patterns are filtered out.
-    // Network failures: filtered to gambling.com first-party requests only;
-    // Cloudflare RUM beacons (/cdn-cgi/rum) are excluded as they fail transiently
-    // without affecting page function.
+    // Console: only `pageerror` and `console.error` attributed to a gambling.com script URL
+    // (third-party CMP noise such as CookieYes CORS is ignored). Network: first-party failures only;
+    // Cloudflare RUM beacons (/cdn-cgi/rum) are excluded as they fail transiently without affecting UX.
     test(`${config.name} — @regression no console errors and no failed first-party network requests`, async ({ page }) => {
-      const consoleErrors: string[] = [];
+      const guards = new FirstPartyPageGuards(page);
       const failedRequests: string[] = [];
 
-      page.on('console', msg => {
-        if (msg.type() === 'error') consoleErrors.push(msg.text());
-      });
       page.on('requestfailed', req => failedRequests.push(req.url()));
 
-      const cp = new ComparisonPage(page);
-      await cp.goto(config.url);
+      try {
+        const cp = new ComparisonPage(page);
+        await cp.goto(config.url);
 
-      const criticalConsole = consoleErrors.filter(e =>
-        !/favicon|analytics|comment count|failed to fetch|resizeobserver|permissions-policy|taboola|attestation reporting/i.test(e)
-      );
+        const criticalNetwork = failedRequests.filter(url => {
+          try {
+            const host = new URL(url).hostname.replace(/^www\./, '');
+            if (host !== 'gambling.com') return false;
+            if (url.includes('/cdn-cgi/rum')) return false;
+            return true;
+          } catch {
+            return false;
+          }
+        });
 
-      const criticalNetwork = failedRequests.filter(url => {
-        try {
-          const host = new URL(url).hostname.replace(/^www\./, '');
-          if (host !== 'gambling.com') return false;
-          if (url.includes('/cdn-cgi/rum')) return false;
-          return true;
-        } catch {
-          return false;
-        }
-      });
-
-      expect(criticalConsole).toHaveLength(0);
-      expect(criticalNetwork).toHaveLength(0);
+        expect(guards.pageErrors).toEqual([]);
+        expect(guards.firstPartyConsoleErrors).toEqual([]);
+        expect(criticalNetwork).toHaveLength(0);
+      } finally {
+        guards.detach();
+      }
     });
 
     // ── Conditional tests (T9–T11) ────────────────────────────────────────────

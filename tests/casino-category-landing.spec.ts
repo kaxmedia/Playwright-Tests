@@ -133,8 +133,8 @@ test.describe('Category Landing — UK Online Casinos', () => {
     });
 
     test('@regression clicking an anchor link updates the operator list', async () => {
-        // Get the count before clicking
-        const beforeCount = await ukPage.getOperatorCount();
+        // Warm / snapshot list before click (count not asserted — first anchor may already be active)
+        await ukPage.getOperatorCount();
 
         // Click the first anchor link — we don't hardcode the text so it's content-editor safe
         const firstLink = ukPage.anchorLinks.first();

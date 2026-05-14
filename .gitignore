@@ -13,6 +13,9 @@ playwright-report/
 # TypeScript build output
 dist/
 
+# ESLint cache
+.eslintcache
+
 # OS junk files
 .DS_Store
 Thumbs.db

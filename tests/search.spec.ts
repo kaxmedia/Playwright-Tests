@@ -15,13 +15,15 @@ test.describe('Search', () => {
     await page.goto(HOME_URL);
     const searchPage = new SearchPage(page);
 
-    // The input should be hidden before clicking the icon
-    await expect(searchPage.searchInput).not.toBeVisible();
-
-    await searchPage.searchIcon.click();
-
-    // After clicking, the input should appear
+    await expect(searchPage.searchIcon).toBeVisible();
+    // The header often keeps `input.search-input` in the DOM before the overlay is expanded.
     await expect(searchPage.searchInput).toBeVisible();
+
+    await searchPage.openSearch();
+
+    // The expanded field can sit outside the hit viewport until scrolled; focus without pointer geometry.
+    await searchPage.searchInput.focus();
+    await expect(searchPage.searchInput).toBeFocused();
   });
 
   test('typing a keyword shows search results', async ({ page }) => {

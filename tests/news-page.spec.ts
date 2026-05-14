@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { NewsPage } from '../pages/NewsPage';
+import { FirstPartyPageGuards } from './helpers/firstPartyPageGuards';
 
 // ─── Shared setup ────────────────────────────────────────────────────────────
 test.describe('Global News Page', () => {
@@ -169,24 +170,14 @@ test.describe('Global News Page', () => {
   test.describe('Performance & resilience', () => {
 
     test('@regression page has no console errors on load', async ({ page }) => {
-      const errors: string[] = [];
-      page.on('console', msg => {
-        if (msg.type() === 'error') errors.push(msg.text());
-      });
-
-      await newsPage.goto();
-      const critical = errors.filter(e => {
-        const lower = e.toLowerCase();
-        if (
-          /favicon|analytics|comment count|failed to fetch|resizeobserver|permissions-policy|taboola|attestation reporting/i.test(
-            lower
-          )
-        ) {
-          return false;
-        }
-        return true;
-      });
-      expect(critical).toHaveLength(0);
+      const guards = new FirstPartyPageGuards(page);
+      try {
+        await newsPage.goto();
+        expect(guards.pageErrors).toEqual([]);
+        expect(guards.firstPartyConsoleErrors).toEqual([]);
+      } finally {
+        guards.detach();
+      }
     });
 
     test('@regression page has no failed network requests', async ({ page }) => {
