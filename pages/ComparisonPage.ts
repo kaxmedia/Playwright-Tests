@@ -379,8 +379,9 @@ export const comparisonPages: ComparisonPageConfig[] = [
 // Use data attributes for identity assertions wherever possible — they are
 // set server-side and do not change with CSS refactors or Tailwind purges.
 //
-// CTA selector: a.operator-item__cta_link (confirmed identical across all geos)
-// DO NOT use automation-* classes — they vary by locale:
+// CTA selector: prefer `a.operator-item__cta_link` inside `.operator-main` when present; otherwise
+// the first card-scoped CTA (CA FR featured rows omit `.operator-main`). Do not rely on locale-specific
+// automation-* classes — they vary by locale:
 //   automation-visit-casino-cta (UK) · automation-jetzt-spielen-cta (DE)
 //   automation-play-now-cta (US) — these would silently fail cross-geo.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -412,6 +413,30 @@ export class ComparisonPage {
   // Return the card at a 0-based index.
   nthCard(index: number): Locator {
     return this.cards.nth(index);
+  }
+
+  // ── CA FR editorial “TOP 3” strip (inside .cf-primary-operator-list) ────────
+  // Only on the CA FR casino comparison layout: a label row plus a horizontal flex strip
+  // with three `li.operator-item` before the main `ol.rwd-table`. Other geos have no
+  // matching flex row — these locators match nothing there.
+
+  /** Horizontal flex row with the three featured operator cards. */
+  editorialTopThreeStrip(): Locator {
+    return this.page.locator(
+      'div.operator-list-full.cf-primary-operator-list > div.cf-removalable-on-pagination.flex'
+    );
+  }
+
+  /** Label directly above the strip (e.g. “TOP 3 DE LA RÉDACTION”) — excludes the flex row, which also uses mb-4. */
+  editorialTopThreeLabel(): Locator {
+    return this.page.locator(
+      'div.operator-list-full.cf-primary-operator-list > div.cf-removalable-on-pagination.mb-4:not(.flex)'
+    );
+  }
+
+  /** One of the three featured `li.operator-item` nodes inside {@link editorialTopThreeStrip}. */
+  nthEditorialTopPick(index: number): Locator {
+    return this.editorialTopThreeStrip().locator('li.operator-item').nth(index);
   }
 
   // Return a card by its data-operator value (exact match, case-sensitive).
@@ -457,8 +482,9 @@ export class ComparisonPage {
   // returns a child Locator scoped to that card.
 
   // Logo image — alt text is "[Operator Name] Casino" on all confirmed geos.
+  // Some cards ship responsive srcset pairs (e.g. hidden lg:block + lg:hidden); .first() avoids strict violations.
   logoImg(card: Locator): Locator {
-    return card.locator('a.operator-item__image_link img');
+    return card.locator('a.operator-item__image_link img').first();
   }
 
   // Logo anchor — href is the /go/ affiliate redirect for this operator.
@@ -482,11 +508,15 @@ export class ComparisonPage {
   }
 
   // Primary CTA button anchor.
-  // Scoped to .operator-main to exclude the identical class on expanded detail
-  // attribute rows (.more-info-table), which also carry operator-item__cta_link.
-  // .first() guards against VWO A/B variants that inject a duplicate in the same area.
+  // Prefer `.operator-main …` so we ignore duplicate `operator-item__cta_link` anchors inside
+  // `.more-info-table` (UK lists ~7 matching anchors per card; the list CTA is the first outside the panel).
+  // CA FR (and similar v2 layouts) sometimes omit `.operator-main` on featured top picks — fall back to
+  // the first card-scoped CTA, which is still the list button in DOM order before any detail-panel clones.
   ctaLink(card: Locator): Locator {
-    return card.locator('.operator-main a.operator-item__cta_link').first();
+    return card
+      .locator('.operator-main a.operator-item__cta_link')
+      .first()
+      .or(card.locator('a.operator-item__cta_link').first());
   }
 
   // CTA button visible text element (e.g. "Visit Casino", "Jetzt Spielen").
