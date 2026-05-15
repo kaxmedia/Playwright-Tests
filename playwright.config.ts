@@ -28,5 +28,27 @@ export default defineConfig({
       name: 'webkit',
       use: { ...devices['Desktop Safari'] },
     },
+    // ── Visual regression projects ────────────────────────────────────────────
+    // Scoped to ./tests/visual so they never run the functional suite.
+    {
+      name: 'visual-chromium-desktop',
+      testDir: './tests/visual',
+      use: { ...devices['Desktop Chrome'], channel: 'chrome' },
+    },
+    {
+      name: 'visual-webkit-desktop',
+      testDir: './tests/visual',
+      use: { ...devices['Desktop Safari'] },
+    },
+    {
+      name: 'visual-chromium-android',
+      testDir: './tests/visual',
+      use: { ...devices['Pixel 7'] },
+    },
+    {
+      name: 'visual-webkit-ios',
+      testDir: './tests/visual',
+      use: { ...devices['iPhone 15'] },
+    },
   ],
 });
