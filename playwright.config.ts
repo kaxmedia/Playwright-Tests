@@ -36,7 +36,7 @@ export default defineConfig({
     {
       name: 'visual-chromium-desktop',
       testDir: './tests/visual',
-      use: { ...devices['Desktop Chrome'], channel: 'chrome' },
+      use: { ...devices['Desktop Chrome'] },
     },
     {
       name: 'visual-webkit-desktop',
