@@ -18,14 +18,17 @@ export default defineConfig({
   projects: [
     {
       name: 'chrome',
+      testIgnore: ['**/visual/**'],
       use: { ...devices['Desktop Chrome'], channel: 'chrome' },
     },
     {
       name: 'firefox',
+      testIgnore: ['**/visual/**'],
       use: { ...devices['Desktop Firefox'] },
     },
     {
       name: 'webkit',
+      testIgnore: ['**/visual/**'],
       use: { ...devices['Desktop Safari'] },
     },
     // ── Visual regression projects ────────────────────────────────────────────
