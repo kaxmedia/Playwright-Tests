@@ -5,6 +5,12 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      update_baselines:
+        description: 'Capture new baselines and upload as artifact'
+        type: boolean
+        default: false
 
 jobs:
   visual-regression:
@@ -20,7 +26,15 @@ jobs:
         run: npm ci
 
       - name: Run visual regression tests
-        run: npx playwright test --project=visual-chromium-desktop --project=visual-webkit-desktop --project=visual-chromium-android --project=visual-webkit-ios
+        run: npx playwright test --project=visual-chromium-desktop --project=visual-webkit-desktop --project=visual-chromium-android --project=visual-webkit-ios ${{ inputs.update_baselines == 'true' && '--update-snapshots' || '' }}
+
+      - name: Upload baselines
+        if: ${{ inputs.update_baselines == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-baselines
+          path: tests/visual/**-snapshots/
+          retention-days: 30
 
       - name: Upload report and results on failure
         if: failure()
