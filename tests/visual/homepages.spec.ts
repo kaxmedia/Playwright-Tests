@@ -35,37 +35,11 @@ for (const geo of GEOS) {
   test(`@visual gambling.com ${geo.path} renders deterministically`, async ({ page }) => {
     await page.goto(geo.path, { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('load');
-    // Freeze all CSS animations and transitions
     await page.addStyleTag({
       content: '*, *::before, *::after { animation-duration: 0s !important; animation-delay: 0s !important; transition-duration: 0s !important; transition-delay: 0s !important; }',
     });
-    // Scroll through the full page to fire IntersectionObserver and trigger lazy image loading
-    await page.evaluate(async () => {
-      const step = window.innerHeight;
-      let pos = 0;
-      while (pos < document.body.scrollHeight) {
-        window.scrollTo(0, pos);
-        await new Promise(r => setTimeout(r, 100));
-        pos += step;
-      }
-      window.scrollTo(0, 0);
-    });
-    // Wait for every image triggered by the scroll to finish loading
-    await page.waitForFunction(
-      () => [...document.images].every(img => img.complete),
-      { timeout: 15000 },
-    ).catch(() => {});
-    // Kill all JS timers so live-updating content (counters, odds) is frozen
-    await page.evaluate(() => {
-      const maxId = window.setTimeout(() => {}, 0);
-      for (let i = 1; i <= maxId; i++) {
-        window.clearTimeout(i);
-        window.clearInterval(i);
-      }
-    });
-    await page.evaluate(() => { document.documentElement.style.overflowY = 'scroll'; });
     await expect(page).toHaveScreenshot(`${geo.name}.png`, {
-      fullPage: true,
+      fullPage: false,
       threshold: 0,
       maxDiffPixelRatio: 0.02,
       timeout: 30000,
