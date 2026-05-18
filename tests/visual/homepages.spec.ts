@@ -35,6 +35,12 @@ for (const geo of GEOS) {
   test(`@visual gambling.com ${geo.path} renders deterministically`, async ({ page }) => {
     await page.goto(geo.path, { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('load');
+    // Freeze all CSS animations and transitions so consecutive screenshots are identical
+    await page.addStyleTag({
+      content: '*, *::before, *::after { animation-duration: 0s !important; animation-delay: 0s !important; transition-duration: 0s !important; transition-delay: 0s !important; }',
+    });
+    // Wait for lazy-loaded resources to settle; swallow timeout on pages with live data feeds
+    await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
     await page.evaluate(() => { document.documentElement.style.overflowY = 'scroll'; });
     await expect(page).toHaveScreenshot(`${geo.name}.png`, {
       fullPage: true,

@@ -29,7 +29,7 @@ jobs:
         run: npx playwright test --project=visual-chromium-desktop --project=visual-webkit-desktop --project=visual-chromium-android --project=visual-webkit-ios ${{ inputs.update_baselines && '--update-snapshots' || '' }}
 
       - name: Upload baselines
-        if: ${{ inputs.update_baselines }}
+        if: ${{ always() && inputs.update_baselines }}
         uses: actions/upload-artifact@v4
         with:
           name: visual-baselines
