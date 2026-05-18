@@ -35,6 +35,7 @@ for (const geo of GEOS) {
   test(`@visual gambling.com ${geo.path} renders deterministically`, async ({ page }) => {
     await page.goto(geo.path, { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('load');
+    await page.evaluate(() => { document.documentElement.style.overflowY = 'scroll'; });
     await expect(page).toHaveScreenshot(`${geo.name}.png`, {
       fullPage: true,
       threshold: 0,

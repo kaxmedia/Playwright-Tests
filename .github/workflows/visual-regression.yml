@@ -26,10 +26,10 @@ jobs:
         run: npm ci
 
       - name: Run visual regression tests
-        run: npx playwright test --project=visual-chromium-desktop --project=visual-webkit-desktop --project=visual-chromium-android --project=visual-webkit-ios ${{ inputs.update_baselines == 'true' && '--update-snapshots' || '' }}
+        run: npx playwright test --project=visual-chromium-desktop --project=visual-webkit-desktop --project=visual-chromium-android --project=visual-webkit-ios ${{ inputs.update_baselines && '--update-snapshots' || '' }}
 
       - name: Upload baselines
-        if: ${{ inputs.update_baselines == 'true' }}
+        if: ${{ inputs.update_baselines }}
         uses: actions/upload-artifact@v4
         with:
           name: visual-baselines
