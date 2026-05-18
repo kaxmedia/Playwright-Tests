@@ -1,4 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
+import { iphone15Pro, pixel9 } from './tests/mobile/devices';
 
 export default defineConfig({
   testDir: './tests',
@@ -18,18 +19,41 @@ export default defineConfig({
   projects: [
     {
       name: 'chrome',
-      testIgnore: ['**/visual/**'],
+      testIgnore: ['**/visual/**', '**/mobile/**'],
       use: { ...devices['Desktop Chrome'], channel: 'chrome' },
     },
     {
       name: 'firefox',
-      testIgnore: ['**/visual/**'],
+      testIgnore: ['**/visual/**', '**/mobile/**'],
       use: { ...devices['Desktop Firefox'] },
     },
     {
       name: 'webkit',
-      testIgnore: ['**/visual/**'],
+      testIgnore: ['**/visual/**', '**/mobile/**'],
       use: { ...devices['Desktop Safari'] },
+    },
+    // Mobile functional suite — device emulation per project (WebKit vs Chromium)
+    {
+      name: 'mobile-iphone',
+      testMatch: '**/mobile/**/*.spec.ts',
+      timeout: 90000,
+      use: {
+        ...iphone15Pro,
+        screenshot: 'only-on-failure',
+        video: 'retain-on-failure',
+        trace: 'retain-on-failure',
+      },
+    },
+    {
+      name: 'mobile-pixel',
+      testMatch: '**/mobile/**/*.spec.ts',
+      timeout: 90000,
+      use: {
+        ...pixel9,
+        screenshot: 'only-on-failure',
+        video: 'retain-on-failure',
+        trace: 'retain-on-failure',
+      },
     },
     // ── Visual regression projects ────────────────────────────────────────────
     // Scoped to ./tests/visual so they never run the functional suite.

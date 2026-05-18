@@ -189,7 +189,13 @@ export class AuthPage {
 
     async openSignUpModal(): Promise<void> {
         if (await this.modal.isVisible().catch(() => false)) return;
-        await this.headerSignUpBtn.click();
+        if (await this.headerSignUpBtn.isVisible().catch(() => false)) {
+            await this.headerSignUpBtn.click();
+        } else {
+            const registerNow = this.page.getByRole('button', { name: /register now/i }).first();
+            await registerNow.waitFor({ state: 'visible', timeout: 10000 });
+            await registerNow.tap();
+        }
         await this.modal.waitFor({ state: 'visible', timeout: 10000 });
     }
 
@@ -217,6 +223,7 @@ export class AuthPage {
             await this.openSignInFromHeader();
         } else {
             await this.openSignUpModal();
+            await this.signInLink.waitFor({ state: 'visible', timeout: 10000 });
             await this.signInLink.click();
         }
         await this.modal.waitFor({ state: 'visible', timeout: 10000 });
