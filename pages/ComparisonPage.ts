@@ -519,6 +519,26 @@ export class ComparisonPage {
       .or(card.locator('a.operator-item__cta_link').first());
   }
 
+  /**
+   * Taps/clicks the list CTA (usually `target="_blank"`) and returns the new tab.
+   * Use `tap: true` on mobile projects; desktop can omit it.
+   */
+  async openCtaAffiliateTab(card: Locator, options?: { tap?: boolean }): Promise<Page> {
+    const cta = this.ctaLink(card);
+    await cta.scrollIntoViewIfNeeded();
+
+    const popupPromise = this.page.context().waitForEvent('page');
+    if (options?.tap) {
+      await cta.tap();
+    } else {
+      await cta.click();
+    }
+
+    const affiliateTab = await popupPromise;
+    await affiliateTab.waitForLoadState('domcontentloaded');
+    return affiliateTab;
+  }
+
   // CTA button visible text element (e.g. "Visit Casino", "Jetzt Spielen").
   ctaButtonText(card: Locator): Locator {
     return card.locator('span.button-blue-v2');
