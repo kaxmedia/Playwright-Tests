@@ -29,7 +29,14 @@ const GEOS = [
   { path: '/us',    name: 'us' },
 ];
 
-const OPLIST_MASKS = ['.operator-column-bonus-v2', '.promo-code', 'span.progress-number'];
+const OPLIST_MASKS = [
+  '.operator-column-bonus-v2',
+  '.promo-code',
+  'span.progress-number',
+  'div.primary-list-item-payment-methods',
+  '.operator-established-year-v2',
+  'div.cky-banner-bottom',
+];
 
 for (const geo of GEOS) {
   test(`@visual gambling.com ${geo.path} oplist renders deterministically`, async ({ page }) => {
