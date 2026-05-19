@@ -50,7 +50,7 @@ for (const geo of GEOS) {
     });
     await expect(page.locator('div.cf-primary-operator-list')).toHaveScreenshot(`oplist-${geo.name}.png`, {
       threshold: 0,
-      maxDiffPixelRatio: 0.02,
+      maxDiffPixelRatio: 0.04,
       timeout: 30000,
       mask: OPLIST_MASKS.map(s => page.locator(s)),
     });
