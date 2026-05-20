@@ -58,4 +58,4 @@ jobs:
           labels: |
             baseline-refresh
             automated
-          team-reviewers: qa
+          reviewers: mcgras22
