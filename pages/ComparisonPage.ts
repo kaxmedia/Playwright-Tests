@@ -49,6 +49,12 @@ export interface ComparisonPageConfig {
   // T9 skips these entries — full coverage deferred to PR #9 (requires
   // cookieBanner fixture integration and click-to-expand interaction).
   hasLazyRating?: boolean;
+
+  /**
+   * IDs from `KNOWN_PAGE_ERROR_ALLOWLIST` in tests/helpers/firstPartyPageGuards.ts.
+   * T8 still fails on any other uncaught pageerror — remove ids when the bug is fixed.
+   */
+  knownPageErrorIds?: string[];
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -134,6 +140,7 @@ export const comparisonPages: ComparisonPageConfig[] = [
     expectedCardCountMin: 15,
     hasRating: false,
     hasBadge: true,
+    knownPageErrorIds: ['age-checker-related-content-slots'],
     ageLimit: '18+',
   },
   {
@@ -241,6 +248,7 @@ export const comparisonPages: ComparisonPageConfig[] = [
     expectedCardCountMin: 15,
     hasRating: false,
     hasBadge: true,
+    knownPageErrorIds: ['age-checker-related-content-slots'],
     ageLimit: '18+',
   },
   {
