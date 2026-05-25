@@ -15,8 +15,13 @@ jobs:
       pull-requests: write
 
     steps:
+      - name: Install git-lfs
+        run: apt-get update && apt-get install -y git-lfs
+
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          lfs: true
 
       - name: Install dependencies
         run: npm ci
