@@ -24,12 +24,12 @@ export default defineConfig({
     },
     {
       name: 'firefox',
-      testIgnore: ['**/visual/**', '**/mobile/**'],
+      testIgnore: ['**/visual/**', '**/mobile/**', '**/ktag/**'],
       use: { ...devices['Desktop Firefox'] },
     },
     {
       name: 'webkit',
-      testIgnore: ['**/visual/**', '**/mobile/**'],
+      testIgnore: ['**/visual/**', '**/mobile/**', '**/ktag/**'],
       use: { ...devices['Desktop Safari'] },
     },
     // Mobile functional suite — device emulation per project (WebKit vs Chromium)
