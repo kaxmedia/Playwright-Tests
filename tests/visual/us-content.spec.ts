@@ -11,7 +11,7 @@ const SECTIONS = [
 
 for (const section of SECTIONS) {
   test(`@visual gambling.com /us ${section.name} renders deterministically`, async ({ page }) => {
-    await page.goto('/us/', { waitUntil: 'networkidle' });
+    await page.goto('/us/', { waitUntil: 'load' });
     await page.addStyleTag({
       content: '*, *::before, *::after { animation-duration: 0s !important; animation-delay: 0s !important; transition-duration: 0s !important; transition-delay: 0s !important; }',
     });
@@ -19,7 +19,8 @@ for (const section of SECTIONS) {
       `div.content-block-with-header-component:has(h2:has-text("${section.heading}"))`
     );
     await cb.scrollIntoViewIfNeeded();
-    await page.waitForLoadState('networkidle');
+    await cb.waitFor({ state: 'visible' });
+    await page.waitForTimeout(500);
     await expect(cb).toHaveScreenshot(`us-${section.name}.png`, {
       threshold: 0,
       maxDiffPixelRatio: 0.04,
