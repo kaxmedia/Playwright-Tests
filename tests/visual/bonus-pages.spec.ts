@@ -40,10 +40,11 @@ const BONUS_MASKS = [
 ];
 
 for (const geo of GEOS) {
-  test(`@visual gambling.com ${geo.path} bonus list renders deterministically`, async ({ page }) => {
+  test(`@visual gambling.com ${geo.path} bonus list renders deterministically`, async ({ page }, testInfo) => {
     if (geo.name === 'us') {
       test.skip(true, '/us bonus content rotates faster than the ~25 min test cycle between capture and verify - tracked for Sprint 4 strategy review');
     }
+    test.skip(testInfo.project.name === 'visual-chromium-android', 'chromium-android masking incomplete on bonus pages — Pixel 7 DOM differs from desktop/iOS; revisit after Android selector recon');
     await page.goto(`${geo.path}${BONUS_PATH}`, { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('load');
     await page.addStyleTag({
