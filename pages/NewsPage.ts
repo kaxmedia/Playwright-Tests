@@ -1,4 +1,5 @@
 import { type Page, type Locator } from '@playwright/test';
+import { globalNavLogo } from './globalNavLogo';
 
 export class NewsPage {
   readonly page: Page;
@@ -26,8 +27,7 @@ export class NewsPage {
   constructor(page: Page) {
     this.page = page;
 
-    // Same class as HomePage — logo is not always a descendant of `<header>` on /news, so do not chain `header`.
-    this.logo = page.locator('img.global-nav-logo').first();
+    this.logo = globalNavLogo(page);
     this.mainNav = page.locator('nav').first();
 
     // News sections — each category block (h2 heading + cards beneath)

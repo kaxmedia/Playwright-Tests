@@ -1,4 +1,5 @@
 import { type Locator, type Page } from '@playwright/test';
+import { globalNavLogoLink } from './globalNavLogo';
 
 /**
  * Mobile header / nav for gambling.com global layout.
@@ -23,7 +24,7 @@ export class MobilePage {
     this.menuPanel = page.locator('#level-one.show-level-one');
     this.menuPopularLinks = page.locator('#mobile-nav-popular-pages a');
     this.menuLinks = page.locator('#level-one a[href^="/"]');
-    this.logoHomeLink = page.locator('a:has(img.global-nav-logo)').first();
+    this.logoHomeLink = globalNavLogoLink(page);
     this.registerNowButton = page.getByRole('button', { name: /register now/i }).first();
     this.visibleMainHeading = page.locator('h1:visible').first();
   }

@@ -22,6 +22,7 @@ import {
   assertRedirectv2Specific,
   KtagEvent,
 } from '../helpers/ktag-assertions';
+import { oplistGoCta } from '../helpers/oplistCta';
 
 const OPLIST_PAGE = 'https://www.gambling.com/uk/online-casinos';
 
@@ -30,7 +31,7 @@ const OPLIST_PAGE = 'https://www.gambling.com/uk/online-casinos';
  * Returns the URL with debug=1 appended.
  */
 async function getGoUrlWithDebug(page: import('@playwright/test').Page): Promise<string | null> {
-  const href = await page.locator('a[href*="/go/"]').first().getAttribute('href');
+  const href = await oplistGoCta(page).getAttribute('href');
   if (!href) return null;
 
   const fullUrl = href.startsWith('http') ? href : `https://www.gambling.com${href}`;

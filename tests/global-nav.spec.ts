@@ -8,6 +8,7 @@
 
 import { test, expect } from '@playwright/test';
 import { GeoHomepage, geoHomepages } from '../pages/GeoHomepage';
+import { globalNavLogoLink } from '../pages/globalNavLogo';
 
 const BASE_URL = 'https://www.gambling.com';
 
@@ -67,8 +68,7 @@ for (const config of geoHomepages) {
 
     // T6 ─ @smoke ─────────────────────────────────────────────────────────────
     test(`${config.name} — @smoke logo home link exists in nav`, async () => {
-      // Logo links to the geo root (e.g. /de, /it) not always '/' — match by wrapped image instead.
-      const logoLink = gh.nav.locator('a:has(img[alt="gambling.com"])').first();
+      const logoLink = globalNavLogoLink(gh.page);
       await expect(logoLink).toBeAttached();
       const href = await logoLink.getAttribute('href');
       expect(href).toMatch(/^\//);

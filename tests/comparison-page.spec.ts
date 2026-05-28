@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { ComparisonPage, comparisonPages } from '../pages/ComparisonPage';
-import { FirstPartyPageGuards } from './helpers/firstPartyPageGuards';
+import { FirstPartyPageGuards, unexpectedPageErrors } from './helpers/firstPartyPageGuards';
 
 // Parameterised suite — one describe block per entry in comparisonPages.
 // To add a new geo or category: add an entry to comparisonPages in
@@ -112,7 +112,18 @@ for (const config of comparisonPages) {
           }
         });
 
-        expect(guards.pageErrors).toEqual([]);
+        const allowlistIds = config.knownPageErrorIds ?? [];
+        const uncaughtPageErrors = unexpectedPageErrors(guards.pageErrors, allowlistIds);
+        if (guards.pageErrors.length > uncaughtPageErrors.length) {
+          test.info().annotations.push({
+            type: 'known-issue',
+            description: `Suppressed ${guards.pageErrors.length - uncaughtPageErrors.length} tracked pageerror(s): ${allowlistIds.join(', ')}`,
+          });
+        }
+        expect(
+          uncaughtPageErrors,
+          'Unexpected uncaught page errors (known bugs filtered via config.knownPageErrorIds)',
+        ).toEqual([]);
         expect(guards.firstPartyConsoleErrors).toEqual([]);
         expect(criticalNetwork).toHaveLength(0);
       } finally {
