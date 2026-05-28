@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-const BONUS_PATH = '/online-casinos/bonus/';
+const BONUS_PATH = '/online-casinos/bonus';
 
 const GEOS = [
   { path: '/at',    name: 'at' },
