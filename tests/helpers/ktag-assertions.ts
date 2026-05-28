@@ -367,8 +367,10 @@ export function assertRedirectv2Specific(event: KtagEvent): void {
     expect(event, 'dest_url_mobile key missing').toHaveProperty('dest_url_mobile');
     // ~99.5%
     expect(event.dest_url_tc, 'dest_url_tc missing').toBeDefined();
-    // ~96%
-    expect(event.dest_url_deeplink, 'dest_url_deeplink missing').toBeDefined();
+    // ~96% — optional; some operator payloads omit deeplink
+    if (event.dest_url_deeplink !== undefined && event.dest_url_deeplink !== null) {
+        expect(event.dest_url_deeplink, 'dest_url_deeplink malformed').toEqual(expect.any(String));
+    }
 }
 
 // ---------------------------------------------------------------------------

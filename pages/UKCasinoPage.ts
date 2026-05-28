@@ -1,4 +1,5 @@
 import { Page, Locator, expect } from '@playwright/test';
+import { globalNavLogo } from './globalNavLogo';
 
 export const UK_CASINO = {
     url: 'https://www.gambling.com/uk/online-casinos',
@@ -53,8 +54,7 @@ export class UKCasinoPage {
 
         // Page structure — use the main nav home link (responsive logos toggle lg:hidden / lg:block)
         this.pageTitle = page.locator('h1').first();
-        // One nav link wraps two responsive logos — desktop viewport matches the second image
-        this.logo = page.locator('img.global-nav-logo').nth(1);
+        this.logo = globalNavLogo(page);
         this.mainNav = page.locator('nav').first();
 
         // Geo switcher — covers dropdown and button variants
@@ -92,12 +92,12 @@ export class UKCasinoPage {
         this.compareModalSections = this.compareModal.locator('button[id^="category-header-"]');
         this.compareModalCloseBtn = this.compareModal.getByRole('button', { name: /close modal/i });
 
-        // FAQ — UK page uses a long-form "What is an Online Casino?" block with h3 sub-questions (no .automation-faq)
+        // Editorial explainer block (formerly accordion FAQ — now static H2 + body copy)
         this.faqSection = page
-            .locator('.body_content')
+            .locator('.content-block-component')
             .filter({ has: page.getByRole('heading', { name: 'What is an Online Casino?' }) })
             .first();
-        this.faqItems = this.faqSection.getByRole('heading', { level: 3 });
+        this.faqItems = this.faqSection.locator('p');
 
         // Footer
         this.footer = page.locator('footer').first();
@@ -159,25 +159,10 @@ export class UKCasinoPage {
         await this.page.waitForTimeout(500);
     }
 
+    /** Returns body copy for the nth paragraph in the explainer block (no expand interaction). */
     async openFaqItem(index: number): Promise<string> {
         const item = this.faqItems.nth(index);
         await item.scrollIntoViewIfNeeded();
-        const tag = await item.evaluate((el) => el.tagName.toLowerCase());
-        if (tag === 'dt') {
-            await item.click();
-            await this.page.waitForTimeout(400);
-            return item.locator('xpath=following-sibling::dd[1]').innerText();
-        }
-        await item.click();
-        await this.page.waitForTimeout(200);
-        return item.evaluate((el: HTMLElement) => {
-            const parts: string[] = [];
-            let n = el.nextElementSibling;
-            while (n && n.tagName !== 'H3' && n.tagName !== 'H2') {
-                parts.push(n.textContent || '');
-                n = n.nextElementSibling;
-            }
-            return parts.join('\n');
-        });
+        return item.innerText();
     }
 }
