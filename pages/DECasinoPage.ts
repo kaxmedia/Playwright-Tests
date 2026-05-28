@@ -1,4 +1,5 @@
 import { Page, Locator } from '@playwright/test';
+import { globalNavLogo } from './globalNavLogo';
 
 export const DE_CASINO = {
     url: 'https://www.gambling.com/de/online-casinos',
@@ -36,7 +37,7 @@ export class DECasinoPage {
         this.page = page;
 
         this.pageTitle = page.locator('h1').first();
-        this.logo = page.locator('img.global-nav-logo').nth(1);
+        this.logo = globalNavLogo(page);
         this.mainNav = page.locator('nav').first();
 
         this.operatorList = page.locator('main .operator-list').first();

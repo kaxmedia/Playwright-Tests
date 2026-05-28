@@ -13,6 +13,7 @@ import {
   assertPageviewIdChain,
   findEvent,
 } from '../helpers/ktag-assertions';
+import { oplistGoCta } from '../helpers/oplistCta';
 
 const OPLIST_PAGE = 'https://www.gambling.com/uk/online-casinos';
 
@@ -22,12 +23,8 @@ test.describe('Ktag — oplistclk event @ktag @oplistclk @regression', () => {
     await page.goto(OPLIST_PAGE);
 
     // Find and click the first CTA button inside an operator list
-    const ctaButton = page.locator('[data-listid] a[href*="/go/"], [data-oplist] a[href*="/go/"]').first();
-
-    // Fallback: try any CTA anchor if list-specific selectors don't match
-    const fallbackCta = page.locator('a[href*="/go/"]').first();
-
-    const target = await ctaButton.count() > 0 ? ctaButton : fallbackCta;
+    const target = oplistGoCta(page);
+    await expect(target).toBeVisible({ timeout: 15000 });
     const href = await target.getAttribute('href');
     expect(href).toContain('/go/');
     const url = new URL(href!, 'https://www.gambling.com');
@@ -40,7 +37,8 @@ test.describe('Ktag — oplistclk event @ktag @oplistclk @regression', () => {
   test('oplistclk: CTA href carries click attribution fields', async ({ page }) => {
     await page.goto(OPLIST_PAGE);
 
-    const cta = page.locator('a[href*="/go/"]').first();
+    const cta = oplistGoCta(page);
+    await expect(cta).toBeVisible({ timeout: 15000 });
     const href = await cta.getAttribute('href');
     const url = new URL(href!, 'https://www.gambling.com');
     expect(url.searchParams.get('ct')).toBe('oplistclk');
@@ -57,7 +55,7 @@ test.describe('Ktag — oplistclk event @ktag @oplistclk @regression', () => {
     await page.waitForTimeout(600);
 
     await page.route('**/go/**', route => route.abort());
-    const cta = page.locator('a[href*="/go/"]').first();
+    const cta = oplistGoCta(page);
     await cta.click({ force: true }).catch(() => {});
 
     await page.waitForTimeout(1000);
@@ -78,7 +76,7 @@ test.describe('Ktag — oplistclk event @ktag @oplistclk @regression', () => {
     await page.goto(OPLIST_PAGE);
     await page.route('**/go/**', route => route.abort());
 
-    const cta = page.locator('a[href*="/go/"]').first();
+    const cta = oplistGoCta(page);
     await cta.click({ force: true }).catch(() => {});
 
     await page.waitForTimeout(1000);
@@ -94,7 +92,8 @@ test.describe('Ktag — oplistclk event @ktag @oplistclk @regression', () => {
   test('oplistclk: cta_id is present on the CTA href @smoke', async ({ page }) => {
     await page.goto(OPLIST_PAGE);
 
-    const cta = page.locator('a[href*="/go/"]').first();
+    const cta = oplistGoCta(page);
+    await expect(cta).toBeVisible({ timeout: 15000 });
     const href = await cta.getAttribute('href');
     const url = new URL(href!, 'https://www.gambling.com');
     expect(url.searchParams.get('cta_id')).toMatch(/^[0-9a-f-]{36}$/i);
@@ -103,7 +102,7 @@ test.describe('Ktag — oplistclk event @ktag @oplistclk @regression', () => {
   test('oplistclk: CTA href carries seen item and source metadata', async ({ page }) => {
     await page.goto(OPLIST_PAGE);
 
-    const cta = page.locator('a[href*="/go/"]').first();
+    const cta = oplistGoCta(page);
     const href = await cta.getAttribute('href');
     const url = new URL(href!, 'https://www.gambling.com');
     const source = url.searchParams.get('source');

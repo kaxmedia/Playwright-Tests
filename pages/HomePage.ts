@@ -9,6 +9,7 @@
 // Without POM, you'd have to hunt down and fix every single test file.
 
 import { type Page, type Locator } from '@playwright/test';
+import { globalNavLogo } from './globalNavLogo';
 
 export class HomePage {
 
@@ -33,10 +34,8 @@ export class HomePage {
 
   constructor(page: Page) {
     this.page = page;
-    // The site uses 'global-nav-logo' class only on the navigation bar logo.
-    // A second logo image exists inside the login modal, so we use this class
-    // to target the correct one without ambiguity.
-    this.logo          = page.locator('img.global-nav-logo');
+    // Header mark is an inline SVG in the primary nav (scoped to avoid auth-modal duplicates).
+    this.logo          = globalNavLogo(page);
     this.reviewsNavLink = page.getByRole('link', { name: 'Reviews' }).first();
     this.mainHeading   = page.getByRole('heading', { level: 1 });
   }

@@ -1,4 +1,5 @@
 import { Page, Locator } from '@playwright/test';
+import { globalNavLogo } from './globalNavLogo';
 
 export const AGE_VERIFICATION_GEOS = {
     nl: {
@@ -74,7 +75,7 @@ export class AgeVerificationPage {
         }).first();
 
         // Page structure
-        this.logo = page.locator('img.global-nav-logo').nth(1);
+        this.logo = globalNavLogo(page);
         this.mainNav = page.locator('nav').first();
     }
 

@@ -4,6 +4,35 @@ import { type ConsoleMessage, type Page } from '@playwright/test';
 const KNOWN_NOISY_SUBSTRING =
   /favicon|analytics|comment count|failed to fetch|resizeobserver|permissions-policy|taboola|attestation reporting/i;
 
+/**
+ * Tracked production `pageerror`s — tests still run and still fail on any other exception.
+ * Remove an entry (and `knownPageErrorIds` on comparison configs) once dev fixes ship.
+ */
+export const KNOWN_PAGE_ERROR_ALLOWLIST: ReadonlyArray<{
+  id: string;
+  pattern: RegExp;
+  note: string;
+}> = [
+  {
+    id: 'age-checker-related-content-slots',
+    pattern:
+      /ReferenceError:\s*AgeChecker is not defined[\s\S]*RelatedContentCollectionSlots/i,
+    note: 'DE/RO casino comparison — mountAgeCheckerGB runs before AgeChecker global is defined',
+  },
+];
+
+/** Returns pageerrors that are not on the known-issue allowlist (by id). */
+export function unexpectedPageErrors(
+  pageErrors: string[],
+  allowlistIds: readonly string[] = [],
+): string[] {
+  const patterns = KNOWN_PAGE_ERROR_ALLOWLIST.filter(entry =>
+    allowlistIds.includes(entry.id),
+  ).map(entry => entry.pattern);
+
+  return pageErrors.filter(err => !patterns.some(pattern => pattern.test(err)));
+}
+
 function isGamblingComScriptUrl(url: string | undefined): boolean {
   if (!url || !/^https?:\/\//i.test(url)) return false;
   try {

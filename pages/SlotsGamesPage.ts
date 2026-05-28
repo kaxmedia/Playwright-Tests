@@ -1,4 +1,5 @@
 import { Page, Locator, expect } from '@playwright/test';
+import { globalNavLogo } from './globalNavLogo';
 
 export const SLOTS_PAGE = {
     url: 'https://www.gambling.com/uk/online-casinos/slots/games',
@@ -78,7 +79,7 @@ export class SlotsGamesPage {
         this.page = page;
 
         this.pageTitle = page.locator('h1.automation-section-title, h1').first();
-        this.logo = page.locator('img.global-nav-logo').nth(1);
+        this.logo = globalNavLogo(page);
         this.mainNav = page.locator('nav').first();
         this.footer = page.locator('footer').first();
 

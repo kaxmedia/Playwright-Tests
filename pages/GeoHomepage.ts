@@ -1,4 +1,5 @@
 import { type Page, type Locator } from '@playwright/test';
+import { globalNavLogo } from './globalNavLogo';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GeoHomepageConfig — per-URL configuration for parameterised geo homepage tests.
@@ -81,8 +82,7 @@ export const geoHomepages: GeoHomepageConfig[] = [
 export class GeoHomepage {
   readonly page: Page;
 
-  // Site logo image — alt text is consistent across all geos.
-  // :visible + .first() targets the rendered header instance, skipping hidden mobile duplicates.
+  // Site logo — inline SVG in the primary nav (`aria-label="Gambling.com"`).
   readonly logo: Locator;
 
   // Primary navigation element — scoped by data-gtm attribute to avoid matching
@@ -116,7 +116,7 @@ export class GeoHomepage {
 
   constructor(page: Page) {
     this.page                 = page;
-    this.logo                 = page.locator('img[alt="gambling.com"]:visible').first();
+    this.logo                 = globalNavLogo(page);
     this.nav                  = page.locator('nav:has([data-gtm="global-nav"])').first();
     this.navItems             = this.nav.locator('a');
     this.navDropdownTriggers  = this.nav.locator('a[href="#"]');

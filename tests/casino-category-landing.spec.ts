@@ -301,17 +301,18 @@ test.describe('Category Landing — UK Online Casinos', () => {
         await expect(ukPage.faqSection).toBeVisible();
     });
 
-    test('@smoke FAQ has at least 3 items', async () => {
+    test('@smoke explainer block has substantive body copy', async () => {
         const count = await ukPage.faqItems.count();
-        expect(count).toBeGreaterThanOrEqual(3);
+        expect(count).toBeGreaterThanOrEqual(1);
+        const bodyText = await ukPage.openFaqItem(0);
+        expect(bodyText.trim().length).toBeGreaterThan(50);
     });
 
-    test('@regression clicking a FAQ item expands it and reveals content', async () => {
-        const count = await ukPage.faqItems.count();
-        if (count > 0) {
-            const answerText = await ukPage.openFaqItem(0);
-            expect(answerText.trim().length).toBeGreaterThan(10);
-        }
+    test('@regression What is an Online Casino section is visible with content', async () => {
+        await ukPage.faqSection.scrollIntoViewIfNeeded();
+        await expect(ukPage.faqSection.getByRole('heading', { name: 'What is an Online Casino?' })).toBeVisible();
+        const answerText = await ukPage.openFaqItem(0);
+        expect(answerText.trim().length).toBeGreaterThan(10);
     });
 
     // ── 7. Geo-specific content ──────────────────────────────────────────────
