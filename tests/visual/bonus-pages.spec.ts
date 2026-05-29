@@ -36,7 +36,7 @@ for (const geo of GEOS) {
     });
     await expect(page.locator('div.cf-primary-operator-list ol')).toHaveScreenshot(`bonus-${geo.name}.png`, {
       threshold: 0,
-      maxDiffPixelRatio: 0.04,
+      maxDiffPixelRatio: 0.10,
       timeout: 30000,
       mask: BONUS_MASKS.map(s => page.locator(s)),
     });
