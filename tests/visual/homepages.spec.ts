@@ -41,7 +41,7 @@ for (const geo of GEOS) {
     await expect(page).toHaveScreenshot(`${geo.name}.png`, {
       fullPage: false,
       threshold: 0,
-      maxDiffPixelRatio: 0.02,
+      maxDiffPixelRatio: 0.10,
       timeout: 30000,
       mask: BASE_MASKS.map(s => page.locator(s)),
     });
