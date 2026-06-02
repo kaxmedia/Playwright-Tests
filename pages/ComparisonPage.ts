@@ -50,6 +50,10 @@ export interface ComparisonPageConfig {
   // cookieBanner fixture integration and click-to-expand interaction).
   hasLazyRating?: boolean;
 
+  // Whether per-operator review links (a.operator-review-link) appear on list cards.
+  // Absent on some sports lists (e.g. IE, NZ betting) — omit or set false to skip the assertion.
+  hasReviewLink?: boolean;
+
   /**
    * IDs from `KNOWN_PAGE_ERROR_ALLOWLIST` in tests/helpers/firstPartyPageGuards.ts.
    * T8 still fails on any other uncaught pageerror — remove ids when the bug is fixed.
@@ -568,12 +572,12 @@ export class ComparisonPage {
   // Present on UK (Gambling Commission), DE (GGL Legal), IT (ADM), GR (ΕΕΕΠ).
   // Absent on US — use hasBadge flag in ComparisonPageConfig before asserting.
   regulatorBadge(card: Locator): Locator {
-    return card.locator('div.gambling-comission-logo img');
+    return card.locator('div.gambling-comission-logo img').first();
   }
 
   // Review/read-more anchor — carries data-review-url with the canonical path.
   reviewLink(card: Locator): Locator {
-    return card.locator('a.operator-review-link');
+    return card.locator('a.operator-review-link').first();
   }
 
   // ── Expandable details panel ────────────────────────────────────────────────
