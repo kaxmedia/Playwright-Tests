@@ -1,4 +1,4 @@
-import { type Page, type Locator } from '@playwright/test';
+import { type Page, type Locator, type Response } from '@playwright/test';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ComparisonPageConfig — per-URL configuration for parameterised tests.
@@ -59,6 +59,12 @@ export interface ComparisonPageConfig {
    * T8 still fails on any other uncaught pageerror — remove ids when the bug is fixed.
    */
   knownPageErrorIds?: string[];
+
+  /**
+   * Oplist renders an initial batch (10) with a "Show More" control — card-count tests
+   * must expand before asserting expectedCardCountMin.
+   */
+  hasOplistPagination?: boolean;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -83,6 +89,7 @@ export const comparisonPages: ComparisonPageConfig[] = [
     hasRating: true,
     hasBadge: true,
     ageLimit: '18+',
+    hasOplistPagination: true,
   },
   {
     name: 'UK Sports',
@@ -409,15 +416,62 @@ export class ComparisonPage {
     this.cards = page.locator('li.operator-item');
   }
 
+  /** "Show More" control for paginated oplists (10 cards per batch). */
+  showMoreOplistButton(): Locator {
+    return this.page
+      .locator('a.automation-readmore-button[data-gtm="show_more_less"]')
+      .filter({ hasText: /Show More/i });
+  }
+
   // Navigate to a comparison page and wait until at least one card is attached.
-  // waitUntil: 'domcontentloaded' is sufficient — cards are server-rendered in
-  // the initial HTML and do not require JS execution to appear in the DOM.
-  async goto(url: string): Promise<void> {
-    const response = await this.page.goto(url, { waitUntil: 'domcontentloaded' });
-    if (response !== null && response.status() >= 400) {
-      throw new Error(`${url} returned HTTP ${response.status()}`);
+  // Retries transient navigation errors (e.g. ERR_NETWORK_CHANGED on long CI runs).
+  async goto(url: string): Promise<Response | null> {
+    const maxAttempts = 3;
+    let lastError: unknown;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        const response = await this.page.goto(url, { waitUntil: 'domcontentloaded' });
+        if (response !== null && response.status() >= 400) {
+          throw new Error(`${url} returned HTTP ${response.status()}`);
+        }
+        await this.cards.first().waitFor({ state: 'attached' });
+        return response;
+      } catch (error) {
+        lastError = error;
+        const message = error instanceof Error ? error.message : String(error);
+        const isTransientNetwork = /ERR_NETWORK|ERR_INTERNET|ERR_CONNECTION|ERR_NAME_NOT_RESOLVED/i.test(message);
+        if (!isTransientNetwork || attempt === maxAttempts) {
+          throw error;
+        }
+        await this.page.waitForTimeout(1000 * attempt);
+      }
     }
-    await this.cards.first().waitFor({ state: 'attached' });
+
+    throw lastError;
+  }
+
+  /** Click "Show More" until at least `min` operator cards are in the DOM. */
+  async expandOplistToMinimum(min: number): Promise<void> {
+    while ((await this.cards.count()) < min) {
+      const showMore = this.showMoreOplistButton().first();
+      if (!(await showMore.isVisible().catch(() => false))) {
+        break;
+      }
+      const before = await this.cards.count();
+      await showMore.scrollIntoViewIfNeeded();
+      await showMore.click();
+      await this.page
+        .waitForFunction(
+          (prev) => document.querySelectorAll('li.operator-item').length > prev,
+          before,
+          { timeout: 10_000 },
+        )
+        .catch(() => {});
+      if ((await this.cards.count()) <= before) {
+        break;
+      }
+    }
   }
 
   // ── Card selection ──────────────────────────────────────────────────────────

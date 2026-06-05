@@ -13,12 +13,9 @@ for (const config of comparisonPages) {
     // These run against every entry in the array — no conditional skipping.
 
     // T1 ─ @smoke ─────────────────────────────────────────────────────────────
-    // Navigates independently to capture the HTTP response object.
-    // ComparisonPage.goto() returns void, so page.goto() is called directly here.
     test(`${config.name} — @smoke page loads with HTTP 200 and non-empty title`, async ({ page }) => {
       const cp = new ComparisonPage(page);
-      const response = await page.goto(config.url, { waitUntil: 'domcontentloaded' });
-      await cp.cards.first().waitFor({ state: 'attached' });
+      const response = await cp.goto(config.url);
       expect(response?.status()).toBeLessThan(400);
       expect(await page.title()).toBeTruthy();
     });
@@ -34,6 +31,9 @@ for (const config of comparisonPages) {
     test(`${config.name} — @smoke at least ${config.expectedCardCountMin} operator cards rendered`, async ({ page }) => {
       const cp = new ComparisonPage(page);
       await cp.goto(config.url);
+      if (config.hasOplistPagination) {
+        await cp.expandOplistToMinimum(config.expectedCardCountMin);
+      }
       expect(await cp.cards.count()).toBeGreaterThanOrEqual(config.expectedCardCountMin);
     });
 
