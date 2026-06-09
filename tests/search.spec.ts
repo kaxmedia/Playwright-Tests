@@ -30,4 +30,27 @@ test.describe('Search', () => {
     await searchPage.searchFor('blackjack');
     await expect(searchPage.resultItems.first()).toContainText(/blackjack/i);
   });
+
+  test('@smoke no-results query shows No Results Found message', async () => {
+    await searchPage.searchFor('zzqxqq');
+    await expect(searchPage.resultsContainer).toBeVisible();
+    await expect(searchPage.noResultsMessage).toContainText('No Results Found');
+    expect(await searchPage.resultItems.count()).toBe(0);
+  });
+
+  test('@smoke multi-word query returns results', async () => {
+    await searchPage.searchFor('online casino');
+    await expect(searchPage.resultsContainer).toBeVisible();
+    expect(await searchPage.resultItems.count()).toBeGreaterThanOrEqual(1);
+  });
+
+  test('@smoke result links have valid hrefs', async () => {
+    await searchPage.searchFor('blackjack');
+    const count = Math.min(await searchPage.resultItems.count(), 3);
+    for (let i = 0; i < count; i++) {
+      const href = await searchPage.resultItems.nth(i).getAttribute('href');
+      expect(href?.trim().length, `Result ${i} has empty href`).toBeGreaterThan(0);
+      expect(href, `Result ${i} has dead # href`).not.toBe('#');
+    }
+  });
 });

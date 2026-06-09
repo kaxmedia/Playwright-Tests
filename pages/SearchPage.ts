@@ -20,6 +20,9 @@ export class SearchPage {
   // Individual result links inside the results container
   readonly resultItems: Locator;
 
+  // The "No Results Found" message item shown when search returns no matches
+  readonly noResultsMessage: Locator;
+
   constructor(page: Page) {
     this.page           = page;
     // SSR adds #search-icon-placeholder; the live nav uses another img.search-icon. Algolia embeds
@@ -29,6 +32,7 @@ export class SearchPage {
     this.searchInput    = page.locator('input.search-input');
     this.resultsContainer = page.locator('div.search-result');
     this.resultItems    = page.locator('div.search-result a');
+    this.noResultsMessage = page.locator('div.search-result li');
   }
 
   /** Activates the header search control (DOM click — the img is positioned outside Playwright’s hit viewport). */
