@@ -34,6 +34,12 @@ jobs:
         continue-on-error: true
         run: npx playwright test --project=visual-chromium-desktop --project=visual-chromium-android --project=visual-webkit-desktop --project=visual-webkit-ios --update-snapshots
 
+      - name: Close stale baseline-refresh PRs
+        run: |
+          gh pr list --label baseline-refresh --state open --json number --jq '.[].number' | xargs -I{} gh pr close {} --comment "Superseded by run ${{ github.run_id }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Create pull request
         uses: peter-evans/create-pull-request@v6
         with:
