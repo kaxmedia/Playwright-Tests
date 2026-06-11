@@ -23,6 +23,12 @@ test.describe('Games Pages', () => {
     });
   }
 
+  test('@smoke /games/free-slots loads and renders slot grid', async ({ page }) => {
+    const response = await page.goto('/games/free-slots', { waitUntil: 'domcontentloaded' });
+    expect(response?.ok(), 'free-slots response should be ok').toBeTruthy();
+    await expect(page.locator('.slot-games-grid-wrapper').first()).toBeVisible();
+  });
+
   test('@smoke /games has h1', async ({ page }) => {
     await page.goto('/games');
     const h1 = page.locator('h1').first();
