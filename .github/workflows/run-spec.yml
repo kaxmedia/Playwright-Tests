@@ -1,0 +1,43 @@
+name: Run Spec
+
+on:
+  workflow_dispatch:
+    inputs:
+      spec_file:
+        description: 'Spec file to run (e.g. tests/visual/homepages.spec.ts)'
+        required: true
+      branch:
+        description: 'Branch to run against'
+        required: false
+        default: 'main'
+
+jobs:
+  run-spec:
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.59.1-noble
+
+    steps:
+      - name: Install git-lfs
+        run: apt-get update && apt-get install -y git-lfs
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Playwright spec
+        run: npx playwright test ${{ inputs.spec_file }} --reporter=json
+
+      - name: Upload report and results on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: run-spec-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 30
