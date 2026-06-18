@@ -31,6 +31,7 @@ jobs:
 
       - name: Run Playwright spec
         env:
+          HOME: /root
           PLAYWRIGHT_JSON_OUTPUT_NAME: test-results/results.json
         run: npx playwright test ${{ inputs.spec_file }} --reporter=json,line
 
