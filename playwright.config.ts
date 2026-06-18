@@ -20,7 +20,7 @@ export default defineConfig({
     {
       name: 'chrome',
       testIgnore: ['**/visual/**', '**/mobile/**'],
-      use: { ...devices['Desktop Chrome'], channel: 'chrome' },
+      use: { ...devices['Desktop Chrome'] },
     },
     {
       name: 'firefox',
