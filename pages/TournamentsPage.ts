@@ -13,14 +13,21 @@
 //
 // NOTE: Authenticated tests verify UI state only — they do not enter a tournament.
 
-import { type Page, type Locator } from '@playwright/test';
+import { type Page, type Locator, type Response } from '@playwright/test';
 
 const retryDelay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export class TournamentsPage {
   readonly page: Page;
 
+  /** Default global tournaments URL (no geo prefix). */
   readonly url = 'https://www.gambling.com/games/tournaments';
+
+  urlForGeo(geo?: string): string {
+    if (!geo) return this.url;
+    const segment = geo.replace(/^\//, '');
+    return `https://www.gambling.com/${segment}/games/tournaments`;
+  }
 
   readonly main: Locator;
   readonly heading: Locator;
@@ -66,18 +73,19 @@ export class TournamentsPage {
     this.termsLink = page.getByRole('link', { name: /terms|t&c/i }).first();
   }
 
-  async goto(): Promise<void> {
+  async goto(geo?: string): Promise<Response | null> {
+    const targetUrl = this.urlForGeo(geo);
     const maxAttempts = 3;
     let lastError: unknown;
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
-        await this.page.goto(this.url, { waitUntil: 'domcontentloaded' });
+        const response = await this.page.goto(targetUrl, { waitUntil: 'domcontentloaded' });
         await this.page.getByRole('button', { name: /accept all/i }).click({ timeout: 5000 }).catch(() => {});
         await this.tournamentCard.waitFor({ state: 'visible', timeout: 20_000 });
         await this.heading.waitFor({ state: 'visible', timeout: 10_000 });
         await this.page.locator('div.countdown-unit').first().waitFor({ state: 'attached', timeout: 10_000 }).catch(() => {});
-        return;
+        return response;
       } catch (error) {
         lastError = error;
         const message = error instanceof Error ? error.message : String(error);
