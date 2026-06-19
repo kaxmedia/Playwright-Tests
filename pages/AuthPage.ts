@@ -14,19 +14,15 @@ export const WEAK_PASSWORDS = {
     noSpecial: 'MyTest1234',
 };
 
-/** Gmail plus-addressing so registrations aren’t rejected as reserved/disposable domains. */
+/** Gmail plus-addressing so registrations aren't rejected as reserved/disposable domains. */
 export function generateTestEmail(): string {
     return `testpot209+gctest${Date.now()}@gmail.com`;
 }
 
-/** Matches signup steps, email sign-in intro, returning-user "Welcome back", *and* post-signup success ("You're in!"). */
-const AUTH_MODAL_TEXT =
-    /Step\s+[123]\s+of\s+3|Sign\s+in\s+to\s+your\s+account|Welcome\s+to\s+Gambling\.com|Welcome\s+back|You'?re\s+in|successfully\s+created\s+your\s+account/i;
-
 export class AuthPage {
     readonly page: Page;
 
-    // Header (scoped to fixed global nav so we don’t hit duplicate CTAs inside dialogs)
+    // Header (scoped to fixed global nav so we don't hit duplicate CTAs inside dialogs)
     readonly headerSignUpBtn: Locator;
     readonly headerSignInBtn: Locator;
     /** Nav avatar after login (same element as `userAvatar`). */
@@ -50,7 +46,7 @@ export class AuthPage {
     readonly signInLink: Locator;
     readonly signUpLink: Locator;
 
-    // Step 2 (Sign up form)
+    // Sign up form (step 1 — details; step 2 — consent checkboxes)
     readonly fullNameInput: Locator;
     readonly emailInput: Locator;
     readonly passwordInput: Locator;
@@ -59,14 +55,15 @@ export class AuthPage {
     readonly ruleUpperLower: Locator;
     readonly ruleNumber: Locator;
     readonly ruleSpecialChar: Locator;
+    readonly letsGoBtn: Locator;
 
-    // Step 3
-    /** Narrow title — does not match checkbox copy (prod may still use “Create your account” until a11y lands). */
+    // Consent step (step 2 of 2)
     readonly almostThereHeading: Locator;
-    /** Waits for step 3 when heading exists; falls back to mandatory age checkbox (current prod). */
+    /** Waits for the mandatory age checkbox on the consent step. */
     readonly stepThreeReady: Locator;
     readonly ageConfirmCheckbox: Locator;
     readonly marketingCheckbox: Locator;
+    /** Primary signup submit CTA (`Let's Go`); kept as `imInBtn` for older specs. */
     readonly imInBtn: Locator;
 
     // Sign in (email)
@@ -91,20 +88,19 @@ export class AuthPage {
     constructor(page: Page) {
         this.page = page;
 
-        // Header CTAs: stable ids where present (text-only nav hits duplicate/hidden nodes inside dialogs).
-        this.headerSignUpBtn = page.locator('nav').first().getByText(/^sign up$/i).first();
+        this.headerSignUpBtn = page.locator('#gdc-signup-text');
         this.headerSignInBtn = page.locator('#login-button');
         /** Post–sign-in initials chip in the global nav (prod: `#logged-in-user-icon`). */
         this.profileAvatar = page.locator('nav').first().locator('#logged-in-user-icon');
         this.userAvatar = this.profileAvatar;
 
         this.signupModal = page.locator('#signup-modal');
-        this.modal = page.locator('[role="dialog"]').filter({ hasText: AUTH_MODAL_TEXT });
+        this.modal = this.signupModal;
         this.modalCloseBtn = this.signupModal.locator(
             'button[aria-label*="close" i], [data-testid*="close" i], button:has-text("×")'
         ).first();
         this.modalBackBtn = this.modal.getByRole('button', { name: /back/i }).first();
-        this.stepIndicator = this.modal.getByText(/\bStep\s+\d\s+of\s+3\b/i).first();
+        this.stepIndicator = this.modal.getByText(/\bStep\s+\d+\s+of\s+\d+\b/i).first();
 
         this.continueWithGoogleBtn = this.modal.getByRole('button', { name: /continue with google/i }).first();
         this.continueWithEmailBtn = this.modal.getByRole('button', { name: /continue with email/i }).first();
@@ -113,7 +109,6 @@ export class AuthPage {
             .first();
         this.welcomeBackHeading = this.modal.getByText(/Welcome back/i).first();
         this.lastSignedInWithGoogleHint = this.modal.getByText(/You last signed in with Google/i).first();
-        /** Prefer `<a>` when UI ships links; current prod uses `<button>` — `.or()` keeps both working. */
         this.signInLink = this.modal
             .getByRole('link', { name: /^sign in$/i })
             .or(this.modal.getByRole('button', { name: /^sign in$/i }))
@@ -123,11 +118,9 @@ export class AuthPage {
             .or(this.modal.getByRole('button', { name: /^sign up$/i }))
             .first();
 
-        // Avoid honeypot `input[name="username"]` — use stable signup field ids
         this.fullNameInput = this.modal.locator('#signup-name');
         this.emailInput = this.modal.locator('#signup-email');
         this.passwordInput = this.modal.locator('#signup-password');
-        /** Eye control sits as sibling of the labelled password field row (not parent traversal chains). */
         this.passwordToggle = this.modal
             .locator('#signup-password')
             .locator('xpath=../following-sibling::button')
@@ -137,18 +130,23 @@ export class AuthPage {
         this.ruleUpperLower = this.modal.getByText(/upper\s+and\s+lowercase\s+letters/i);
         this.ruleNumber = this.modal.getByText(/1\s+or\s+more\s+numbers/i);
         this.ruleSpecialChar = this.modal.getByText(/special\s+character/i);
+        this.letsGoBtn = this.modal.locator('#supabase-signup-details-button');
 
         this.almostThereHeading = this.modal.getByRole('heading', { name: /almost there/i });
-        this.ageConfirmCheckbox = this.modal.getByRole('checkbox', { name: /confirm I am over|over 18 years old/i }).first();
+        this.ageConfirmCheckbox = this.modal
+            .locator('#age-confirm-inline')
+            .or(this.modal.getByRole('checkbox', { name: /confirm I am over|over 18 years old/i }))
+            .first();
         this.stepThreeReady = this.almostThereHeading.or(this.ageConfirmCheckbox);
-        this.marketingCheckbox = this.modal.getByRole('checkbox', { name: /receive emails|marketing|offers/i }).first();
-        this.imInBtn = this.modal.getByRole('button', { name: /i'?m in/i }).first();
+        this.marketingCheckbox = this.modal
+            .locator('#marketing-consent-inline')
+            .or(this.modal.getByRole('checkbox', { name: /receive emails|marketing|offers/i }))
+            .first();
+        this.imInBtn = this.letsGoBtn;
 
         this.signInEmailInput = this.modal.locator('#signin-email');
         this.signInPasswordInput = this.modal.locator('#signin-password');
-        /** Scoped to the email/password form so it doesn’t collide with the “Sign In” switch on the sign-up intro. */
         this.signInSubmitBtn = this.modal.locator('form:has(#signin-email)').getByRole('button', { name: /^sign in$/i });
-        /** Password reset control is a `<button>` on current layout (not an `<a href>`). */
         this.forgotPasswordLink = this.modal.getByRole('button', { name: /forgot password/i }).first();
 
         this.successHeading = this.modal.getByText(/you're in/i).first();
@@ -157,7 +155,6 @@ export class AuthPage {
             .getByRole('button', { name: /complete your profile/i })
             .or(this.modal.getByRole('link', { name: /complete your profile/i }))
             .first();
-        // Prod uses a `<button>` for this CTA (not an `<a>`).
         this.continueToSiteLink = this.modal
             .getByRole('button', { name: /continue to site/i })
             .or(this.modal.getByRole('link', { name: /continue to site/i }))
@@ -166,7 +163,6 @@ export class AuthPage {
         /** Logged-in account menu reuses `#signup-modal` with `user-logged-in` (see `modal-authentication-content`). */
         this.profileDropdown = page.locator('#signup-modal.user-logged-in');
         this.profileDropdownHeading = this.profileDropdown.getByText(/hello/i).first();
-        // Rows are often clickable wrappers around copy (link role not always exposed).
         this.manageAccountLink = this.profileDropdown.getByText(/^manage your account$/i).first();
         this.goToRewardsLink = this.profileDropdown.getByText(/go to rewards/i).first();
         this.signOutBtn = this.profileDropdown.getByRole('button', { name: /sign out/i }).first();
@@ -177,26 +173,33 @@ export class AuthPage {
         await this.page.getByRole('button', { name: /accept all/i }).click({ timeout: 3000 }).catch(() => { });
     }
 
-    /** Opens Sign In from the global header (falls back to DOM click when Playwright visibility checks fail). */
+    /** Opens Sign In — header `#login-button` is often hidden; fall back to Sign In inside the auth modal. */
     async openSignInFromHeader(): Promise<void> {
-        const el = this.headerSignInBtn;
-        try {
-            await el.click({ timeout: 8000, force: true });
-        } catch {
-            await el.evaluate((node: HTMLElement) => node.click());
+        if (await this.headerSignInBtn.isVisible().catch(() => false)) {
+            try {
+                await this.headerSignInBtn.click({ timeout: 8000, force: true });
+            } catch {
+                await this.headerSignInBtn.evaluate((node: HTMLElement) => node.click());
+            }
+            await this.signupModal.waitFor({ state: 'visible', timeout: 10000 });
+            return;
         }
+
+        await this.openSignUpModal();
+        await this.signInLink.click();
+        await this.signupModal.waitFor({ state: 'visible', timeout: 10000 });
     }
 
     async openSignUpModal(): Promise<void> {
-        if (await this.modal.isVisible().catch(() => false)) return;
-        if (await this.headerSignUpBtn.isVisible().catch(() => false)) {
-            await this.headerSignUpBtn.click();
-        } else {
-            const registerNow = this.page.getByRole('button', { name: /register now/i }).first();
-            await registerNow.waitFor({ state: 'visible', timeout: 10000 });
-            await registerNow.tap();
+        if (await this.signupModal.isVisible().catch(() => false)) return;
+
+        const trigger = this.headerSignUpBtn;
+        try {
+            await trigger.click({ timeout: 8000, force: true });
+        } catch {
+            await trigger.evaluate((node: HTMLElement) => node.click());
         }
-        await this.modal.waitFor({ state: 'visible', timeout: 10000 });
+        await this.signupModal.waitFor({ state: 'visible', timeout: 10000 });
     }
 
     async openSignInModal(): Promise<void> {
@@ -211,40 +214,39 @@ export class AuthPage {
             return;
         }
 
-        if (await this.modal.isVisible().catch(() => false)) {
+        if (await this.signupModal.isVisible().catch(() => false)) {
             if (await this.signInLink.isVisible().catch(() => false)) {
                 await this.signInLink.click();
-                await this.modal.waitFor({ state: 'visible', timeout: 10000 });
+                await this.signupModal.waitFor({ state: 'visible', timeout: 10000 });
                 return;
             }
         }
 
-        if (await this.headerSignInBtn.isVisible().catch(() => false)) {
-            await this.openSignInFromHeader();
-        } else {
-            await this.openSignUpModal();
-            await this.signInLink.waitFor({ state: 'visible', timeout: 10000 });
-            await this.signInLink.click();
-        }
-        await this.modal.waitFor({ state: 'visible', timeout: 10000 });
+        await this.openSignInFromHeader();
+        await this.signupModal.waitFor({ state: 'visible', timeout: 10000 });
     }
 
-    async fillSignUpForm(fullName: string, email: string, password: string): Promise<void> {
+    /** Rewards signup step 1 already shows the email form — no "Continue with Email" on this view. */
+    async ensureSignUpFormVisible(): Promise<void> {
+        await this.fullNameInput.waitFor({ state: 'visible', timeout: 10000 });
+    }
+
+    async fillSignUpForm(fullName: string, email: string, password: string, advance = true): Promise<void> {
+        await this.ensureSignUpFormVisible();
         await this.fullNameInput.fill(fullName);
         await this.emailInput.fill(email);
         await this.passwordInput.fill(password);
-        await this.imInBtn.click().catch(async () => {
-            await this.passwordInput.press('Enter');
-        });
+        if (advance) {
+            await this.letsGoBtn.click();
+        }
     }
 
     async signUp(fullName: string, email: string, password: string): Promise<void> {
         await this.openSignUpModal();
-        await this.continueWithEmailBtn.click();
         await this.fillSignUpForm(fullName, email, password);
         await this.stepThreeReady.waitFor({ state: 'visible', timeout: 15000 });
         await this.ageConfirmCheckbox.check({ force: true });
-        await this.imInBtn.click();
+        await this.letsGoBtn.click();
     }
 
     async signIn(email: string, password: string): Promise<void> {
@@ -255,6 +257,7 @@ export class AuthPage {
         await this.signInEmailInput.fill(email);
         await this.signInPasswordInput.fill(password);
         await this.signInSubmitBtn.click();
+        await this.dismissSignupModalIfOpen();
     }
 
     /** After `signIn`, prod may leave `#signup-modal` open — close so profile UI is usable. */

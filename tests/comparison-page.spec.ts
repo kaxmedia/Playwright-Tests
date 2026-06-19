@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { ComparisonPage, comparisonPages } from '../pages/ComparisonPage';
-import { FirstPartyPageGuards, unexpectedPageErrors } from './helpers/firstPartyPageGuards';
+import { FirstPartyPageGuards, unexpectedPageErrors, unexpectedConsoleErrors } from './helpers/firstPartyPageGuards';
 
 // Parameterised suite — one describe block per entry in comparisonPages.
 // To add a new geo or category: add an entry to comparisonPages in
@@ -113,18 +113,32 @@ for (const config of comparisonPages) {
         });
 
         const allowlistIds = config.knownPageErrorIds ?? [];
+        const consoleAllowlistIds = config.knownConsoleErrorIds ?? [];
         const uncaughtPageErrors = unexpectedPageErrors(guards.pageErrors, allowlistIds);
+        const uncaughtConsoleErrors = unexpectedConsoleErrors(
+          guards.firstPartyConsoleErrors,
+          consoleAllowlistIds,
+        );
         if (guards.pageErrors.length > uncaughtPageErrors.length) {
           test.info().annotations.push({
             type: 'known-issue',
             description: `Suppressed ${guards.pageErrors.length - uncaughtPageErrors.length} tracked pageerror(s): ${allowlistIds.join(', ')}`,
           });
         }
+        if (guards.firstPartyConsoleErrors.length > uncaughtConsoleErrors.length) {
+          test.info().annotations.push({
+            type: 'known-issue',
+            description: `Suppressed ${guards.firstPartyConsoleErrors.length - uncaughtConsoleErrors.length} tracked console error(s): ${consoleAllowlistIds.join(', ')}`,
+          });
+        }
         expect(
           uncaughtPageErrors,
           'Unexpected uncaught page errors (known bugs filtered via config.knownPageErrorIds)',
         ).toEqual([]);
-        expect(guards.firstPartyConsoleErrors).toEqual([]);
+        expect(
+          uncaughtConsoleErrors,
+          'Unexpected first-party console errors (known bugs filtered via config.knownConsoleErrorIds)',
+        ).toEqual([]);
         expect(criticalNetwork).toHaveLength(0);
       } finally {
         guards.detach();

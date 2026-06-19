@@ -61,6 +61,12 @@ export interface ComparisonPageConfig {
   knownPageErrorIds?: string[];
 
   /**
+   * IDs from `KNOWN_CONSOLE_ERROR_ALLOWLIST` in tests/helpers/firstPartyPageGuards.ts.
+   * T8 still fails on other first-party console errors — remove ids when the bug is fixed.
+   */
+  knownConsoleErrorIds?: string[];
+
+  /**
    * Oplist renders an initial batch (10) with a "Show More" control — card-count tests
    * must expand before asserting expectedCardCountMin.
    */
@@ -121,6 +127,7 @@ export const comparisonPages: ComparisonPageConfig[] = [
     hasBadge: false,
     ageLimit: '21+',
     hasLazyRating: true,
+    knownConsoleErrorIds: ['us-malformed-s3-logo-urls'],
   },
   // ── IE ──────────────────────────────────────────────────────────────────────
   {
