@@ -253,6 +253,8 @@ test.describe('Category Landing — UK Online Casinos', () => {
     });
 
     test('@regression expanding an attribute section in the compare modal reveals content', async () => {
+        // Known product regression: accordion expand/collapse in the UK compare modal can fail in prod.
+        // Keep this assertion strict so CI continues to flag the bug rather than masking it.
         await ukPage.goto();
         const cbCount = await ukPage.compareCheckboxes.count();
         expect(

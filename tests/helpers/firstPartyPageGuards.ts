@@ -21,6 +21,20 @@ export const KNOWN_PAGE_ERROR_ALLOWLIST: ReadonlyArray<{
   },
 ];
 
+/** Tracked first-party console errors — remove when dev fixes ship. */
+export const KNOWN_CONSOLE_ERROR_ALLOWLIST: ReadonlyArray<{
+  id: string;
+  pattern: RegExp;
+  note: string;
+}> = [
+  {
+    id: 'us-malformed-s3-logo-urls',
+    pattern:
+      /Failed to load resource.*404.*%22https:\/\/s3\.eu-west-1\.amazonaws\.com\/objects\.kaxmedia\.com/i,
+    note: 'US Sportsbooks — logo src wrapped in extra quotes, 404 on gambling.com origin',
+  },
+];
+
 /** Returns pageerrors that are not on the known-issue allowlist (by id). */
 export function unexpectedPageErrors(
   pageErrors: string[],
@@ -31,6 +45,21 @@ export function unexpectedPageErrors(
   ).map(entry => entry.pattern);
 
   return pageErrors.filter(err => !patterns.some(pattern => pattern.test(err)));
+}
+
+/** Returns console errors not on the known-issue allowlist (by id). */
+export function unexpectedConsoleErrors(
+  errors: { url: string; text: string }[],
+  allowlistIds: readonly string[] = [],
+): { url: string; text: string }[] {
+  const patterns = KNOWN_CONSOLE_ERROR_ALLOWLIST.filter(entry =>
+    allowlistIds.includes(entry.id),
+  ).map(entry => entry.pattern);
+
+  return errors.filter(err => {
+    const combined = `${err.text} ${err.url}`;
+    return !patterns.some(pattern => pattern.test(combined));
+  });
 }
 
 function isGamblingComScriptUrl(url: string | undefined): boolean {

@@ -103,9 +103,15 @@ export class ProfilePage {
 
     // ── Marketing Preferences tab ─────────────────────────────────────────────
     readonly marketingHeading: Locator;
+    readonly notificationsHeading: Locator;
+    readonly interestsHeading: Locator;
+    readonly toggleEmailNotifications: Locator;
+    readonly toggleSmsNotifications: Locator;
+    readonly togglePushNotifications: Locator;
     readonly toggleGeneralNews: Locator;
     readonly toggleBetting: Locator;
     readonly toggleCasino: Locator;
+    readonly marketingSaveBtn: Locator;
 
     // ── Manage Password tab ───────────────────────────────────────────────────
     readonly passwordHeading: Locator;
@@ -129,7 +135,7 @@ export class ProfilePage {
     constructor(page: Page) {
         this.page = page;
 
-        this.profileShell = page.locator('main').filter({ has: page.getByRole('link', { name: /^profile details$/i }) });
+        this.profileShell = page.locator('main.body_content');
         /** Profile content column that shows the Marketing Preferences heading (subset of `profileShell`). */
         this.marketingPanel = this.profileShell.filter({
             has: page.getByRole('heading', { name: /marketing preferences/i }),
@@ -240,21 +246,17 @@ export class ProfilePage {
         this.bonusOtherInput = additionalPane.locator('input[name*="other"], textarea[name*="other"], input[placeholder*="specify" i]').first();
         this.additionalSaveBtn = additionalPane.getByRole('button', { name: /save changes/i }).first();
 
-        // ── Marketing — row checkboxes sit beside copy blocks (Betting/Casino nest copy in an inner div).
+        // ── Marketing — notification channels + interest checkboxes (Save Changes persists).
         this.marketingHeading = this.marketingPanel.getByRole('heading', { name: /marketing preferences/i }).first();
-        const marketingRows = this.marketingPanel
-            .locator(':scope > div')
-            .filter({ has: page.locator('input[type="checkbox"]') })
-            .filter({ hasText: /general news|betting offers|casino offers/i })
-            .first()
-            .locator(':scope > *');
-        const marketingToggle = (label: RegExp) => {
-            const row = marketingRows.filter({ hasText: label });
-            return row.getByRole('checkbox').or(row.getByRole('switch')).first();
-        };
-        this.toggleGeneralNews = marketingToggle(/General News and Updates/i);
-        this.toggleBetting = marketingToggle(/Receive information about our Betting Offers/i);
-        this.toggleCasino = marketingToggle(/Receive information Casino Offers/i);
+        this.notificationsHeading = this.marketingPanel.getByText(/notifications from us/i).first();
+        this.interestsHeading = this.marketingPanel.getByText(/indicate your interests/i).first();
+        this.toggleEmailNotifications = this.marketingPanel.locator('#newsletter');
+        this.toggleSmsNotifications = this.marketingPanel.locator('#sms');
+        this.togglePushNotifications = this.marketingPanel.locator('#browser_push');
+        this.toggleGeneralNews = this.marketingPanel.locator('#preference_general_news');
+        this.toggleBetting = this.marketingPanel.locator('#preference_betting');
+        this.toggleCasino = this.marketingPanel.locator('#preference_casino');
+        this.marketingSaveBtn = this.marketingPanel.getByRole('button', { name: /save changes/i }).first();
 
         // ── Password — prefer labels (a11y); fall back to DOM order if inputs are anonymous ──────────────
         const pwdRoot = this.passwordFormRoot;
@@ -423,15 +425,29 @@ export class ProfilePage {
         }
     }
 
-    /** Toggle a marketing preference switch and return the new checked state after the UI updates. */
+    /** Toggle a marketing preference checkbox and return the new checked state after the UI updates. */
     async toggleMarketing(toggle: Locator): Promise<boolean> {
         const before = await this.getToggleState(toggle);
         await toggle.click({ force: true });
         await expect
             .poll(async () => await this.getToggleState(toggle), { timeout: 15000 })
             .not.toBe(before);
-        // Server persistence for marketing can lag — regression tests wait after toggle before navigating away.
         return await this.getToggleState(toggle);
+    }
+
+    /** Persist marketing checkbox changes — the Save button stays disabled until a value changes. */
+    async saveMarketingPreferences(): Promise<void> {
+        await expect(this.marketingSaveBtn).toBeEnabled({ timeout: 10000 });
+        const saveRequest = this.page
+            .waitForResponse(
+                (response) =>
+                    response.url().includes('update-customer-preferences') && response.status() === 200,
+                { timeout: 20000 }
+            )
+            .catch(() => null);
+        await this.marketingSaveBtn.click();
+        await saveRequest;
+        await this.page.waitForLoadState('domcontentloaded');
     }
 
     /** Toggle Free spins bonus — label click is flaky; target the Vue `value="free_spins"` input. */

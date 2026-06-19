@@ -38,10 +38,9 @@ async function expectImInReady(imIn: Locator): Promise<void> {
 
 // ─── Authentication Tests — Sign Up & Sign In ─────────────────────────────────
 //
-// Sign Up flow (3 steps):
-//   Step 1 — Modal: Continue with Google | Continue with Email | Sign In link
-//   Step 2 — Create your account: Full Name + Email + Password (strength rules)
-//   Step 3 — Almost there!: Age checkbox (mandatory) + Marketing checkbox (optional) + I'm In
+// Sign Up flow (2 steps):
+//   Step 1 — Create an account: Full Name + Email + Password + Continue with Google + Let's Go
+//   Step 2 — Age checkbox (mandatory) + Marketing checkbox (optional) + Let's Go
 //
 // Sign In flow:
 //   Modal: Continue with Google | Continue with Email | Sign Up link
@@ -83,10 +82,10 @@ test.describe('Authentication — Sign Up & Sign In', () => {
         await expect(authPage.modal).toBeVisible();
     });
 
-    test('@smoke modal shows Continue with Google and Continue with Email', async () => {
+    test('@smoke modal shows Continue with Google on sign up step 1', async () => {
         await authPage.openSignUpModal();
         await expect(authPage.continueWithGoogleBtn).toBeVisible();
-        await expect(authPage.continueWithEmailBtn).toBeVisible();
+        await expect(authPage.fullNameInput).toBeVisible();
     });
 
     test('@smoke modal shows Sign In link for existing users', async () => {
@@ -94,10 +93,10 @@ test.describe('Authentication — Sign Up & Sign In', () => {
         await expect(authPage.signInLink).toBeVisible();
     });
 
-    test('@smoke modal shows Step 1 of 3 indicator', async () => {
+    test('@smoke modal shows Step 1 of 2 indicator', async () => {
         await authPage.openSignUpModal();
         const text = await authPage.stepIndicator.innerText();
-        expect(text).toMatch(/step 1 of 3/i);
+        expect(text).toMatch(/step 1 of 2/i);
     });
 
     test('@smoke modal shows Terms and Privacy Policy links', async () => {
@@ -148,43 +147,45 @@ test.describe('Authentication — Sign Up & Sign In', () => {
         testInfo.skip(true, 'Google OAuth did not open (often blocked for automated Chrome).');
     });
 
-    test('@negative Google sign up without age confirmation is not possible — button disabled until step 3', async () => {
-        // This test verifies the Google route still requires the age confirmation step.
+    test('@negative Google sign up without age confirmation is not possible — button disabled until step 2', async () => {
         // We can't complete Google OAuth in automated tests (requires real Google account),
-        // so we verify the "I'm In" button on step 3 is disabled without the age checkbox.
-        // If the site ever bypasses this step for Google users, that's a compliance failure.
+        // so use the email path to reach the consent step and verify Let's Go stays blocked
+        // without the mandatory age checkbox.
         await authPage.openSignUpModal();
-        await authPage.continueWithEmailBtn.click(); // use email to simulate reaching step 3
         await authPage.fillSignUpForm('Test User', generateTestEmail(), VALID_PASSWORD);
         await expect(authPage.stepThreeReady).toBeVisible({ timeout: 8000 });
-        // Age checkbox NOT ticked — button must be disabled
         await expectImInBlocked(authPage.imInBtn);
     });
 
     // ══════════════════════════════════════════════════════════════════════════
-    // 3. Sign Up — Step 2 (Create your account form)
+    // 3. Sign Up — Step 1 (Create your account form)
     // ══════════════════════════════════════════════════════════════════════════
 
-    test('@smoke Continue with Email shows the sign up form', async () => {
+    test('@smoke sign up form is visible on step 1', async () => {
         await authPage.openSignUpModal();
-        await authPage.continueWithEmailBtn.click();
+        await authPage.ensureSignUpFormVisible();
         await expect(authPage.fullNameInput).toBeVisible();
         await expect(authPage.emailInput).toBeVisible();
         await expect(authPage.passwordInput).toBeVisible();
     });
 
-    test('@smoke step indicator updates to Step 2 of 3', async () => {
+    test('@smoke step indicator updates to Step 2 of 2 after valid details', async () => {
         await authPage.openSignUpModal();
-        await authPage.continueWithEmailBtn.click();
+        await authPage.fillSignUpForm('Test User', generateTestEmail(), VALID_PASSWORD);
         const text = await authPage.stepIndicator.innerText();
-        expect(text).toMatch(/step 2 of 3/i);
+        expect(text).toMatch(/step 2 of 2/i);
     });
 
-    test('@regression back button returns to step 1', async () => {
+    test('@regression closing and reopening modal resets to step 1', async ({ page }) => {
         await authPage.openSignUpModal();
-        await authPage.continueWithEmailBtn.click();
-        await authPage.modalBackBtn.click();
-        await expect(authPage.continueWithEmailBtn).toBeVisible({ timeout: 5000 });
+        await authPage.fillSignUpForm('Test User', generateTestEmail(), VALID_PASSWORD);
+        await authPage.modalCloseBtn.click();
+        await expect(authPage.modal).toBeHidden({ timeout: 5000 });
+        await page.reload();
+        await page.getByRole('button', { name: /accept all/i }).click({ timeout: 3000 }).catch(() => { });
+        await authPage.openSignUpModal();
+        const text = await authPage.stepIndicator.innerText();
+        expect(text).toMatch(/step 1 of 2/i);
     });
 
     // ══════════════════════════════════════════════════════════════════════════
@@ -193,7 +194,7 @@ test.describe('Authentication — Sign Up & Sign In', () => {
 
     test('@smoke password strength rules are shown after typing', async () => {
         await authPage.openSignUpModal();
-        await authPage.continueWithEmailBtn.click();
+        await authPage.ensureSignUpFormVisible();
         await authPage.passwordInput.fill('abc');
         await expect(authPage.ruleLength).toBeVisible();
         await expect(authPage.ruleUpperLower).toBeVisible();
@@ -203,7 +204,7 @@ test.describe('Authentication — Sign Up & Sign In', () => {
 
     test('@negative too short password keeps I\'m In disabled', async () => {
         await authPage.openSignUpModal();
-        await authPage.continueWithEmailBtn.click();
+        await authPage.ensureSignUpFormVisible();
         await authPage.fullNameInput.fill('Test User');
         await authPage.emailInput.fill(generateTestEmail());
         await authPage.passwordInput.fill(WEAK_PASSWORDS.tooShort);
@@ -213,7 +214,7 @@ test.describe('Authentication — Sign Up & Sign In', () => {
 
     test('@negative password without uppercase keeps I\'m In disabled', async () => {
         await authPage.openSignUpModal();
-        await authPage.continueWithEmailBtn.click();
+        await authPage.ensureSignUpFormVisible();
         await authPage.fullNameInput.fill('Test User');
         await authPage.emailInput.fill(generateTestEmail());
         await authPage.passwordInput.fill(WEAK_PASSWORDS.noUppercase);
@@ -223,7 +224,7 @@ test.describe('Authentication — Sign Up & Sign In', () => {
 
     test('@negative password without number keeps I\'m In disabled', async () => {
         await authPage.openSignUpModal();
-        await authPage.continueWithEmailBtn.click();
+        await authPage.ensureSignUpFormVisible();
         await authPage.fullNameInput.fill('Test User');
         await authPage.emailInput.fill(generateTestEmail());
         await authPage.passwordInput.fill(WEAK_PASSWORDS.noNumber);
@@ -233,7 +234,7 @@ test.describe('Authentication — Sign Up & Sign In', () => {
 
     test('@negative password without special character keeps I\'m In disabled', async () => {
         await authPage.openSignUpModal();
-        await authPage.continueWithEmailBtn.click();
+        await authPage.ensureSignUpFormVisible();
         await authPage.fullNameInput.fill('Test User');
         await authPage.emailInput.fill(generateTestEmail());
         await authPage.passwordInput.fill(WEAK_PASSWORDS.noSpecial);
@@ -243,7 +244,7 @@ test.describe('Authentication — Sign Up & Sign In', () => {
 
     test('@regression password toggle reveals and hides password text', async () => {
         await authPage.openSignUpModal();
-        await authPage.continueWithEmailBtn.click();
+        await authPage.ensureSignUpFormVisible();
         await authPage.passwordInput.fill(VALID_PASSWORD);
 
         expect(await authPage.passwordInput.getAttribute('type')).toBe('password');
@@ -255,7 +256,7 @@ test.describe('Authentication — Sign Up & Sign In', () => {
 
     test('@negative empty name field keeps I\'m In disabled', async () => {
         await authPage.openSignUpModal();
-        await authPage.continueWithEmailBtn.click();
+        await authPage.ensureSignUpFormVisible();
         // Leave name empty
         await authPage.emailInput.fill(generateTestEmail());
         await authPage.passwordInput.fill(VALID_PASSWORD);
@@ -265,7 +266,7 @@ test.describe('Authentication — Sign Up & Sign In', () => {
 
     test('@negative invalid email format keeps I\'m In disabled or shows error', async () => {
         await authPage.openSignUpModal();
-        await authPage.continueWithEmailBtn.click();
+        await authPage.ensureSignUpFormVisible();
         await authPage.fullNameInput.fill('Test User');
         await authPage.emailInput.fill('not-an-email');
         await authPage.passwordInput.fill(VALID_PASSWORD);
@@ -285,28 +286,25 @@ test.describe('Authentication — Sign Up & Sign In', () => {
     });
 
     // ══════════════════════════════════════════════════════════════════════════
-    // 5. Sign Up — Step 3 (Almost there! checkboxes)
+    // 5. Sign Up — Step 2 (Age & marketing checkboxes)
     // ══════════════════════════════════════════════════════════════════════════
 
-    test('@smoke Almost there! heading appears after valid form fill', async () => {
+    test('@smoke age checkbox appears after valid form fill', async () => {
         await authPage.openSignUpModal();
-        await authPage.continueWithEmailBtn.click();
         await authPage.fillSignUpForm('Test User', generateTestEmail(), VALID_PASSWORD);
         await expect(authPage.stepThreeReady).toBeVisible({ timeout: 8000 });
     });
 
-    test('@smoke step indicator updates to Step 3 of 3', async () => {
+    test('@smoke step indicator updates to Step 2 of 2 on consent step', async () => {
         await authPage.openSignUpModal();
-        await authPage.continueWithEmailBtn.click();
         await authPage.fillSignUpForm('Test User', generateTestEmail(), VALID_PASSWORD);
         await expect(authPage.stepThreeReady).toBeVisible({ timeout: 8000 });
         const text = await authPage.stepIndicator.innerText();
-        expect(text).toMatch(/step 3 of 3/i);
+        expect(text).toMatch(/step 2 of 2/i);
     });
 
-    test('@smoke age and marketing checkboxes are visible on step 3', async () => {
+    test('@smoke age and marketing checkboxes are visible on step 2', async () => {
         await authPage.openSignUpModal();
-        await authPage.continueWithEmailBtn.click();
         await authPage.fillSignUpForm('Test User', generateTestEmail(), VALID_PASSWORD);
         await expect(authPage.ageConfirmCheckbox).toBeVisible({ timeout: 8000 });
         await expect(authPage.marketingCheckbox).toBeVisible({ timeout: 8000 });
@@ -314,7 +312,6 @@ test.describe('Authentication — Sign Up & Sign In', () => {
 
     test('@negative I\'m In is disabled before age checkbox ticked', async () => {
         await authPage.openSignUpModal();
-        await authPage.continueWithEmailBtn.click();
         await authPage.fillSignUpForm('Test User', generateTestEmail(), VALID_PASSWORD);
         await expect(authPage.stepThreeReady).toBeVisible({ timeout: 8000 });
         await expectImInBlocked(authPage.imInBtn);
@@ -322,7 +319,6 @@ test.describe('Authentication — Sign Up & Sign In', () => {
 
     test('@regression I\'m In becomes enabled after ticking age checkbox', async () => {
         await authPage.openSignUpModal();
-        await authPage.continueWithEmailBtn.click();
         await authPage.fillSignUpForm('Test User', generateTestEmail(), VALID_PASSWORD);
         await authPage.ageConfirmCheckbox.check({ force: true });
         await expectImInReady(authPage.imInBtn);
@@ -330,7 +326,6 @@ test.describe('Authentication — Sign Up & Sign In', () => {
 
     test('@negative I\'m In stays disabled with only marketing checkbox ticked', async () => {
         await authPage.openSignUpModal();
-        await authPage.continueWithEmailBtn.click();
         await authPage.fillSignUpForm('Test User', generateTestEmail(), VALID_PASSWORD);
         await expect(authPage.stepThreeReady).toBeVisible({ timeout: 8000 });
         // Tick only the optional marketing checkbox — not the mandatory age one
@@ -340,7 +335,6 @@ test.describe('Authentication — Sign Up & Sign In', () => {
 
     test('@regression marketing checkbox is optional — I\'m In enabled without it', async () => {
         await authPage.openSignUpModal();
-        await authPage.continueWithEmailBtn.click();
         await authPage.fillSignUpForm('Test User', generateTestEmail(), VALID_PASSWORD);
         await authPage.ageConfirmCheckbox.check({ force: true });
         // marketing NOT ticked
@@ -353,7 +347,6 @@ test.describe('Authentication — Sign Up & Sign In', () => {
 
     test('@smoke success screen appears after sign up — "You\'re in!" heading visible', async () => {
         await authPage.openSignUpModal();
-        await authPage.continueWithEmailBtn.click();
         await authPage.fillSignUpForm('GC Test', generateTestEmail(), VALID_PASSWORD);
         await authPage.ageConfirmCheckbox.check({ force: true });
         await authPage.imInBtn.click();
@@ -364,7 +357,6 @@ test.describe('Authentication — Sign Up & Sign In', () => {
 
     test('@smoke success screen shows Complete Your Profile button and Continue to Site link', async () => {
         await authPage.openSignUpModal();
-        await authPage.continueWithEmailBtn.click();
         await authPage.fillSignUpForm('GC Test', generateTestEmail(), VALID_PASSWORD);
         await authPage.ageConfirmCheckbox.check({ force: true });
         await authPage.imInBtn.click();
@@ -376,7 +368,6 @@ test.describe('Authentication — Sign Up & Sign In', () => {
 
     test('@regression Complete Your Profile navigates to /profile/additional', async ({ page }) => {
         await authPage.openSignUpModal();
-        await authPage.continueWithEmailBtn.click();
         await authPage.fillSignUpForm('GC Test', generateTestEmail(), VALID_PASSWORD);
         await authPage.ageConfirmCheckbox.check({ force: true });
         await authPage.imInBtn.click();
@@ -392,7 +383,6 @@ test.describe('Authentication — Sign Up & Sign In', () => {
         const urlBeforeSignUp = page.url();
 
         await authPage.openSignUpModal();
-        await authPage.continueWithEmailBtn.click();
         await authPage.fillSignUpForm('GC Test', generateTestEmail(), VALID_PASSWORD);
         await authPage.ageConfirmCheckbox.check({ force: true });
         await authPage.imInBtn.click();
@@ -407,7 +397,6 @@ test.describe('Authentication — Sign Up & Sign In', () => {
 
     test('@regression after Continue to Site — Sign Up button replaced by profile avatar', async () => {
         await authPage.openSignUpModal();
-        await authPage.continueWithEmailBtn.click();
         await authPage.fillSignUpForm('GC Test', generateTestEmail(), VALID_PASSWORD);
         await authPage.ageConfirmCheckbox.check({ force: true });
         await authPage.imInBtn.click();
@@ -527,7 +516,6 @@ test.describe('Authentication — Sign Up & Sign In', () => {
 
     test('@regression full sign up E2E — success screen → Continue to Site → user logged in', async ({ page }, testInfo) => {
         await authPage.openSignUpModal();
-        await authPage.continueWithEmailBtn.click();
         await authPage.fillSignUpForm('GC Test User', generateTestEmail(), VALID_PASSWORD);
         await authPage.ageConfirmCheckbox.check({ force: true });
         await authPage.imInBtn.click();
@@ -560,7 +548,7 @@ test.describe('Authentication — Sign Up & Sign In', () => {
     test('@smoke Sign Up link on sign in modal switches back to sign up', async () => {
         await authPage.openSignInModal();
         await authPage.signUpLink.click();
-        await expect(authPage.modal.getByText(/welcome to gambling\.com/i)).toBeVisible({ timeout: 5000 });
+        await expect(authPage.fullNameInput).toBeVisible({ timeout: 5000 });
     });
 
     // ══════════════════════════════════════════════════════════════════════════

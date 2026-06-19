@@ -14,6 +14,7 @@
  * existing auth test credentials and approach from auth.spec.ts.
  */
 
+import { type Page } from '@playwright/test';
 import { test, expect } from '../../fixtures/ktag';
 import {
   assertBaseline,
@@ -21,43 +22,65 @@ import {
   assertNoOAuthTokensOnUdc,
   findEvents,
 } from '../helpers/ktag-assertions';
+import { AuthPage, SIGN_IN_USER } from '../../pages/AuthPage';
 
-const BASE_URL  = 'https://www.gambling.com';
+const BASE_URL = 'https://www.gambling.com';
 
-// Credentials — use the same test account pattern as auth.spec.ts
-// (Gmail plus-address pattern)
-const TEST_EMAIL    = process.env.TEST_EMAIL    ?? 'your-test-email+ktag@gmail.com';
-const TEST_PASSWORD = process.env.TEST_PASSWORD ?? 'YourTestPassword123!';
+const TEST_EMAIL = process.env.TEST_EMAIL ?? SIGN_IN_USER.email;
+const TEST_PASSWORD = process.env.TEST_PASSWORD ?? SIGN_IN_USER.password;
+
+/** Visible newsletter/subscribe field — excludes hidden auth modal `#signup-email`. */
+function visibleSubscriptionEmailInput(page: Page) {
+  return page.locator('input[type="email"]').filter({ visible: true });
+}
+
+async function submitSubscriptionForm(page: Page, email: string): Promise<boolean> {
+  const emailInput = visibleSubscriptionEmailInput(page).first();
+  if ((await emailInput.count()) === 0) return false;
+
+  await emailInput.fill(email);
+  const submit = page
+    .locator('button[type="submit"], .subscribe-btn, [class*="subscribe"] button')
+    .filter({ visible: true })
+    .first();
+  if ((await submit.count()) === 0) return false;
+
+  await submit.click();
+  return true;
+}
+
+async function signInForKtag(page: Page): Promise<void> {
+  const auth = new AuthPage(page);
+  await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
+  await page.getByRole('button', { name: /accept all/i }).click({ timeout: 3000 }).catch(() => {});
+  await auth.signIn(TEST_EMAIL, TEST_PASSWORD);
+  await auth.profileAvatar.waitFor({ state: 'visible', timeout: 20000 });
+}
 
 test.describe('Ktag — udc event @ktag @udc @regression', () => {
 
-  test('udc event fires on email subscription form submission', async ({ page, ktagEvents, waitForKtagEvent }) => {
-    // Navigate to a page with a newsletter/subscription widget
+  test('udc event fires on email subscription form submission', async ({ page, waitForKtagEvent }) => {
     await page.goto(`${BASE_URL}/uk/online-casinos`, { waitUntil: 'domcontentloaded' });
+    await page.getByRole('button', { name: /accept all/i }).click({ timeout: 3000 }).catch(() => {});
 
-    // Look for email subscription input
-    const emailInput = page.locator('input[type="email"]').first();
-    if (await emailInput.count() === 0) {
-      test.skip();
+    if (!(await submitSubscriptionForm(page, 'test+ktag@example.com'))) {
+      test.skip(true, 'No visible email subscription form on this page.');
       return;
     }
-
-    await emailInput.fill('test+ktag@example.com');
-    await page.locator('button[type="submit"], .subscribe-btn').first().click();
 
     const event = await waitForKtagEvent('udc', 8000);
     assertBaseline(event, 'udc');
     assertUdcSpecific(event);
   });
 
-  test('udc: ds field is a known discriminator value', async ({ page, ktagEvents, waitForKtagEvent }) => {
+  test('udc: ds field is a known discriminator value', async ({ page, waitForKtagEvent }) => {
     await page.goto(`${BASE_URL}/uk/online-casinos`, { waitUntil: 'domcontentloaded' });
+    await page.getByRole('button', { name: /accept all/i }).click({ timeout: 3000 }).catch(() => {});
 
-    const emailInput = page.locator('input[type="email"]').first();
-    if (await emailInput.count() === 0) { test.skip(); return; }
-
-    await emailInput.fill('test+ktag2@example.com');
-    await page.locator('button[type="submit"], .subscribe-btn').first().click();
+    if (!(await submitSubscriptionForm(page, 'test+ktag2@example.com'))) {
+      test.skip(true, 'No visible email subscription form on this page.');
+      return;
+    }
 
     const event = await waitForKtagEvent('udc', 8000);
     const validDs = [
@@ -67,14 +90,14 @@ test.describe('Ktag — udc event @ktag @udc @regression', () => {
     expect(validDs, `ds="${event.ds}" is not a known discriminator`).toContain(event.ds);
   });
 
-  test('udc: email_sha256 is a valid SHA-256 hex string', async ({ page, ktagEvents, waitForKtagEvent }) => {
+  test('udc: email_sha256 is a valid SHA-256 hex string', async ({ page, waitForKtagEvent }) => {
     await page.goto(`${BASE_URL}/uk/online-casinos`, { waitUntil: 'domcontentloaded' });
+    await page.getByRole('button', { name: /accept all/i }).click({ timeout: 3000 }).catch(() => {});
 
-    const emailInput = page.locator('input[type="email"]').first();
-    if (await emailInput.count() === 0) { test.skip(); return; }
-
-    await emailInput.fill('test+ktag3@example.com');
-    await page.locator('button[type="submit"], .subscribe-btn').first().click();
+    if (!(await submitSubscriptionForm(page, 'test+ktag3@example.com'))) {
+      test.skip(true, 'No visible email subscription form on this page.');
+      return;
+    }
 
     const event = await waitForKtagEvent('udc', 8000);
     expect(event.email_sha256).toMatch(/^[a-f0-9]{64}$/i);
@@ -91,30 +114,7 @@ test.describe('Ktag — udc event @ktag @udc @regression', () => {
    * Any failure here should be raised as a P1 defect on the FE team.
    */
   test('udc: OAuth tokens must NOT be present (FE must strip before ktag fires) @negative @smoke', async ({ page, ktagEvents }) => {
-    // Attempt the sign-in flow to trigger a udc event
-    await page.goto(`${BASE_URL}`, { waitUntil: 'domcontentloaded' });
-
-    // Open the sign-in modal
-    const signInTrigger = page.locator('[data-modal="signin"], .sign-in-btn, [href*="signin"]').first();
-    if (await signInTrigger.count() === 0) {
-      test.skip();
-      return;
-    }
-
-    await signInTrigger.click();
-    await page.waitForTimeout(500);
-
-    // Fill credentials
-    const emailInput = page.locator('#email, input[name="email"], input[type="email"]').first();
-    const passwordInput = page.locator('#password, input[name="password"], input[type="password"]').first();
-
-    if (await emailInput.count() === 0) { test.skip(); return; }
-
-    await emailInput.fill(TEST_EMAIL);
-    await passwordInput.fill(TEST_PASSWORD);
-    await page.locator('button[type="submit"]').first().click();
-
-    // Wait for auth to complete and ktag to fire
+    await signInForKtag(page);
     await page.waitForTimeout(3000);
 
     const udcEvents = findEvents(ktagEvents, 'udc');
@@ -124,21 +124,7 @@ test.describe('Ktag — udc event @ktag @udc @regression', () => {
   });
 
   test('udc: udc event for sign-in has ds = "user login"', async ({ page, ktagEvents }) => {
-    await page.goto(`${BASE_URL}`, { waitUntil: 'domcontentloaded' });
-
-    const signInTrigger = page.locator('[data-modal="signin"], .sign-in-btn, [href*="signin"]').first();
-    if (await signInTrigger.count() === 0) { test.skip(); return; }
-
-    await signInTrigger.click();
-    await page.waitForTimeout(500);
-
-    const emailInput = page.locator('#email, input[name="email"], input[type="email"]').first();
-    const passwordInput = page.locator('#password, input[name="password"], input[type="password"]').first();
-    if (await emailInput.count() === 0) { test.skip(); return; }
-
-    await emailInput.fill(TEST_EMAIL);
-    await passwordInput.fill(TEST_PASSWORD);
-    await page.locator('button[type="submit"]').first().click();
+    await signInForKtag(page);
     await page.waitForTimeout(3000);
 
     const udcEvents = findEvents(ktagEvents, 'udc');
@@ -151,9 +137,9 @@ test.describe('Ktag — udc event @ktag @udc @regression', () => {
   });
 
   test('udc: no forbidden token fields at all, even on non-social auth @negative', async ({ page, ktagEvents }) => {
-    await page.goto(`${BASE_URL}`, { waitUntil: 'domcontentloaded' });
+    await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
+    await page.getByRole('button', { name: /accept all/i }).click({ timeout: 3000 }).catch(() => {});
 
-    // Watch for any udc events during a normal browse session
     await page.waitForTimeout(2000);
 
     const udcEvents = findEvents(ktagEvents, 'udc');
