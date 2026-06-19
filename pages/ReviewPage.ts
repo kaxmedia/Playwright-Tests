@@ -72,13 +72,20 @@ export class ReviewPage {
     this.page = page;
 
     // ── Existing ──────────────────────────────────────────────────────────
-    this.ratingContainer = page.locator('div[class*="bg-gdc-gray-200"]').last();
+    const casinoRatingContainer = page.locator('div[class*="bg-gdc-gray-200"]').last();
+    const bettingRatingContainer = page.locator(
+      'main.body_content:not(:has(div[class*="bg-gdc-gray-200"])) .user-review-rating-component'
+    ).first();
+    this.ratingContainer = casinoRatingContainer.or(bettingRatingContainer);
     this.ctaButton = page.locator('a.btn-cta-play-now').last();
 
     // ── Extended ──────────────────────────────────────────────────────────
 
-    // Rating score — first metric row in the rating card is always "Our Rating"
-    this.ratingScore = this.ratingContainer.locator('div.flex').first().locator('span').first();
+    // Rating score — casino reviews use the gray rating card; betting reviews use
+    // the user-review-rating block (only when the gray card is absent).
+    const casinoRatingScore = casinoRatingContainer.locator('div.flex').first().locator('span').first();
+    const bettingRatingScore = bettingRatingContainer.locator('span.font-bold').first();
+    this.ratingScore = casinoRatingScore.or(bettingRatingScore);
 
     // Pros/cons — review hero uses `.pros-and-cons-table-component` with two <ul> lists
     const prosConsSection = page.locator('.pros-and-cons-table-component').first();
