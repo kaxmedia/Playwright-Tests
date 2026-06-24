@@ -10,6 +10,10 @@ on:
         description: 'Branch to run against'
         required: false
         default: 'main'
+      grep:
+        description: 'Optional grep filter for individual journey'
+        required: false
+        default: ''
 
 jobs:
   run-spec:
@@ -33,7 +37,7 @@ jobs:
         env:
           HOME: /root
           PLAYWRIGHT_JSON_OUTPUT_NAME: test-results/results.json
-        run: npx playwright test ${{ inputs.spec_file }} --reporter=json,line
+        run: npx playwright test "${{ inputs.spec_file }}"${{ inputs.grep != '' && format(' --grep "{0}"', inputs.grep) || '' }} --reporter=json,line
 
       - name: Upload JSON results
         if: always()
