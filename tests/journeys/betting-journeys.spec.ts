@@ -434,6 +434,7 @@ test.describe('Journey 5.12 — World Cup / tournament predictor', () => {
         tournamentsPage = new TournamentsPage(page);
         const response = await tournamentsPage.goto('ie');
         expect(response?.status(), 'Tournaments page should return HTTP 200').toBeLessThan(400);
+        test.skip(!(await tournamentsPage.hasActiveTournament()), 'No active tournament currently live');
     });
 
     test('@smoke predictor page loads with H1 and leaderboard @journey', async ({ page }) => {

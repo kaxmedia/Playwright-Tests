@@ -152,6 +152,7 @@ test.describe('Journey 8.4 — Predictor leaderboard', () => {
         tournamentsPage = new TournamentsPage(page);
         const response = await tournamentsPage.goto('ie');
         expect(response?.status(), 'Tournaments page should return HTTP 200').toBeLessThan(400);
+        test.skip(!(await tournamentsPage.hasActiveTournament()), 'No active tournament currently live');
     });
 
     test('@smoke leaderboard page loads with H1 @journey', async ({ page }) => {

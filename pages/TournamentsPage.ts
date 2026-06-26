@@ -82,14 +82,18 @@ export class TournamentsPage {
       try {
         const response = await this.page.goto(targetUrl, { waitUntil: 'domcontentloaded' });
         await this.page.getByRole('button', { name: /accept all/i }).click({ timeout: 5000 }).catch(() => {});
-        await this.tournamentCard.waitFor({ state: 'visible', timeout: 20_000 });
-        await this.heading.waitFor({ state: 'visible', timeout: 10_000 });
-        await this.page.locator('div.countdown-unit').first().waitFor({ state: 'attached', timeout: 10_000 }).catch(() => {});
+        // Wait for the page itself to render (H1), NOT the active-tournament widget.
+        // The tournament panel / countdown only exist while a tournament is live, so
+        // requiring them here breaks navigation during between-tournament windows.
+        // Tests that need a live tournament should gate on hasActiveTournament().
+        await this.heading.waitFor({ state: 'visible', timeout: 15_000 });
         return response;
       } catch (error) {
         lastError = error;
         const message = error instanceof Error ? error.message : String(error);
-        const isTransient = /ERR_NETWORK|ERR_INTERNET|ERR_CONNECTION|Timeout.*exceeded/i.test(message);
+        // Only retry genuinely transient network failures — NOT element/navigation
+        // timeouts, which are not transient and would just triple the wasted wait.
+        const isTransient = /ERR_NETWORK|ERR_INTERNET|ERR_CONNECTION/i.test(message);
         if (!isTransient || attempt === maxAttempts) {
           throw error;
         }
@@ -98,6 +102,11 @@ export class TournamentsPage {
     }
 
     throw lastError;
+  }
+
+  /** True only when a tournament is currently live (the active-tournament widget renders). */
+  async hasActiveTournament(): Promise<boolean> {
+    return this.tournamentCard.isVisible().catch(() => false);
   }
 
   // Available for single-unit countdown text — spec iterates all units directly.
