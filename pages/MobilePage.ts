@@ -18,6 +18,8 @@ export class MobilePage {
   readonly registerNowButton: Locator;
   readonly visibleMainHeading: Locator;
 
+  private regionHandlerRegistered = false;
+
   constructor(page: Page) {
     this.page = page;
     this.menuToggle = page.locator('#js-toggle-menu');
@@ -30,8 +32,8 @@ export class MobilePage {
   }
 
   async goto(path = '/') {
+    await this.registerRegionPromptHandler();
     await this.page.goto(path, { waitUntil: 'domcontentloaded' });
-    await this.dismissRegionPromptIfShown();
   }
 
   /** CookieYes banner — same selectors as fixtures/cookieBanner.ts */
@@ -45,14 +47,26 @@ export class MobilePage {
     }
   }
 
-  async dismissRegionPromptIfShown() {
-    try {
-      const modal = this.page.locator('[aria-labelledby="region-prompt-modal-heading"]');
-      if (await modal.isVisible({ timeout: 4000 }).catch(() => false)) {
-        await modal.getByRole('button', { name: /no thanks/i }).click({ timeout: 3000 });
-        await modal.waitFor({ state: 'hidden', timeout: 5000 });
-      }
-    } catch { /* prompt absent on CI / non-IE geo */ }
+  /**
+   * Auto-dismiss the "visiting from Ireland" geo modal whenever it appears.
+   * The modal renders on a variable delay, so a one-shot check after goto() races
+   * it; addLocatorHandler runs before every action and dismisses it no matter when
+   * it shows. Registered once per page (guarded), before the first navigation.
+   */
+  private async registerRegionPromptHandler() {
+    if (this.regionHandlerRegistered) return;
+    this.regionHandlerRegistered = true;
+    const modal = this.page.locator('[aria-labelledby="region-prompt-modal-heading"]');
+    await this.page.addLocatorHandler(
+      modal,
+      async () => {
+        // The CookieYes bottom banner coexists with this modal and occludes its
+        // "No Thanks" button (mutual z-index conflict between two interstitials).
+        // Force-click the modal's own dismiss button to bypass the overlay — it is
+        // the confirmed-correct control, so this clears the prompt without redirect.
+        await modal.getByRole('button', { name: /no thanks/i }).click({ force: true });
+      },
+    );
   }
 
   async openMenu() {
