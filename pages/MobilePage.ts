@@ -31,6 +31,7 @@ export class MobilePage {
 
   async goto(path = '/') {
     await this.page.goto(path, { waitUntil: 'domcontentloaded' });
+    await this.dismissRegionPromptIfShown();
   }
 
   /** CookieYes banner — same selectors as fixtures/cookieBanner.ts */
@@ -42,6 +43,16 @@ export class MobilePage {
     } catch {
       // Banner absent or already dismissed
     }
+  }
+
+  async dismissRegionPromptIfShown() {
+    try {
+      const modal = this.page.locator('[aria-labelledby="region-prompt-modal-heading"]');
+      if (await modal.isVisible({ timeout: 4000 }).catch(() => false)) {
+        await modal.getByRole('button', { name: /no thanks/i }).click({ timeout: 3000 });
+        await modal.waitFor({ state: 'hidden', timeout: 5000 });
+      }
+    } catch { /* prompt absent on CI / non-IE geo */ }
   }
 
   async openMenu() {

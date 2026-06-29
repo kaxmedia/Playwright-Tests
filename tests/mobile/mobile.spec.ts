@@ -7,7 +7,7 @@ import { AgeVerificationPage } from '../../pages/AgeVerificationPage';
 import { FooterPage } from '../../pages/FooterPage';
 
 // Device emulation is configured per project in playwright.config.ts:
-//   mobile-iphone (WebKit) · mobile-pixel (Chromium)
+//   mobile-iphone (WebKit) · mobile-samsung (Chromium)
 
 const UK_CASINOS = '/uk/online-casinos';
 

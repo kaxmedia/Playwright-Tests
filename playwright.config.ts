@@ -1,5 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
-import { iphone15Pro, pixel9 } from './tests/mobile/devices';
+import { iphone15Pro, galaxyS25 } from './tests/mobile/devices';
 
 export default defineConfig({
   testDir: './tests',
@@ -45,11 +45,11 @@ export default defineConfig({
       },
     },
     {
-      name: 'mobile-pixel',
+      name: 'mobile-samsung',
       testMatch: '**/mobile/**/*.spec.ts',
       timeout: 90000,
       use: {
-        ...pixel9,
+        ...galaxyS25,
         screenshot: 'only-on-failure',
         video: 'retain-on-failure',
         trace: 'retain-on-failure',
