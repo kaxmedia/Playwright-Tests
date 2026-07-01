@@ -38,8 +38,8 @@ const URLS = {
     homepage: `${BASE}/ie`,
     profile: `${BASE}/profile`,
     tournaments: `${BASE}/ie/games/tournaments`,
-    /** Redirects to /ie/online-casinos — reviews are the main toplist on IE. */
-    reviewsHub: `${BASE}/ie/online-casinos/reviews`,
+    /** Reviews hub is the main IE casino toplist; the old /ie/online-casinos/reviews path now 404s. */
+    reviewsHub: `${BASE}/ie/online-casinos`,
     news: `${BASE}/ie/news`,
     /** Global RG hub — no /ie/responsible-gambling page exists. */
     responsible: `${BASE}/responsible`,
@@ -235,7 +235,8 @@ test.describe('Journey 8.6 — Geo homepage (UK market)', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 // Journey 8.7 — Reviews Hub
 // Brand search → reviews hub → pick a vertical → open a review
-// Note: /ie/online-casinos/reviews redirects to the main toplist on IE.
+// Note: the IE reviews hub IS the main casino toplist (/ie/online-casinos);
+// the old /ie/online-casinos/reviews redirect was removed and now 404s.
 // ─────────────────────────────────────────────────────────────────────────────
 
 test.describe('Journey 8.7 — Reviews hub', () => {
