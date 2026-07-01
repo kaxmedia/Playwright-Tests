@@ -12,6 +12,12 @@ on:
         type: boolean
         default: false
 
+# Auto-cancel superseded runs on the same ref so pushes/reopens don't leave
+# long (~78 min) visual runs stacking up and competing for runners.
+concurrency:
+  group: visual-regression-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   visual-regression:
     runs-on: ubuntu-latest
