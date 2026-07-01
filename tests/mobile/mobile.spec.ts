@@ -47,7 +47,9 @@ test.describe('Mobile Navigation', () => {
     const logo = mobile.logoHomeLink;
     await expect(logo).toBeVisible();
     await logo.tap();
-    await expect(page).toHaveURL(/gambling\.com\/?(\?|$|#)/, { timeout: 15000 });
+    // From a /uk/* page the logo returns to the localized homepage (/uk), not the
+    // bare root — accept any locale segment (e.g. /uk, /is/en, /be/fr).
+    await expect(page).toHaveURL(/gambling\.com\/[a-z]{2}(\/[a-z]{2})?\/?(\?|$|#)/, { timeout: 15000 });
   });
 
   test('@regression @mobile navigation links are accessible in menu', async ({ page }) => {
