@@ -178,7 +178,11 @@ test.describe('Mobile Touch Interactions', () => {
       expect(box.height).toBeGreaterThanOrEqual(40);
     }
 
-    await register.tap();
+    // Mobile '/' serves the /rewards promo page, whose "Register now" CTA is a
+    // <div role="button"> with a JS-only handler that doesn't fire on a synthetic
+    // tap. Open the auth modal via the page-independent header trigger
+    // (force/JS-click), matching the sign-in test below.
+    await auth.openSignUpModal();
     await expect(auth.signupModal).toBeVisible({ timeout: 10000 });
   });
 
