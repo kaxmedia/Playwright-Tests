@@ -8,11 +8,13 @@
 //
 // Confirmed from live page (June 2026):
 //   - Cards render inside div.live-competitions > div.competitions > div
-//   - Entry CTA label: "Read more & enter"
+//   - Entry CTA label: "Read more & enter" — links to /{geo}/giveaways/{slug}
+//   - Competition detail exposes an on-page registration form (name, email, phone)
+//     — users do not need a site account before entering
 //   - Card titles are carried on img[alt], not h2/h3
-//   - Content is client-side rendered — goto() waits for the first card
+//   - When no competitions are live the page shows "Giveaways Coming Soon"
 
-import { type Page, type Locator } from '@playwright/test';
+import { type Page, type Locator, expect } from '@playwright/test';
 
 const retryDelay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -28,9 +30,16 @@ export class GiveawaysPage {
   readonly firstCard: Locator;
   readonly cardTitle: Locator;
   readonly cardImage: Locator;
+  readonly comingSoonHeading: Locator;
   readonly entryCta: Locator;
   readonly termsLink: Locator;
   readonly footer: Locator;
+
+  /** On-page competition entry form — no prior site login required */
+  readonly registrationNameInput: Locator;
+  readonly registrationEmailInput: Locator;
+  readonly registrationPhoneInput: Locator;
+  readonly registrationSubmitBtn: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -42,21 +51,34 @@ export class GiveawaysPage {
 
     this.giveawayCards = this.liveCompetitions.locator('div.competitions > div');
     this.firstCard = this.giveawayCards.first();
+    this.comingSoonHeading = page.getByText(/giveaways coming soon/i);
 
     // Titles are img alt text on live UK giveaways — not h2/h3 inside cards
     this.cardTitle = this.firstCard.locator('img[alt]').first();
     this.cardImage = this.firstCard.locator('img').first();
 
-    this.entryCta = page.getByRole('link', {
+    this.entryCta = this.giveawayCards.getByRole('link', {
       name: /read more & enter|enter now|enter giveaway/i,
     }).first();
 
     this.termsLink = page.getByRole('link', {
       name: /terms|t&c|full terms/i,
     }).first();
+
+    this.registrationNameInput = page.locator('main.body_content input[name="name"]').first();
+    this.registrationEmailInput = page.locator('main.body_content input[name="email"]').first();
+    this.registrationPhoneInput = page.locator('main.body_content input[placeholder*="PHONE" i]').first();
+    this.registrationSubmitBtn = page
+      .locator('main.body_content')
+      .getByRole('button', { name: /^submit$/i })
+      .first();
   }
 
-  async goto(geo = 'uk'): Promise<void> {
+  /**
+   * Navigate to the giveaways hub. Returns true when live competition cards are
+   * visible, false when the page shows "Giveaways Coming Soon" only.
+   */
+  async goto(geo = 'uk'): Promise<boolean> {
     const url = `/${geo}${this.basePath}`;
     const maxAttempts = 3;
     let lastError: unknown;
@@ -65,8 +87,15 @@ export class GiveawaysPage {
       try {
         await this.page.goto(url, { waitUntil: 'domcontentloaded' });
         await this.page.getByRole('button', { name: /accept all/i }).click({ timeout: 5000 }).catch(() => {});
-        await this.firstCard.waitFor({ state: 'visible', timeout: 20_000 });
-        return;
+
+        if (await this.firstCard.isVisible({ timeout: 20_000 }).catch(() => false)) {
+          return true;
+        }
+        if (await this.comingSoonHeading.isVisible({ timeout: 5_000 }).catch(() => false)) {
+          return false;
+        }
+
+        throw new Error('Giveaways hub loaded but neither live cards nor Coming Soon state appeared');
       } catch (error) {
         lastError = error;
         const message = error instanceof Error ? error.message : String(error);
@@ -79,6 +108,16 @@ export class GiveawaysPage {
     }
 
     throw lastError;
+  }
+
+  /** Opens the first live giveaway's competition page — does not submit the form. */
+  async openFirstGiveawayRegistration(): Promise<void> {
+    await expect(this.firstCard).toBeVisible({ timeout: 20_000 });
+    await expect(this.entryCta).toBeVisible();
+    await this.entryCta.click();
+    await expect(this.page).toHaveURL(/\/giveaways\/.+/);
+    await this.page.getByRole('button', { name: /accept all/i }).click({ timeout: 5000 }).catch(() => {});
+    await this.registrationSubmitBtn.scrollIntoViewIfNeeded();
   }
 
   async getCardCount(): Promise<number> {

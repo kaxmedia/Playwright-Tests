@@ -6,47 +6,32 @@
 //
 // Confirmed from live page inspection (June 2026):
 //   - Title: "Gambling.com Giveaways"
-//   - Meta description references "Free To Enter and Play — prizes include
-//     hospitality big game tickets, cash draws, super cars and holidays"
-//   - Canonical: https://www.gambling.com/uk/giveaways
-//   - Content is client-side rendered
-//
-// AUTH STRATEGY — same as tournaments.spec.ts:
-//   Authenticated tests verify UI state only. The entry CTA is asserted
-//   visible but NOT clicked — avoids submitting real giveaway entries.
+//   - Entry CTA ("Read more & enter") links to a competition detail page
+//   - Competition detail exposes an on-page registration form (name, email, phone)
+//   - Users do not need a site account before registering for a giveaway
 //
 // Run with:
 //   npx playwright test tests/giveaways.spec.ts --project=chrome
 //   npx playwright test tests/giveaways.spec.ts --grep @smoke
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { test, expect, type Page } from '@playwright/test';
-import { AuthPage, SIGN_IN_USER } from '../pages/AuthPage';
+import { test, expect } from '@playwright/test';
 import { GiveawaysPage } from '../pages/GiveawaysPage';
-
-// TODO: extract to a shared authenticated test fixture (auth.spec.ts / profile.spec.ts pattern).
-async function loginViaUi(page: Page): Promise<AuthPage> {
-  const authPage = new AuthPage(page);
-  await authPage.goto();
-  await page.getByRole('button', { name: /accept all/i }).click({ timeout: 5000 }).catch(() => {});
-  await authPage.signIn(SIGN_IN_USER.email, SIGN_IN_USER.password);
-  await authPage.dismissSignupModalIfOpen();
-  await expect(authPage.profileAvatar).toBeVisible({ timeout: 20_000 });
-  return authPage;
-}
 
 const TEST_GEO = 'uk';
 
+let hasLiveGiveaways = true;
+
 // ─────────────────────────────────────────────────────────────────────────────
-// Unauthenticated suite
+// Giveaways hub
 // ─────────────────────────────────────────────────────────────────────────────
 
-test.describe('Giveaways Page — Unauthenticated', () => {
+test.describe('Giveaways Page', () => {
   let giveawaysPage: GiveawaysPage;
 
   test.beforeEach(async ({ page }) => {
     giveawaysPage = new GiveawaysPage(page);
-    await giveawaysPage.goto(TEST_GEO);
+    hasLiveGiveaways = await giveawaysPage.goto(TEST_GEO);
   });
 
   // ─── 1. Page fundamentals ─────────────────────────────────────────────────
@@ -65,25 +50,22 @@ test.describe('Giveaways Page — Unauthenticated', () => {
     test('@smoke page title is descriptive', async ({ page }) => {
       const title = await page.title();
       expect(title.trim().length).toBeGreaterThan(0);
-      // Title confirmed from live page: "Gambling.com Giveaways"
       expect(title).toMatch(/giveaway/i);
     });
 
     test('@smoke page has a canonical meta tag', async ({ page }) => {
-      const canonical = await page.locator('link[rel="canonical"]').getAttribute('href');
-      expect(canonical).toBeTruthy();
-      expect(canonical).toContain('giveaway');
+      const canonical = page.locator('link[rel="canonical"]');
+      await expect(canonical).toHaveAttribute('href', /giveaway/);
     });
 
     test('@smoke page has an OG title meta tag', async ({ page }) => {
-      const ogTitle = await page.locator('meta[property="og:title"]').getAttribute('content');
-      expect(ogTitle?.trim().length, 'og:title should not be empty').toBeGreaterThan(0);
+      const ogTitle = page.locator('meta[property="og:title"]');
+      await expect(ogTitle).toHaveAttribute('content', /.+/);
     });
 
     test('@smoke page has an OG image', async ({ page }) => {
-      const ogImage = await page.locator('meta[property="og:image"]').getAttribute('content');
-      // Confirmed from live page — OG image is hosted on objects.kaxmedia.com
-      expect(ogImage?.trim().length, 'og:image should not be empty').toBeGreaterThan(0);
+      const ogImage = page.locator('meta[property="og:image"]');
+      await expect(ogImage).toHaveAttribute('content', /.+/);
     });
 
   });
@@ -92,8 +74,13 @@ test.describe('Giveaways Page — Unauthenticated', () => {
 
   test.describe('Giveaway cards', () => {
 
+    test.beforeEach(async ({}, testInfo) => {
+      if (!hasLiveGiveaways) {
+        testInfo.skip(true, 'No live giveaways — page shows Coming Soon');
+      }
+    });
+
     test('@smoke at least one giveaway card is present', async () => {
-      // Wait for client-side render
       await expect(giveawaysPage.firstCard).toBeVisible({ timeout: 20_000 });
       const count = await giveawaysPage.getCardCount();
       expect(count, 'At least one giveaway card should be present').toBeGreaterThan(0);
@@ -101,20 +88,15 @@ test.describe('Giveaways Page — Unauthenticated', () => {
 
     test('@smoke first giveaway card has a non-empty title', async () => {
       await expect(giveawaysPage.firstCard).toBeVisible({ timeout: 20_000 });
-      await expect(giveawaysPage.cardTitle).toBeAttached();
-      const alt = await giveawaysPage.cardTitle.getAttribute('alt');
-      expect(alt?.trim().length, 'Giveaway card title (img alt) should not be empty').toBeGreaterThan(0);
+      await expect(giveawaysPage.cardTitle).toHaveAttribute('alt', /.+/);
     });
 
     test('@smoke first giveaway card has an image', async () => {
       await expect(giveawaysPage.firstCard).toBeVisible({ timeout: 20_000 });
       const imgCount = await giveawaysPage.cardImage.count();
       if (imgCount > 0) {
-        await expect(giveawaysPage.cardImage).toBeAttached();
-        const src = await giveawaysPage.cardImage.getAttribute('src');
-        expect(src?.trim().length, 'Giveaway card image src should not be empty').toBeGreaterThan(0);
+        await expect(giveawaysPage.cardImage).toHaveAttribute('src', /.+/);
       } else {
-        // Cards may use background images — assert the card itself is visible and non-empty
         const cardText = await giveawaysPage.firstCard.innerText();
         expect(cardText.trim().length).toBeGreaterThan(10);
       }
@@ -128,42 +110,43 @@ test.describe('Giveaways Page — Unauthenticated', () => {
       for (let i = 0; i < limit; i++) {
         const card = giveawaysPage.giveawayCards.nth(i);
         const img = card.locator('img[alt]').first();
-        const alt = await img.getAttribute('alt');
-        expect(
-          alt?.trim().length,
-          `Giveaway card ${i} has an empty title (img alt)`
-        ).toBeGreaterThan(0);
+        await expect(img).toHaveAttribute('alt', /.+/);
       }
     });
 
   });
 
-  // ─── 3. Entry CTA — unauthenticated ──────────────────────────────────────
+  // ─── 3. Giveaway entry registration ───────────────────────────────────────
 
-  test.describe('Entry CTA — unauthenticated', () => {
+  test.describe('Giveaway entry registration', () => {
 
-    test('@smoke an entry CTA is present on the page', async () => {
-      await expect(giveawaysPage.firstCard).toBeVisible({ timeout: 20_000 });
-      // When logged out, the entry CTA should be present but prompt auth
-      const ctaCount = await giveawaysPage.entryCta.count();
-      if (ctaCount > 0) {
-        await expect(giveawaysPage.entryCta).toBeVisible();
-      } else {
-        // Fallback — check for any entry-related text
-        const mainText = await giveawaysPage.main.innerText();
-        expect(
-          /enter|sign up|log in|register/i.test(mainText),
-          'Page should have an entry mechanism or auth prompt'
-        ).toBe(true);
+    test.beforeEach(async ({}, testInfo) => {
+      if (!hasLiveGiveaways) {
+        testInfo.skip(true, 'No live giveaways — page shows Coming Soon');
       }
     });
 
-    test('@smoke unauthenticated entry CTA leads to sign-up or log-in', async () => {
+    test('@smoke entry CTA links to a competition detail page', async () => {
       await expect(giveawaysPage.firstCard).toBeVisible({ timeout: 20_000 });
       await expect(giveawaysPage.entryCta).toBeVisible();
-      const href = await giveawaysPage.entryCta.getAttribute('href');
-      expect(href?.trim().length, 'Entry CTA should have a valid href').toBeGreaterThan(0);
-      expect(href, 'Entry CTA should not be a dead # link').not.toBe('#');
+      await expect(giveawaysPage.entryCta).toHaveAttribute('href', /\/giveaways\/.+/);
+    });
+
+    test('@smoke competition detail exposes a registration form without site login', async () => {
+      await giveawaysPage.openFirstGiveawayRegistration();
+
+      await expect(giveawaysPage.registrationNameInput).toBeVisible();
+      await expect(giveawaysPage.registrationEmailInput).toBeVisible();
+      await expect(giveawaysPage.registrationPhoneInput).toBeVisible();
+      await expect(giveawaysPage.registrationSubmitBtn).toBeVisible();
+    });
+
+    test('@regression registration form is present but not submitted', async () => {
+      await giveawaysPage.openFirstGiveawayRegistration();
+
+      // Assert the form is actionable — we deliberately do not click SUBMIT
+      await expect(giveawaysPage.registrationSubmitBtn).toBeEnabled();
+      await expect(giveawaysPage.page.locator('#signup-modal.user-logged-in')).toBeHidden();
     });
 
   });
@@ -172,14 +155,18 @@ test.describe('Giveaways Page — Unauthenticated', () => {
 
   test.describe('Terms link', () => {
 
+    test.beforeEach(async ({}, testInfo) => {
+      if (!hasLiveGiveaways) {
+        testInfo.skip(true, 'No live giveaways — page shows Coming Soon');
+      }
+    });
+
     test('@smoke terms and conditions link is present', async () => {
       await expect(giveawaysPage.firstCard).toBeVisible({ timeout: 20_000 });
       const count = await giveawaysPage.termsLink.count();
       if (count > 0) {
-        const href = await giveawaysPage.termsLink.getAttribute('href');
-        expect(href?.trim().length, 'Terms link should have a valid href').toBeGreaterThan(0);
+        await expect(giveawaysPage.termsLink).toHaveAttribute('href', /.+/);
       } else {
-        // T&Cs may be inline text rather than a link on some giveaway layouts
         const mainText = await giveawaysPage.main.innerText();
         expect(
           /terms|t&c/i.test(mainText),
@@ -199,45 +186,6 @@ test.describe('Giveaways Page — Unauthenticated', () => {
       await expect(giveawaysPage.footer).toBeVisible();
     });
 
-  });
-
-});
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Authenticated suite
-// ─────────────────────────────────────────────────────────────────────────────
-
-test.describe('Giveaways Page — Authenticated', () => {
-  test.setTimeout(120_000);
-
-  let giveawaysPage: GiveawaysPage;
-
-  test.beforeEach(async ({ page }) => {
-    await loginViaUi(page);
-    giveawaysPage = new GiveawaysPage(page);
-    await giveawaysPage.goto(TEST_GEO);
-  });
-
-  test('@smoke authenticated user sees giveaway cards', async () => {
-    await expect(giveawaysPage.firstCard).toBeVisible({ timeout: 20_000 });
-    const count = await giveawaysPage.getCardCount();
-    expect(count, 'Giveaway cards should be visible when authenticated').toBeGreaterThan(0);
-  });
-
-  test('@smoke authenticated user sees an entry CTA on the first card', async () => {
-    await expect(giveawaysPage.firstCard).toBeVisible({ timeout: 20_000 });
-    // Verify the entry CTA is present — do NOT click it (no real entry submission)
-    const ctaCount = await giveawaysPage.entryCta.count();
-    if (ctaCount > 0) {
-      await expect(giveawaysPage.entryCta).toBeVisible();
-    } else {
-      // Fallback — check the card has actionable content
-      const cardText = await giveawaysPage.firstCard.innerText();
-      expect(
-        /enter|join|play/i.test(cardText),
-        'Authenticated giveaway card should have an entry action'
-      ).toBe(true);
-    }
   });
 
 });
