@@ -31,7 +31,7 @@
 //
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { test as base, expect, type Locator } from '@playwright/test';
+import { test as base, expect, type Locator } from './test';
 
 // Define the shape of what our fixture provides to tests
 type CookieBannerFixtures = {

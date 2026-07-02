@@ -26,7 +26,7 @@
 //     locators because the slots/games hub is a game grid, not operator cards.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../../fixtures/test';
 import { ComparisonPage } from '../../pages/ComparisonPage';
 
 const BASE = 'https://www.gambling.com';

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures/test';
 import { SubCategoryPage, subCategoryUrls } from '../pages/SubCategoryPage';
 
 for (const config of subCategoryUrls) {

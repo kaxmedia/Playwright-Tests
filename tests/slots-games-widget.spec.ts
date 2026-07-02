@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures/test';
 import { SlotsGamesPage, SLOTS_PAGE, TEST_USER } from '../pages/SlotsGamesPage';
 
 // ─── Slots Games Widget Tests ─────────────────────────────────────────────────

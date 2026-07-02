@@ -26,7 +26,7 @@
 //   npx playwright test tests/betting-sites.spec.ts --grep @audit
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures/test';
 import { ComparisonPage, type ComparisonPageConfig } from '../pages/ComparisonPage';
 
 // ─────────────────────────────────────────────────────────────────────────────

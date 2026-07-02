@@ -28,7 +28,7 @@
 //   - Existing POMs reused: AuthPage, TournamentsPage. No new POM code.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../../fixtures/test';
 import { AuthPage } from '../../pages/AuthPage';
 import { TournamentsPage } from '../../pages/TournamentsPage';
 

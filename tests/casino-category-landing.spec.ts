@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures/test';
 import { DECasinoPage, DE_CASINO } from '../pages/DECasinoPage';
 import { UKCasinoPage, UK_CASINO } from '../pages/UKCasinoPage';
 

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures/test';
 import { NewsPage } from '../pages/NewsPage';
 import { FirstPartyPageGuards } from './helpers/firstPartyPageGuards';
 

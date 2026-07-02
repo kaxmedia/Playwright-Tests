@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures/test';
 import { AgeVerificationPage, AGE_VERIFICATION_GEOS } from '../pages/AgeVerificationPage';
 
 // ─── Age Verification Tests — NL & ES ────────────────────────────────────────

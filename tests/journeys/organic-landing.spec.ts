@@ -10,7 +10,7 @@
 //   npx playwright test tests/journeys/organic-landing.spec.ts --grep @smoke
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../../fixtures/test';
 import { ComparisonPage } from '../../pages/ComparisonPage';
 import { OrganicLandingPage, ORGANIC_LANDING } from '../../pages/OrganicLandingPage';
 import { ReviewPage } from '../../pages/ReviewPage';

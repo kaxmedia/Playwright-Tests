@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../../fixtures/test';
 import { ReviewPage } from '../../pages/ReviewPage';
 
 const PROS_CONS_GEOS = ['ie', 'nz', 'nl'];

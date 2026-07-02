@@ -22,7 +22,7 @@
 //   npx playwright test tests/review-page.spec.ts --grep @regression
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures/test';
 import { ReviewPage } from '../pages/ReviewPage';
 
 const TEST_SLUG = 'bet365';

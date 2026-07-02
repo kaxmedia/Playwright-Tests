@@ -16,7 +16,7 @@
  * immediately after page.goto().
  */
 
-import { test as base, expect, type Request } from '@playwright/test';
+import { test as base, expect, type Request } from './test';
 
 export interface KtagFixtures {
     ktagEvents: KtagEvent[];

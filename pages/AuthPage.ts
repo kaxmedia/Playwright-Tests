@@ -1,4 +1,5 @@
 import { type Locator, type Page } from '@playwright/test';
+import { dismissRegionPromptIfVisible } from '../fixtures/regionPrompt';
 
 export const SIGN_IN_USER = {
     email: 'testpot209@gmail.com',
@@ -175,6 +176,8 @@ export class AuthPage {
 
     /** Opens Sign In — header `#login-button` is often hidden; fall back to Sign In inside the auth modal. */
     async openSignInFromHeader(): Promise<void> {
+        await dismissRegionPromptIfVisible(this.page);
+
         if (await this.headerSignInBtn.isVisible().catch(() => false)) {
             try {
                 await this.headerSignInBtn.click({ timeout: 8000, force: true });
@@ -192,6 +195,8 @@ export class AuthPage {
 
     async openSignUpModal(): Promise<void> {
         if (await this.signupModal.isVisible().catch(() => false)) return;
+
+        await dismissRegionPromptIfVisible(this.page);
 
         const trigger = this.headerSignUpBtn;
         try {

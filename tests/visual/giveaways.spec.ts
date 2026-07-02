@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../../fixtures/test';
 
 const GIVEAWAYS_MASKS = [
   'div.countdown-unit',

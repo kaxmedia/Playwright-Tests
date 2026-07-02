@@ -21,7 +21,7 @@
 //     Safe casinos journey uses the how-we-review guide (no /safe-casinos page).
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../../fixtures/test';
 import { ComparisonPage } from '../../pages/ComparisonPage';
 import { ReviewPage } from '../../pages/ReviewPage';
 
