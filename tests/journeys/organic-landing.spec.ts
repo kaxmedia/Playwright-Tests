@@ -152,7 +152,10 @@ test.describe('Organic Landing Journeys — IE', () => {
 
     test('@smoke strategy hub loads with guide listings', async ({ page }) => {
       await expect(page).toHaveURL(/\/ie\/strategy\/?$/);
-      await expect(page.locator('main h1').first()).toContainText(/strategy/i);
+      // Page-level h1 rather than `main h1`: the strategy hub renders no <main>
+      // landmark, so scoping to main matched nothing. The <h1> ("Gambling Strategy")
+      // is present regardless.
+      await expect(page.locator('h1').first()).toContainText(/strategy/i);
       await expect(journey.strategyArticleLinks.nth(2)).toBeAttached();
     });
 
