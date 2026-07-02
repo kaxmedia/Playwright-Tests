@@ -6,7 +6,7 @@
 // first 10 real links, and presence of the logo home link.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures/test';
 import { GeoHomepage, geoHomepages } from '../pages/GeoHomepage';
 import { globalNavLogoLink } from '../pages/globalNavLogo';
 

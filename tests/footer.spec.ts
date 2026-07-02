@@ -8,7 +8,7 @@
 // Run with:  npx playwright test tests/footer.spec.ts --headed --project=chrome
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures/test';
 import { FooterPage } from '../pages/FooterPage';
 import { GeoHomepage, geoHomepages } from '../pages/GeoHomepage';
 

@@ -18,7 +18,7 @@
 // Run with: npx playwright test tests/seo.spec.ts --headed --project=chrome
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures/test';
 
 const BASE_URL = 'https://www.gambling.com';
 

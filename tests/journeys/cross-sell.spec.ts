@@ -20,7 +20,7 @@
 //   - Cookie banner does not block deep-page content — no explicit dismiss needed.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Page } from '../../fixtures/test';
 import { ComparisonPage } from '../../pages/ComparisonPage';
 import { ReviewPage } from '../../pages/ReviewPage';
 import { TournamentsPage } from '../../pages/TournamentsPage';

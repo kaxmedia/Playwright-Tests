@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Page } from '../../fixtures/test';
 import { MobilePage } from '../../pages/MobilePage';
 import { AuthPage } from '../../pages/AuthPage';
 import { SearchPage } from '../../pages/SearchPage';

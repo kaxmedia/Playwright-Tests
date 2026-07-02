@@ -27,7 +27,7 @@
 //   - SearchPage POM reused for Journey 9.3 interactive search. Otherwise raw locators.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../../fixtures/test';
 import { SearchPage } from '../../pages/SearchPage';
 
 const BASE = 'https://www.gambling.com';

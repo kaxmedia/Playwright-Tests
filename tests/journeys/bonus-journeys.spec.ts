@@ -22,7 +22,7 @@
 //   - ComparisonPage POM reused throughout. No new POM code.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../../fixtures/test';
 import { ComparisonPage } from '../../pages/ComparisonPage';
 
 const BASE = 'https://www.gambling.com';

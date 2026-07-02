@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures/test';
 import { ComparisonPage, comparisonPages } from '../pages/ComparisonPage';
 import { FirstPartyPageGuards, unexpectedPageErrors, unexpectedConsoleErrors } from './helpers/firstPartyPageGuards';
 

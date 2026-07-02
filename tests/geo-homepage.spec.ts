@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures/test';
 import { GeoHomepage, geoHomepages } from '../pages/GeoHomepage';
 
 // Parameterised suite — one describe block per entry in geoHomepages.

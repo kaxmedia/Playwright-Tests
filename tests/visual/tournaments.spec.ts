@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../../fixtures/test';
 
 const TOURNAMENTS_MASKS = [
   'div.countdown-unit',

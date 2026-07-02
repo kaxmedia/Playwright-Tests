@@ -30,7 +30,7 @@
 //   - No new POM code — raw locators throughout.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../../fixtures/test';
 import { ComparisonPage } from '../../pages/ComparisonPage';
 
 const BASE = 'https://www.gambling.com';

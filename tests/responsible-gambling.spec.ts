@@ -8,7 +8,7 @@
 //            npx playwright test tests/responsible-gambling.spec.ts --project=chrome --grep @smoke
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures/test';
 import {
   ResponsibleGamblingPage,
   responsibleGamblingAuditPaths,

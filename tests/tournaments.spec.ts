@@ -22,7 +22,7 @@
 //   npx playwright test tests/tournaments.spec.ts --grep @regression
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Page } from '../fixtures/test';
 import { AuthPage, SIGN_IN_USER } from '../pages/AuthPage';
 import { TournamentsPage } from '../pages/TournamentsPage';
 

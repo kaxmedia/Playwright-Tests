@@ -1,4 +1,4 @@
-import { test, expect, type Locator } from '@playwright/test';
+import { test, expect, type Locator } from '../fixtures/test';
 import { ProfilePage, PROFILE_URLS, PROFILE_TEST_DATA } from '../pages/ProfilePage';
 import { AuthPage, SIGN_IN_USER } from '../pages/AuthPage';
 

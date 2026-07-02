@@ -15,7 +15,7 @@
 //   npx playwright test tests/giveaways.spec.ts --grep @smoke
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures/test';
 import { GiveawaysPage } from '../pages/GiveawaysPage';
 
 const TEST_GEO = 'uk';

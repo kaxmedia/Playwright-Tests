@@ -22,7 +22,7 @@
 //     slots, not tied to the primary Starburst URL.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures/test';
 import { AuthPage } from '../pages/AuthPage';
 import { SlotReviewPage } from '../pages/SlotReviewPage';
 import { TEST_USER } from '../pages/SlotsGamesPage';
