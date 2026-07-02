@@ -1,8 +1,8 @@
 import { test as base, expect } from 'playwright/test';
 import { registerRegionPromptHandler } from './regionPrompt';
 
-export const test = base.extend<{}, { _dismissRegionPrompt: void }>({
-  _dismissRegionPrompt: [
+export const test = base.extend<{}, { _acceptRegionPrompt: void }>({
+  _acceptRegionPrompt: [
     async ({ page }, use) => {
       await registerRegionPromptHandler(page);
       await use();
