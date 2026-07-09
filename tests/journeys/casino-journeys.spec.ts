@@ -382,7 +382,11 @@ test.describe('Journey 3.12 — Casino strategy guide', () => {
     });
 
     test('@smoke strategy hub lists individual guide articles @journey', async ({ page }) => {
-        const guideLinks = page.locator('main a[href*="/ie/online-casinos/strategy/"]');
+        // Article links render in a content container that is a sibling of <main>
+        // (the <main> landmark holds only the breadcrumb), so scope by the article
+        // URL pattern rather than the main landmark. The trailing slash excludes the
+        // category card (/ie/online-casinos/strategy) and breadcrumb (/ie/strategy).
+        const guideLinks = page.locator('a[href*="/ie/online-casinos/strategy/"]');
         await expect(guideLinks.first()).toBeAttached();
         await expect(guideLinks.nth(1)).toBeAttached();
     });
@@ -393,7 +397,7 @@ test.describe('Journey 3.12 — Casino strategy guide', () => {
     });
 
     test('@regression opening a strategy article exposes affiliate CTAs @journey', async ({ page }) => {
-        const firstGuide = page.locator('main a[href*="/ie/online-casinos/strategy/"]').first();
+        const firstGuide = page.locator('a[href*="/ie/online-casinos/strategy/"]').first();
         await expect(firstGuide).toBeAttached();
         const href = await firstGuide.getAttribute('href') ?? '';
         expect(href.trim().length).toBeGreaterThan(0);
