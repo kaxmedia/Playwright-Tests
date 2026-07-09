@@ -41,7 +41,7 @@ const URLS = {
     mobileCasinos: `${BASE}/ie/online-casinos/apps`, // /mobile redirects here
     cryptoCasinos: `${BASE}/ie/online-casinos/bitcoin`, // redirects to main toplist
     paymentCasinos: `${BASE}/ie/online-casinos/paypal`,
-    howWeReview: `${BASE}/ie/online-casinos/how-we-review`,
+    howWeReview: `${BASE}/ie/reviews/casino`,
     casinoReview: `${BASE}/ie/online-casinos/kingmaker`,
     slotPage: `${BASE}/ie/online-casinos/slots/starburst`,
     strategyHub: `${BASE}/ie/online-casinos/strategy`,
@@ -274,7 +274,7 @@ test.describe('Journey 3.9 — Safe / licensed casinos (how-we-review guide)', (
     });
 
     test('@smoke how-we-review guide loads with H1 @journey', async ({ page }) => {
-        await expect(page).toHaveURL(/\/ie\/online-casinos\/how-we-review/);
+        await expect(page).toHaveURL(/\/ie\/reviews\/casino/);
         await expect(page.locator('h1').first()).toBeVisible();
     });
 
