@@ -62,7 +62,11 @@ test.describe('Journey 9.1 — How-to guide (strategy hub)', () => {
     });
 
     test('@smoke strategy hub lists individual guide articles @journey', async ({ page }) => {
-        const guideLinks = page.locator('main.body_content a[href*="/ie/online-casinos/strategy/"]');
+        // Article links render in a container that is a sibling of <main> (the
+        // <main> landmark holds only the breadcrumb), so scope by the article URL
+        // pattern rather than main. The trailing slash excludes the category card
+        // (/ie/online-casinos/strategy) and breadcrumb (/ie/strategy).
+        const guideLinks = page.locator('a[href*="/ie/online-casinos/strategy/"]');
         await expect(guideLinks.first()).toBeAttached();
         // nth(1) = at least 2 guides present
         await expect(guideLinks.nth(1)).toBeAttached();
@@ -74,7 +78,7 @@ test.describe('Journey 9.1 — How-to guide (strategy hub)', () => {
     });
 
     test('@regression opening a strategy article exposes operator CTAs @journey', async ({ page }) => {
-        const firstGuide = page.locator('main.body_content a[href*="/ie/online-casinos/strategy/"]').first();
+        const firstGuide = page.locator('a[href*="/ie/online-casinos/strategy/"]').first();
         await expect(firstGuide).toBeAttached();
         const href = await firstGuide.getAttribute('href');
         const fullUrl = href?.startsWith('http') ? href : `${BASE}${href}`;
