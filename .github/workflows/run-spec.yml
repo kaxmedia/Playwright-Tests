@@ -4,8 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       spec_file:
-        description: 'Spec file to run (e.g. tests/visual/homepages.spec.ts)'
-        required: true
+        description: 'Spec file or directory to run (default: tests/ = whole suite)'
+        required: false
+        default: 'tests/'
       branch:
         description: 'Branch to run against'
         required: false
