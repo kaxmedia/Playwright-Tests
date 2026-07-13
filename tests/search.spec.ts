@@ -10,41 +10,41 @@ test.describe('Search', () => {
     searchPage = new SearchPage(page);
   });
 
-  test('@smoke search icon is visible in the navigation bar', async () => {
+  test('@smoke @regression search icon is visible in the navigation bar', async () => {
     await expect(searchPage.searchIcon).toBeVisible();
   });
 
-  test('@smoke clicking the search icon opens the search input', async () => {
+  test('@smoke @regression clicking the search icon opens the search input', async () => {
     await searchPage.openSearch();
     await searchPage.searchInput.focus();
     await expect(searchPage.searchInput).toBeFocused();
   });
 
-  test('@smoke typing a keyword shows search results', async () => {
+  test('@smoke @regression typing a keyword shows search results', async () => {
     await searchPage.searchFor('blackjack');
     await expect(searchPage.resultsContainer).toBeVisible();
     await expect(searchPage.resultItems.first()).toBeVisible();
   });
 
-  test('@smoke search results are relevant to the keyword', async () => {
+  test('@smoke @regression search results are relevant to the keyword', async () => {
     await searchPage.searchFor('blackjack');
     await expect(searchPage.resultItems.first()).toContainText(/blackjack/i);
   });
 
-  test('@smoke no-results query shows No Results Found message', async () => {
+  test('@smoke @regression no-results query shows No Results Found message', async () => {
     await searchPage.searchFor('zzqxqq');
     await expect(searchPage.resultsContainer).toBeVisible();
     await expect(searchPage.noResultsMessage).toContainText('No Results Found');
     expect(await searchPage.resultItems.count()).toBe(0);
   });
 
-  test('@smoke multi-word query returns results', async () => {
+  test('@smoke @regression multi-word query returns results', async () => {
     await searchPage.searchFor('online casino');
     await expect(searchPage.resultsContainer).toBeVisible();
     expect(await searchPage.resultItems.count()).toBeGreaterThanOrEqual(1);
   });
 
-  test('@smoke result links have valid hrefs', async () => {
+  test('@smoke @regression result links have valid hrefs', async () => {
     await searchPage.searchFor('blackjack');
     const count = Math.min(await searchPage.resultItems.count(), 3);
     for (let i = 0; i < count; i++) {

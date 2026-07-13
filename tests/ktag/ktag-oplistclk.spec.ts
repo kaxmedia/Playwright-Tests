@@ -89,7 +89,7 @@ test.describe('Ktag — oplistclk event @ktag @oplistclk @regression', () => {
     }
   });
 
-  test('oplistclk: cta_id is present on the CTA href @smoke', async ({ page }) => {
+  test('oplistclk: cta_id is present on the CTA href @regression', async ({ page }) => {
     await page.goto(OPLIST_PAGE);
 
     const cta = oplistGoCta(page);

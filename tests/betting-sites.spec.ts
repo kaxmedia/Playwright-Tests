@@ -22,7 +22,7 @@
 //
 // Run with:
 //   npx playwright test tests/betting-sites.spec.ts --project=chrome
-//   npx playwright test tests/betting-sites.spec.ts --grep @smoke
+//   npx playwright test tests/betting-sites.spec.ts --grep @regression
 //   npx playwright test tests/betting-sites.spec.ts --grep @audit
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -145,13 +145,13 @@ for (const config of bettingPages) {
 
         // ── T1: Page loads and URL is correct ─────────────────────────────────
 
-        test('@smoke page loads with correct URL', async ({ page }) => {
+        test('@regression page loads with correct URL', async ({ page }) => {
             await expect(page).toHaveURL(new RegExp(escapeForRegex(config.url)));
         });
 
         // ── T2: Operator cards are present above the minimum floor ─────────────
 
-        test(`@smoke at least ${config.expectedCardCountMin} operator cards are present`, async () => {
+        test(`@regression at least ${config.expectedCardCountMin} operator cards are present`, async () => {
             const count = await bettingPage.cards.count();
             expect(
                 count,
@@ -161,7 +161,7 @@ for (const config of bettingPages) {
 
         // ── T3: First card has required data attributes ────────────────────────
 
-        test('@smoke first card has operator name and position data attributes', async () => {
+        test('@regression first card has operator name and position data attributes', async () => {
             const card = bettingPage.nthCard(0);
             const operator = await bettingPage.operatorName(card);
             const position = await bettingPage.position(card);
@@ -171,7 +171,7 @@ for (const config of bettingPages) {
 
         // ── T4: Operator logo is present and has non-empty src ─────────────────
 
-        test('@smoke first card operator logo is attached with a valid src', async () => {
+        test('@regression first card operator logo is attached with a valid src', async () => {
             const card = bettingPage.nthCard(0);
             const logo = bettingPage.logoImg(card);
             await expect(logo).toBeAttached();
@@ -181,7 +181,7 @@ for (const config of bettingPages) {
 
         // ── T5: CTA link is present and points to an affiliate redirect ────────
 
-        test('@smoke first card CTA link has a /go/ affiliate href', async () => {
+        test('@regression first card CTA link has a /go/ affiliate href', async () => {
             const card = bettingPage.nthCard(0);
             const cta = bettingPage.ctaLink(card);
             await expect(cta).toBeVisible();
@@ -216,7 +216,7 @@ for (const config of bettingPages) {
 
         // ── T7: Offer text is present on the first card ────────────────────────
 
-        test('@smoke first card has offer text', async () => {
+        test('@regression first card has offer text', async () => {
             const card = bettingPage.nthCard(0);
             const offer = await bettingPage.offerText(card);
             expect(offer?.trim().length, 'data-offer should not be empty').toBeGreaterThan(0);
@@ -224,7 +224,7 @@ for (const config of bettingPages) {
 
         // ── T8: Age limit text is correct for this geo ─────────────────────────
 
-        test(`@smoke first card terms text contains ${config.ageLimit}`, async () => {
+        test(`@regression first card terms text contains ${config.ageLimit}`, async () => {
             const card = bettingPage.nthCard(0);
             const terms = bettingPage.termsText(card);
             await expect(terms).toContainText(config.ageLimit);
@@ -233,7 +233,7 @@ for (const config of bettingPages) {
         // ── T9: Regulator badge (geo-conditional) ─────────────────────────────
 
         if (config.hasBadge) {
-            test('@smoke first card has a regulator badge', async () => {
+            test('@regression first card has a regulator badge', async () => {
                 const card = bettingPage.nthCard(0);
                 await expect(bettingPage.regulatorBadge(card)).toBeAttached();
             });
@@ -242,7 +242,7 @@ for (const config of bettingPages) {
         // ── T10: Review link (geo-conditional) ────────────────────────────────
 
         if (config.hasReviewLink !== false) {
-            test('@smoke first card review link is present', async () => {
+            test('@regression first card review link is present', async () => {
                 const card = bettingPage.nthCard(0);
                 const reviewLink = bettingPage.reviewLink(card);
                 await expect(reviewLink).toBeAttached();
@@ -253,7 +253,7 @@ for (const config of bettingPages) {
 
         // ── T11: Rank label is visible on the first card ──────────────────────
 
-        test('@smoke first card rank label is visible', async () => {
+        test('@regression first card rank label is visible', async () => {
             const card = bettingPage.nthCard(0);
             await expect(bettingPage.rankLabel(card)).toBeVisible();
         });
@@ -295,11 +295,11 @@ for (const subPage of bettingSubPages) {
             await subPageComparison.goto(subPage.url);
         });
 
-        test('@smoke page URL is correct', async ({ page }) => {
+        test('@regression page URL is correct', async ({ page }) => {
             await expect(page).toHaveURL(new RegExp(escapeForRegex(subPage.url)));
         });
 
-        test(`@smoke at least ${subPage.expectedCardCountMin} operator cards are present`, async () => {
+        test(`@regression at least ${subPage.expectedCardCountMin} operator cards are present`, async () => {
             const count = await subPageComparison.cards.count();
             expect(
                 count,
@@ -307,7 +307,7 @@ for (const subPage of bettingSubPages) {
             ).toBeGreaterThanOrEqual(subPage.expectedCardCountMin);
         });
 
-        test('@smoke first card CTA has a /go/ affiliate href', async () => {
+        test('@regression first card CTA has a /go/ affiliate href', async () => {
             const card = subPageComparison.nthCard(0);
             const cta = subPageComparison.ctaLink(card);
             await expect(cta).toBeVisible();
@@ -315,7 +315,7 @@ for (const subPage of bettingSubPages) {
             expect(href).toMatch(/\/go\//);
         });
 
-        test('@smoke first card has offer text', async () => {
+        test('@regression first card has offer text', async () => {
             const card = subPageComparison.nthCard(0);
             const offer = await subPageComparison.offerText(card);
             expect(offer?.trim().length).toBeGreaterThan(0);
@@ -340,7 +340,7 @@ const allBettingUrls: { name: string; url: string }[] = [
 
 test.describe('Betting Sites — Multi-URL HTTP 200 check @audit', () => {
 
-    test('@audit all betting page URLs return HTTP 200', async ({ request }) => {
+    test('@regression @audit all betting page URLs return HTTP 200', async ({ request }) => {
         test.setTimeout(60_000);
 
         const results = await Promise.all(

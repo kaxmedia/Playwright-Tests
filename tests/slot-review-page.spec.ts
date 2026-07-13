@@ -8,7 +8,7 @@
 //
 // Run with:
 //   npx playwright test tests/slot-review-page.spec.ts --project=chrome
-//   npx playwright test tests/slot-review-page.spec.ts --grep @smoke
+//   npx playwright test tests/slot-review-page.spec.ts --grep @regression
 //
 // Design principles:
 //   - Demo is tested for presence and correct data-demourl, NOT for actual
@@ -46,18 +46,18 @@ test.describe('Slot review — page fundamentals', () => {
     expect(response?.status(), 'Slot review page should return HTTP 200').toBeLessThan(400);
   });
 
-  test('@smoke page loads with correct URL @slot-review', async ({ page }) => {
+  test('@regression page loads with correct URL @slot-review', async ({ page }) => {
     await expect(page).toHaveURL(
       new RegExp(`/${PRIMARY_GEO}/online-casinos/slots/${PRIMARY_SLUG}`)
     );
   });
 
-  test('@smoke H1 is visible and contains the slot name @slot-review', async () => {
+  test('@regression H1 is visible and contains the slot name @slot-review', async () => {
     await expect(slotPage.heading).toBeVisible();
     await expect(slotPage.heading).toContainText(/starburst/i);
   });
 
-  test('@smoke page title contains slot name @slot-review', async ({ page }) => {
+  test('@regression page title contains slot name @slot-review', async ({ page }) => {
     await expect(page).toHaveTitle(/starburst/i);
   });
 
@@ -82,23 +82,23 @@ test.describe('Slot review — game demo presence', () => {
     expect(response?.status()).toBeLessThan(400);
   });
 
-  test('@smoke game demo container is present in the DOM @slot-review', async () => {
+  test('@regression game demo container is present in the DOM @slot-review', async () => {
     await expect(slotPage.gameDemoContainer).toBeAttached();
     await expect(slotPage.gameDemoContainer).toBeVisible();
   });
 
-  test('@smoke demo iframe element is present with a valid data-demourl @slot-review', async () => {
+  test('@regression demo iframe element is present with a valid data-demourl @slot-review', async () => {
     await expect(slotPage.gameDemoIframe).toBeAttached();
     // data-demourl is populated server-side — assert it is non-empty and points
     // to the SlotsLaunch CDN (confirmed pattern: slotslaunch.com/iframe/{id})
     await expect(slotPage.gameDemoIframe).toHaveAttribute('data-demourl', /slotslaunch\.com\/iframe\/\d+/);
   });
 
-  test('@smoke play demo button is present and visible @slot-review', async () => {
+  test('@regression play demo button is present and visible @slot-review', async () => {
     await expect(slotPage.playDemoBtn).toBeVisible();
   });
 
-  test('@smoke play demo button has the correct onclick handler @slot-review', async () => {
+  test('@regression play demo button has the correct onclick handler @slot-review', async () => {
     await expect(slotPage.playDemoBtn).toHaveAttribute(
       'onclick',
       /toggleGameDemo\(['"']open['"']\)/,
@@ -125,7 +125,7 @@ test.describe('Slot review — play demo interaction', () => {
     expect(response?.status()).toBeLessThan(400);
   });
 
-  test('@smoke play demo button is clickable @slot-review', async () => {
+  test('@regression play demo button is clickable @slot-review', async () => {
     const btn = slotPage.playDemoBtn;
     await expect(btn).toBeVisible();
 
@@ -135,12 +135,12 @@ test.describe('Slot review — play demo interaction', () => {
     expect(pointerEvents).not.toBe('none');
   });
 
-  test('@smoke anonymous users see a login gate over the demo @slot-review', async () => {
+  test('@regression anonymous users see a login gate over the demo @slot-review', async () => {
     await expect(slotPage.slotLoginGate).toBeAttached();
     await expect(slotPage.slotLoginSignupBtn).toBeVisible();
   });
 
-  test('@smoke activating the demo handler populates the iframe src @slot-review', async () => {
+  test('@regression activating the demo handler populates the iframe src @slot-review', async () => {
     // Anonymous users cannot click #play-demo-btn — login gate intercepts pointer events.
     // Invoke toggleGameDemo directly to verify the handler without a live game load.
     await slotPage.activateGameDemo();
@@ -179,14 +179,14 @@ test.describe('Slot review — slot metadata', () => {
     expect(response?.status()).toBeLessThan(400);
   });
 
-  test('@smoke slot metadata values are present on the page @slot-review', async () => {
+  test('@regression slot metadata values are present on the page @slot-review', async () => {
     // At least 5 metadata cells present (reels, rows, paylines, min bet, max bet etc.)
     await expect(slotPage.metadataValues.first()).toBeAttached();
     // nth(4) = at least 5 values (0-indexed)
     await expect(slotPage.metadataValues.nth(4)).toBeAttached();
   });
 
-  test('@smoke metadata values are non-empty @slot-review', async () => {
+  test('@regression metadata values are non-empty @slot-review', async () => {
     const firstValue = slotPage.metadataValues.first();
     await expect(firstValue).toBeVisible();
     const text = await firstValue.innerText();
@@ -219,13 +219,13 @@ test.describe('Slot review — operator list', () => {
     expect(response?.status()).toBeLessThan(400);
   });
 
-  test('@smoke at least 3 operator cards are present @slot-review', async () => {
+  test('@regression at least 3 operator cards are present @slot-review', async () => {
     // Hidden duplicate oplist templates exist in the DOM — assert attachment, not visibility.
     await expect(slotPage.operatorCards.first()).toBeAttached({ timeout: 20_000 });
     await expect(slotPage.operatorCards.nth(2)).toBeAttached();
   });
 
-  test('@smoke each operator card exposes an affiliate CTA @slot-review', async () => {
+  test('@regression each operator card exposes an affiliate CTA @slot-review', async () => {
     await expect(slotPage.operatorCtaLinks.first()).toHaveAttribute('href', /\/go\//);
   });
 
@@ -249,17 +249,17 @@ test.describe('Slot review — breadcrumb navigation', () => {
     expect(response?.status()).toBeLessThan(400);
   });
 
-  test('@smoke breadcrumb is present @slot-review', async () => {
+  test('@regression breadcrumb is present @slot-review', async () => {
     await expect(slotPage.breadcrumb).toBeAttached();
   });
 
-  test('@smoke breadcrumb has at least 3 links (Home → Casinos → Slots) @slot-review', async () => {
+  test('@regression breadcrumb has at least 3 links (Home → Casinos → Slots) @slot-review', async () => {
     await expect(slotPage.breadcrumbLinks.first()).toBeAttached();
     // nth(2) = at least 3 breadcrumb links (0-indexed)
     await expect(slotPage.breadcrumbLinks.nth(2)).toBeAttached();
   });
 
-  test('@smoke breadcrumb links back to the Slots hub @slot-review', async () => {
+  test('@regression breadcrumb links back to the Slots hub @slot-review', async () => {
     await expect(slotPage.slotsHubLink).toBeAttached();
     const href = await slotPage.slotsHubLink.getAttribute('href');
     expect(href).toMatch(/\/online-casinos\/slots\/?$/);
@@ -289,7 +289,7 @@ test.describe('Slot review — author byline', () => {
     expect(response?.status()).toBeLessThan(400);
   });
 
-  test('@smoke an author name is present on the page @slot-review', async ({ page }) => {
+  test('@regression an author name is present on the page @slot-review', async ({ page }) => {
     // Author byline uses "Reviewed by" or "Written by" pattern in main content
     const authorByline = page.locator('main').getByText(/reviewed by|written by|by\s+\w+/i).first();
     await expect(authorByline).toBeAttached();
@@ -309,7 +309,7 @@ test.describe('Slot review — related slots', () => {
     expect(response?.status()).toBeLessThan(400);
   });
 
-  test('@smoke related slots gallery is present on the page @slot-review', async () => {
+  test('@regression related slots gallery is present on the page @slot-review', async () => {
     await expect(slotPage.relatedSlotsGallery).toBeAttached();
   });
 
@@ -340,7 +340,7 @@ test.describe('Slot review — review body content', () => {
     expect(response?.status()).toBeLessThan(400);
   });
 
-  test('@smoke review body is present and non-empty @slot-review', async () => {
+  test('@regression review body is present and non-empty @slot-review', async () => {
     await expect(slotPage.reviewBody).toBeVisible();
     const text = await slotPage.reviewBody.innerText();
     expect(text.trim().length).toBeGreaterThan(100);
@@ -395,7 +395,7 @@ test.describe('Slot review — structured data', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 test.describe('Slot review — multi-slug template consistency', () => {
-  test(`@smoke ${ALT_SLUG} loads with demo container, operator cards, and breadcrumb @slot-review`,
+  test(`@regression ${ALT_SLUG} loads with demo container, operator cards, and breadcrumb @slot-review`,
     async ({ page }) => {
       const slotPage = new SlotReviewPage(page);
       const response = await slotPage.goto(PRIMARY_GEO, ALT_SLUG);

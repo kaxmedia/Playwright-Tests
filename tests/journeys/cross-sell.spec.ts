@@ -10,7 +10,7 @@
 //
 // Run with:
 //   npx playwright test tests/journeys/cross-sell.spec.ts --project=chrome
-//   npx playwright test tests/journeys/cross-sell.spec.ts --grep @smoke
+//   npx playwright test tests/journeys/cross-sell.spec.ts --grep @regression
 //
 // Design principles:
 //   - No off-site CTA clicks — /go/ links asserted present, never followed.
@@ -67,13 +67,13 @@ test.describe('Journey 2.1 — Casino toplist → Cosmo Spins free games', () =>
         expect(response?.status(), 'Casino toplist should return HTTP 200').toBeLessThan(400);
     });
 
-    test('@smoke Cosmo Spins cross-sell link is present on casino toplist @journey', async ({ page }) => {
+    test('@regression Cosmo Spins cross-sell link is present on casino toplist @journey', async ({ page }) => {
         await expect(page).toHaveURL(/\/ie\/online-casinos/);
         const cosmoLink = page.locator('a[href*="cosmo-spins"]').first();
         await expect(cosmoLink).toBeAttached();
     });
 
-    test('@smoke navigating to Cosmo Spins lands on the free game hub @journey', async ({ page }) => {
+    test('@regression navigating to Cosmo Spins lands on the free game hub @journey', async ({ page }) => {
         await page.goto(URLS.cosmoSpins);
         await expect(page).toHaveURL(/\/games\/cosmo-spins/);
         await expect(page.locator('h1').first()).toBeVisible();
@@ -92,12 +92,12 @@ test.describe('Journey 2.2 — Cosmo Spins → casino toplist (real money path)'
         expect(response?.status(), 'Cosmo Spins should return HTTP 200').toBeLessThan(400);
     });
 
-    test('@smoke Cosmo Spins page loads with correct H1 @journey', async ({ page }) => {
+    test('@regression Cosmo Spins page loads with correct H1 @journey', async ({ page }) => {
         await expect(page).toHaveURL(/\/games\/cosmo-spins/);
         await expect(page.locator('h1').first()).toBeVisible();
     });
 
-    test('@smoke casino toplist link is reachable from Cosmo Spins page @journey', async ({ page }) => {
+    test('@regression casino toplist link is reachable from Cosmo Spins page @journey', async ({ page }) => {
         const casinoLink = page.locator('a[href*="/ie/online-casinos"]').first();
         await expect(casinoLink).toBeAttached();
     });
@@ -127,13 +127,13 @@ test.describe('Journey 2.3 — Operator review → casino toplist', () => {
         expect(response?.status(), 'Casino review should return HTTP 200').toBeLessThan(400);
     });
 
-    test('@smoke review page loads and toplist breadcrumb link is present @journey', async ({ page }) => {
+    test('@regression review page loads and toplist breadcrumb link is present @journey', async ({ page }) => {
         await expect(page).toHaveURL(/\/ie\/online-casinos\/kingmaker/);
         const toplistLink = page.locator('a[href*="/ie/online-casinos"]').first();
         await expect(toplistLink).toBeAttached();
     });
 
-    test('@smoke navigating back to toplist from review exposes operator cards @journey', async ({ page }) => {
+    test('@regression navigating back to toplist from review exposes operator cards @journey', async ({ page }) => {
         const comparison = new ComparisonPage(page);
         await page.goto(URLS.casinoToplist);
         await expect(page).toHaveURL(/\/ie\/online-casinos\/?$/);
@@ -153,12 +153,12 @@ test.describe('Journey 2.4 — Casino toplist → bonus page', () => {
         expect(response?.status()).toBeLessThan(400);
     });
 
-    test('@smoke bonus hub link is present on casino toplist @journey', async ({ page }) => {
+    test('@regression bonus hub link is present on casino toplist @journey', async ({ page }) => {
         const bonusLink = page.locator('a[href*="/online-casinos/bonus"]').first();
         await expect(bonusLink).toBeAttached();
     });
 
-    test('@smoke navigating to bonus hub exposes claim CTAs @journey', async ({ page }) => {
+    test('@regression navigating to bonus hub exposes claim CTAs @journey', async ({ page }) => {
         await page.goto(URLS.casinoBonus);
         await expect(page).toHaveURL(/\/online-casinos\/bonus/);
         await expect(page.locator('h1').first()).toBeVisible();
@@ -177,12 +177,12 @@ test.describe('Journey 2.5 — Casino toplist → betting toplist via top nav', 
         expect(response?.status()).toBeLessThan(400);
     });
 
-    test('@smoke betting sites nav link is present on casino toplist @journey', async ({ page }) => {
+    test('@regression betting sites nav link is present on casino toplist @journey', async ({ page }) => {
         const bettingLink = page.locator('a[href*="/ie/betting-sites"]').first();
         await expect(bettingLink).toBeAttached();
     });
 
-    test('@smoke navigating to betting toplist loads bookmaker cards @journey', async ({ page }) => {
+    test('@regression navigating to betting toplist loads bookmaker cards @journey', async ({ page }) => {
         await page.goto(URLS.bettingToplist);
         await expect(page).toHaveURL(/\/ie\/betting-sites\/?$/);
         await expect(page.locator('h1').first()).toBeVisible();
@@ -206,12 +206,12 @@ test.describe('Journey 2.6 — Predictor / Tournaments → betting toplist', () 
         expect(response?.status(), 'Tournaments page should return HTTP 200').toBeLessThan(400);
     });
 
-    test('@smoke tournaments page loads with correct heading @journey', async ({ page }) => {
+    test('@regression tournaments page loads with correct heading @journey', async ({ page }) => {
         await expect(page).toHaveURL(/\/ie\/games\/tournaments/);
         await expect(page.locator('h1').first()).toBeVisible();
     });
 
-    test('@smoke betting toplist cross-link is reachable from tournaments page @journey', async ({ page }) => {
+    test('@regression betting toplist cross-link is reachable from tournaments page @journey', async ({ page }) => {
         const bettingLink = page.locator('a[href*="/ie/betting-sites"]').first();
         await expect(bettingLink).toBeAttached();
     });
@@ -238,7 +238,7 @@ test.describe('Journey 2.7 — News hub', () => {
         expect(response?.status()).toBeLessThan(400);
     });
 
-    test('@smoke news hub loads with article links @journey', async ({ page }) => {
+    test('@regression news hub loads with article links @journey', async ({ page }) => {
         await expect(page).toHaveURL(/\/ie\/news/);
         await expect(page.locator('h1').first()).toBeVisible();
         const articleLinks = page.locator('a[href*="/ie/news/"]');
@@ -247,7 +247,7 @@ test.describe('Journey 2.7 — News hub', () => {
 });
 
 test.describe('Journey 2.7 — News article → toplist via in-content link', () => {
-    test('@smoke a long-form article contains in-content toplist links @journey', async ({ page }) => {
+    test('@regression a long-form article contains in-content toplist links @journey', async ({ page }) => {
         const response = await page.goto(URLS.newsArticle);
         expect(response?.status()).toBeLessThan(400);
         await expect(page).toHaveURL(new RegExp(URLS.newsArticleSlug));
@@ -271,14 +271,14 @@ test.describe('Journey 2.8 — Slot page → casino toplist', () => {
         expect(response?.status(), 'Slot page should return HTTP 200').toBeLessThan(400);
     });
 
-    test('@smoke slot page loads with H1 and casino toplist breadcrumb @journey', async ({ page }) => {
+    test('@regression slot page loads with H1 and casino toplist breadcrumb @journey', async ({ page }) => {
         await expect(page).toHaveURL(/\/online-casinos\/slots\/starburst/);
         await expect(page.locator('h1').first()).toBeVisible();
         const toplistBreadcrumb = page.locator('a[href*="/ie/online-casinos"]').first();
         await expect(toplistBreadcrumb).toBeAttached();
     });
 
-    test('@smoke slot page exposes operator affiliate CTAs @journey', async ({ page }) => {
+    test('@regression slot page exposes operator affiliate CTAs @journey', async ({ page }) => {
         await expect(page.locator('a[href*="/go/"]').first()).toBeAttached();
     });
 
@@ -307,13 +307,13 @@ test.describe('Journey 2.9 — Profile / rewards → predictor leaderboard', () 
         expect(response?.status(), 'Tournaments page should return HTTP 200').toBeLessThan(400);
     });
 
-    test('@smoke tournaments / predictor page loads with leaderboard visible @journey', async ({ page }) => {
+    test('@regression tournaments / predictor page loads with leaderboard visible @journey', async ({ page }) => {
         await expect(page).toHaveURL(/\/ie\/games\/tournaments/);
         await expect(page.locator('h1').first()).toBeVisible();
         await expect(tournamentsPage.leaderboard).toBeAttached();
     });
 
-    test('@smoke profile nav link uses /profile path @journey', async ({ page }) => {
+    test('@regression profile nav link uses /profile path @journey', async ({ page }) => {
         // Framework convention — profile hub is `/profile`, not `/account`
         const profileLink = page.locator('a[href="/profile"], a[href*="/profile/"]').first();
         await expect(profileLink).toBeAttached();
@@ -331,20 +331,20 @@ test.describe('Journey 2.10 — Homepage → vertical toplist via tab navigation
         expect(response?.status(), 'Homepage should return HTTP 200').toBeLessThan(400);
     });
 
-    test('@smoke homepage loads with vertical selector tabs @journey', async ({ page }) => {
+    test('@regression homepage loads with vertical selector tabs @journey', async ({ page }) => {
         await expect(page).toHaveURL(/gambling\.com\/ie\/?$/);
         await expect(page.locator('h1').first()).toBeVisible();
         await expect(page.getByRole('button', { name: /^casino$/i }).first()).toBeAttached();
         await expect(page.getByRole('button', { name: /^betting$/i }).first()).toBeAttached();
     });
 
-    test('@smoke homepage casino tab shows casino operator CTAs @journey', async ({ page }) => {
+    test('@regression homepage casino tab shows casino operator CTAs @journey', async ({ page }) => {
         const casinoCta = homepageCasinoCta(page);
         await expect(casinoCta).toBeAttached();
         await expect(casinoCta).toBeVisible();
     });
 
-    test('@smoke clicking betting tab swaps in bookmaker CTAs @journey', async ({ page }) => {
+    test('@regression clicking betting tab swaps in bookmaker CTAs @journey', async ({ page }) => {
         const bettingTab = page.getByRole('button', { name: /^betting$/i }).first();
         await expect(bettingTab).toBeVisible();
         await bettingTab.click();
@@ -353,14 +353,14 @@ test.describe('Journey 2.10 — Homepage → vertical toplist via tab navigation
         await expect(bettingCta).toBeVisible();
     });
 
-    test('@smoke casino toplist is reachable from homepage vertical nav @journey', async ({ page }) => {
+    test('@regression casino toplist is reachable from homepage vertical nav @journey', async ({ page }) => {
         await page.goto(URLS.casinoToplist);
         await expect(page).toHaveURL(/\/ie\/online-casinos\/?$/);
         await expect(page.locator('h1').first()).toBeVisible();
         await expect(page.locator('a[href*="/go/"]').first()).toBeAttached();
     });
 
-    test('@smoke betting toplist is reachable from homepage vertical nav @journey', async ({ page }) => {
+    test('@regression betting toplist is reachable from homepage vertical nav @journey', async ({ page }) => {
         await page.goto(URLS.bettingToplist);
         await expect(page).toHaveURL(/\/ie\/betting-sites\/?$/);
         await expect(page.locator('h1').first()).toBeVisible();

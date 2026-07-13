@@ -11,7 +11,7 @@ test.describe('Category Landing — IE Online Casinos', () => {
 
     // ── 1. Page fundamentals ─────────────────────────────────────────────────
 
-    test('@smoke page loads with a non-empty title', async ({ page }) => {
+    test('@regression page loads with a non-empty title', async ({ page }) => {
         await expect(page).toHaveURL(IE_CASINO.url);
         const title = await page.title();
         expect(title).not.toBe('');
@@ -19,31 +19,31 @@ test.describe('Category Landing — IE Online Casinos', () => {
         expect(title.toLowerCase()).not.toContain('error');
     });
 
-    test('@smoke H1 is visible and non-empty', async () => {
+    test('@regression H1 is visible and non-empty', async () => {
         await expect(iePage.pageTitle).toBeVisible();
         const h1Text = await iePage.pageTitle.innerText();
         expect(h1Text.trim()).not.toBe('');
     });
 
-    test('@smoke logo is visible', async () => {
+    test('@regression logo is visible', async () => {
         await expect(iePage.logo).toBeVisible();
     });
 
-    test('@smoke main navigation is visible', async () => {
+    test('@regression main navigation is visible', async () => {
         await expect(iePage.mainNav).toBeVisible();
     });
 
-    test('@smoke geo switcher is visible', async () => {
+    test('@regression geo switcher is visible', async () => {
         await expect(iePage.geoSwitcher).toBeVisible();
     });
 
-    test('@smoke URL stays on Irish casino category path', async ({ page }) => {
+    test('@regression URL stays on Irish casino category path', async ({ page }) => {
         await expect(page).toHaveURL(/\/ie\/online-casinos/);
     });
 
     // ── 2. Operator list ─────────────────────────────────────────────────────
 
-    test('@smoke operator list renders at least 5 rows', async () => {
+    test('@regression operator list renders at least 5 rows', async () => {
         const count = await iePage.getOperatorCount();
         expect(count).toBeGreaterThanOrEqual(5);
     });
@@ -67,7 +67,7 @@ test.describe('Category Landing — IE Online Casinos', () => {
         expect(count).toBeGreaterThanOrEqual(5);
     });
 
-    test('@smoke operator CTAs are visible and have valid /go/ie/ hrefs', async () => {
+    test('@regression operator CTAs are visible and have valid /go/ie/ hrefs', async () => {
         const ctas = iePage.operatorCTAs;
         const count = await ctas.count();
         expect(count).toBeGreaterThanOrEqual(5);
@@ -97,11 +97,11 @@ test.describe('Category Landing — IE Online Casinos', () => {
 
     // ── 3. Anchor / filter menu ──────────────────────────────────────────────
 
-    test('@smoke anchor menu is visible', async () => {
+    test('@regression anchor menu is visible', async () => {
         await expect(iePage.anchorMenu).toBeVisible();
     });
 
-    test('@smoke anchor menu has at least 3 links', async () => {
+    test('@regression anchor menu has at least 3 links', async () => {
         const count = await iePage.anchorLinks.count();
         expect(count).toBeGreaterThanOrEqual(3);
     });
@@ -118,12 +118,12 @@ test.describe('Category Landing — IE Online Casinos', () => {
 
     // ── 4. FAQ ───────────────────────────────────────────────────────────────
 
-    test('@smoke FAQ section is visible', async () => {
+    test('@regression FAQ section is visible', async () => {
         await iePage.faqSection.scrollIntoViewIfNeeded();
         await expect(iePage.faqSection).toBeVisible();
     });
 
-    test('@smoke FAQ has at least 3 items', async () => {
+    test('@regression FAQ has at least 3 items', async () => {
         const count = await iePage.faqItems.count();
         expect(count).toBeGreaterThanOrEqual(3);
     });
@@ -148,13 +148,13 @@ test.describe('Category Landing — IE Online Casinos', () => {
         expect(bodyText).not.toContain('£');
     });
 
-    test('@smoke document locale matches en-IE for IE category page', async ({ page }) => {
+    test('@regression document locale matches en-IE for IE category page', async ({ page }) => {
         await expect(page.locator('html')).toHaveAttribute('lang', /^en-IE/i);
     });
 
     // ── 6. Footer ────────────────────────────────────────────────────────────
 
-    test('@smoke footer is visible', async () => {
+    test('@regression footer is visible', async () => {
         await iePage.page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
         await expect(iePage.footer).toBeVisible();
     });

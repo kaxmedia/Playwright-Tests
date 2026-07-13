@@ -28,12 +28,12 @@ test.describe('Footer', () => {
   // ─── Smoke tests ─────────────────────────────────────────────────────────────
 
   // Test 1: The footer element itself is present and visible on the page
-  test('@smoke footer is visible', async () => {
+  test('@smoke @regression footer is visible', async () => {
     await expect(footerPage.footer).toBeVisible();
   });
 
   // Test 2: The "Responsible Gambling" compliance link is in the footer and href is correct
-  test('@smoke Responsible Gambling link is visible and href contains /responsible', async () => {
+  test('@smoke @regression Responsible Gambling link is visible and href contains /responsible', async () => {
     // Scroll the link into view in case it is below the initial scroll position
     await footerPage.responsibleGamblingLink.scrollIntoViewIfNeeded();
     // Assert the link is visible to the user
@@ -43,7 +43,7 @@ test.describe('Footer', () => {
   });
 
   // Test 3: "Terms and Conditions" link is visible, href is correct, and the page actually exists (200)
-  test('@smoke Terms and Conditions link is visible, href is correct, and page returns 200', async ({ request }) => {
+  test('@smoke @regression Terms and Conditions link is visible, href is correct, and page returns 200', async ({ request }) => {
     // Scroll the link into view
     await footerPage.termsLink.scrollIntoViewIfNeeded();
     // Assert the link is visible on the page
@@ -60,7 +60,7 @@ test.describe('Footer', () => {
   });
 
   // Test 4: "Privacy and Cookies Policy" link is visible, href is correct, and the page actually exists (200)
-  test('@smoke Privacy and Cookies Policy link is visible, href is correct, and page returns 200', async ({ request }) => {
+  test('@smoke @regression Privacy and Cookies Policy link is visible, href is correct, and page returns 200', async ({ request }) => {
     // Scroll the link into view
     await footerPage.privacyLink.scrollIntoViewIfNeeded();
     // Assert the link is visible on the page
@@ -77,7 +77,7 @@ test.describe('Footer', () => {
   });
 
   // Test 5: The copyright paragraph at the bottom contains the GDC Media company name
-  test('@smoke copyright text contains "GDC Media Limited"', async () => {
+  test('@smoke @regression copyright text contains "GDC Media Limited"', async () => {
     // Scroll the copyright paragraph into view — it is at the very bottom of the footer
     await footerPage.legalText.scrollIntoViewIfNeeded();
     // Assert the paragraph contains the company name
@@ -157,7 +157,7 @@ test.describe('Footer', () => {
 
   // Test 9: Regulatory logos are present in the global footer and their landing pages are live.
   // These logos are a compliance requirement — a missing logo or a dead link is a legal risk.
-  test('@smoke regulatory logos are present and landing pages return 200', async ({ request }) => {
+  test('@smoke @regression regulatory logos are present and landing pages return 200', async ({ request }) => {
     // External regulatory and government websites can be slow to respond.
     // 120 s gives even sluggish servers enough time without failing on latency alone.
     test.setTimeout(120000);
@@ -330,12 +330,12 @@ for (const geo of geoVariants) {
     });
 
     // Test G1: The footer element is present on this geo
-    test('@smoke footer is visible', async () => {
+    test('@smoke @regression footer is visible', async () => {
       await expect(footerPage.footer).toBeVisible();
     });
 
     // Test G2: The Responsible Gambling link exists in the local language and points to the right page
-    test('@smoke Responsible Gambling link is visible and href is correct', async () => {
+    test('@smoke @regression Responsible Gambling link is visible and href is correct', async () => {
       // complianceLink() looks up any footer link by its display text — so passing the
       // German label finds the German link, passing the Greek label finds the Greek link.
       // This is the key payoff of parameterisation: one test body, many languages.
@@ -349,7 +349,7 @@ for (const geo of geoVariants) {
     });
 
     // Test G3: The Terms link exists in the local language and points to the right page
-    test('@smoke Terms link is visible and href is correct', async () => {
+    test('@smoke @regression Terms link is visible and href is correct', async () => {
       const link = footerPage.complianceLink(geo.termsText);
       await link.scrollIntoViewIfNeeded();
       await expect(link).toBeVisible();
@@ -358,7 +358,7 @@ for (const geo of geoVariants) {
     });
 
     // Test G4: The Privacy link exists in the local language and points to the right page
-    test('@smoke Privacy link is visible and href is correct', async () => {
+    test('@smoke @regression Privacy link is visible and href is correct', async () => {
       const link = footerPage.complianceLink(geo.privacyText);
       await link.scrollIntoViewIfNeeded();
       await expect(link).toBeVisible();
@@ -370,7 +370,7 @@ for (const geo of geoVariants) {
     // US shows "GDC Media America Inc"; all other geos show "GDC Media Limited".
     // We locate the paragraph using © rather than the entity name itself, because the
     // entity name is what we are asserting — it should not also be the locator.
-    test('@smoke copyright names the correct legal entity', async () => {
+    test('@smoke @regression copyright names the correct legal entity', async () => {
       const copyright = footerPage.footer.locator('p').filter({ hasText: '©' }).first();
       await copyright.scrollIntoViewIfNeeded();
       await expect(copyright).toContainText(geo.copyrightContains);
@@ -379,7 +379,7 @@ for (const geo of geoVariants) {
     // Test G6: Regulatory logos are present on this geo's footer and their landing pages are live.
     // geo.logos comes from the geoVariants data above — each geo has its own required set.
     // This is the same pattern as Test 9 in the global Footer block, but driven by geo data.
-    test('@smoke regulatory logos are present and landing pages return 200', async ({ request }) => {
+    test('@smoke @regression regulatory logos are present and landing pages return 200', async ({ request }) => {
       // External regulatory and government websites can be slow — 120 s prevents false timeouts
       test.setTimeout(120000);
       // Step 1: Check every logo is in the footer DOM with the correct href
@@ -430,17 +430,17 @@ for (const config of geoHomepages) {
     });
 
     // T1 ─ @smoke ─────────────────────────────────────────────────────────────
-    test(`${config.name} — @smoke footer is visible`, async () => {
+    test(`${config.name} — @smoke @regression footer is visible`, async () => {
       await expect(gh.footer).toBeVisible();
     });
 
     // T2 ─ @smoke ─────────────────────────────────────────────────────────────
-    test(`${config.name} — @smoke footer has at least 20 links`, async () => {
+    test(`${config.name} — @smoke @regression footer has at least 20 links`, async () => {
       expect(await gh.footerLinks.count()).toBeGreaterThanOrEqual(20);
     });
 
     // T3 ─ @smoke ─────────────────────────────────────────────────────────────
-    test(`${config.name} — @smoke no footer link has empty href or # placeholder`, async () => {
+    test(`${config.name} — @smoke @regression no footer link has empty href or # placeholder`, async () => {
       // SE has a Twitter/X icon with href="" in the live footer — site content bug.
       test.fixme(config.skipEmptyHrefCheck === true, 'gambling.com/se footer has href="" on Twitter icon — site content bug, not test bug');
       const count = await gh.footerLinks.count();
@@ -453,7 +453,7 @@ for (const config of geoHomepages) {
     });
 
     // T4 ─ @smoke ─────────────────────────────────────────────────────────────
-    test(`${config.name} — @smoke all internal footer hrefs are well-formed strings`, async () => {
+    test(`${config.name} — @smoke @regression all internal footer hrefs are well-formed strings`, async () => {
       const count = await gh.footerLinks.count();
       for (let i = 0; i < count; i++) {
         const href = await gh.footerLinks.nth(i).getAttribute('href');
@@ -464,7 +464,7 @@ for (const config of geoHomepages) {
     });
 
     // T5 ─ @smoke ─────────────────────────────────────────────────────────────
-    test(`${config.name} — @smoke first 10 internal footer links return HTTP < 400`, async ({ request }) => {
+    test(`${config.name} — @smoke @regression first 10 internal footer links return HTTP < 400`, async ({ request }) => {
       const count = await gh.footerLinks.count();
       const hrefs: string[] = [];
       for (let i = 0; i < count && hrefs.length < 10; i++) {
@@ -483,7 +483,7 @@ for (const config of geoHomepages) {
     });
 
     // T6 ─ @smoke ─────────────────────────────────────────────────────────────
-    test(`${config.name} — @smoke all footer images are attached with non-empty src`, async () => {
+    test(`${config.name} — @smoke @regression all footer images are attached with non-empty src`, async () => {
       const count = await gh.footerImages.count();
       for (let i = 0; i < count; i++) {
         const img = gh.footerImages.nth(i);

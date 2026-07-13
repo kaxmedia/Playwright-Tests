@@ -9,7 +9,7 @@
 //
 // Run with:
 //   npx playwright test tests/journeys/betting-journeys.spec.ts --project=chrome
-//   npx playwright test tests/journeys/betting-journeys.spec.ts --grep @smoke
+//   npx playwright test tests/journeys/betting-journeys.spec.ts --grep @regression
 //
 // Design principles:
 //   - No off-site CTA clicks — /go/ links asserted present, never followed.
@@ -76,7 +76,7 @@ test.describe('Journey 5.1 — Betting research via toplist', () => {
         expect(response?.status(), 'Betting toplist should return HTTP 200').toBeLessThan(400);
     });
 
-    test('@smoke toplist loads with H1 and operator cards @journey', async ({ page }) => {
+    test('@regression toplist loads with H1 and operator cards @journey', async ({ page }) => {
         await expect(page).toHaveURL(/\/ie\/betting-sites\/?$/);
         await expect(page.locator('h1').first()).toBeVisible();
         await expect(comparison.cards.first()).toBeVisible({ timeout: 20_000 });
@@ -84,7 +84,7 @@ test.describe('Journey 5.1 — Betting research via toplist', () => {
         await expect(comparison.cards.nth(4)).toBeAttached();
     });
 
-    test('@smoke first bookmaker card exposes logo, name, and affiliate CTA @journey', async () => {
+    test('@regression first bookmaker card exposes logo, name, and affiliate CTA @journey', async () => {
         await expect(comparison.cards.first()).toBeVisible({ timeout: 20_000 });
         const firstCard = comparison.nthCard(0);
         await expect(comparison.logoImg(firstCard)).toBeVisible();
@@ -107,13 +107,13 @@ test.describe('Journey 5.2 — Betting apps page', () => {
         expect(response?.status(), 'Betting apps page should return HTTP 200').toBeLessThan(400);
     });
 
-    test('@smoke betting apps page loads with correct H1 @journey', async ({ page }) => {
+    test('@regression betting apps page loads with correct H1 @journey', async ({ page }) => {
         await expect(page).toHaveURL(/\/ie\/betting-sites\/apps/);
         await expect(page.locator('h1').first()).toBeVisible();
         await expect(page.locator('h1').first()).toContainText(/app/i);
     });
 
-    test('@smoke betting apps page exposes bookmaker CTAs @journey', async () => {
+    test('@regression betting apps page exposes bookmaker CTAs @journey', async () => {
         await expect(comparison.cards.first()).toBeVisible({ timeout: 20_000 });
         const firstCard = comparison.nthCard(0);
         await expect(comparison.ctaLink(firstCard)).toHaveAttribute('href', /\/go\//);
@@ -134,20 +134,20 @@ test.describe('Journey 5.3 — Free bets page', () => {
         expect(response?.status(), 'Free bets page should return HTTP 200').toBeLessThan(400);
     });
 
-    test('@smoke free bets page loads with correct H1 @journey', async ({ page }) => {
+    test('@regression free bets page loads with correct H1 @journey', async ({ page }) => {
         await expect(page).toHaveURL(/\/ie\/betting-sites\/free-bets/);
         await expect(page.locator('h1').first()).toBeVisible();
         await expect(page.locator('h1').first()).toContainText(/free.?bet/i);
     });
 
-    test('@smoke free bets page exposes bookmaker CTAs @journey', async () => {
+    test('@regression free bets page exposes bookmaker CTAs @journey', async () => {
         await expect(comparison.cards.first()).toBeVisible({ timeout: 20_000 });
         await expect(comparison.cards.nth(2)).toBeAttached();
         const firstCard = comparison.nthCard(0);
         await expect(comparison.ctaLink(firstCard)).toHaveAttribute('href', /\/go\//);
     });
 
-    test('@smoke free bets page links back to betting toplist @journey', async ({ page }) => {
+    test('@regression free bets page links back to betting toplist @journey', async ({ page }) => {
         const toplistLink = page.locator('a[href*="/ie/betting-sites"]').first();
         await expect(toplistLink).toBeAttached();
     });
@@ -174,12 +174,12 @@ test.describe('Journey 5.4 — In-play betting (betting toplist)', () => {
         expect(response?.status(), 'In-play entry should return HTTP 200').toBeLessThan(400);
     });
 
-    test('@smoke in-play entry lands on betting toplist with H1 @journey', async ({ page }) => {
+    test('@regression in-play entry lands on betting toplist with H1 @journey', async ({ page }) => {
         await expect(page).toHaveURL(/\/ie\/betting-sites\/?$/);
         await expect(page.locator('main.body_content h1').first()).toBeVisible();
     });
 
-    test('@smoke in-play journey surfaces live betting content and bookmaker CTAs @journey', async ({ page }) => {
+    test('@regression in-play journey surfaces live betting content and bookmaker CTAs @journey', async ({ page }) => {
         await expect(page.locator('main.body_content').getByText(/live betting/i).first()).toBeAttached();
         await expect(comparison.cards.first()).toBeVisible({ timeout: 20_000 });
         const firstCard = comparison.nthCard(0);
@@ -205,13 +205,13 @@ test.describe('Journey 5.5 — Event offers (free-bets page)', () => {
         expect(response?.status(), 'Free bets / event offers page should return HTTP 200').toBeLessThan(400);
     });
 
-    test('@smoke event offers page loads with sign-up offers @journey', async ({ page }) => {
+    test('@regression event offers page loads with sign-up offers @journey', async ({ page }) => {
         await expect(page).toHaveURL(/\/ie\/betting-sites\/free-bets/);
         await expect(page.locator('h1').first()).toBeVisible();
         await expect(comparison.cards.first()).toBeVisible({ timeout: 20_000 });
     });
 
-    test('@smoke event offer CTAs are present for each bookmaker @journey', async () => {
+    test('@regression event offer CTAs are present for each bookmaker @journey', async () => {
         await expect(comparison.cards.first()).toBeVisible({ timeout: 20_000 });
         const firstCard = comparison.nthCard(0);
         await expect(comparison.ctaLink(firstCard)).toHaveAttribute('href', /\/go\//);
@@ -229,7 +229,7 @@ test.describe('Journey 5.6 — Sport-specific pages (football & horse racing)', 
         expect(response?.status(), 'Betting toplist should return HTTP 200').toBeLessThan(400);
     });
 
-    test('@smoke football betting section is present on the toplist with bookmaker CTAs @journey', async ({ page }) => {
+    test('@regression football betting section is present on the toplist with bookmaker CTAs @journey', async ({ page }) => {
         await expect(page).toHaveURL(/\/ie\/betting-sites\/?$/);
         await expect(
             page.locator('main.body_content h2').filter({ hasText: /football betting/i }).first()
@@ -237,7 +237,7 @@ test.describe('Journey 5.6 — Sport-specific pages (football & horse racing)', 
         await expect(page.locator('main.body_content a[href*="/go/"]').first()).toBeAttached();
     });
 
-    test('@smoke horse racing betting section is present on the toplist with bookmaker CTAs @journey', async ({ page }) => {
+    test('@regression horse racing betting section is present on the toplist with bookmaker CTAs @journey', async ({ page }) => {
         await expect(page).toHaveURL(/\/ie\/betting-sites\/?$/);
         await expect(
             page.locator('main.body_content h2').filter({ hasText: /horse racing betting/i }).first()
@@ -267,13 +267,13 @@ test.describe('Journey 5.7 — Odds comparison (best-odds-guaranteed page)', () 
         expect(response?.status(), 'Best odds page should return HTTP 200').toBeLessThan(400);
     });
 
-    test('@smoke best odds entry lands on betting toplist with H1 @journey', async ({ page }) => {
+    test('@regression best odds entry lands on betting toplist with H1 @journey', async ({ page }) => {
         await expect(page).toHaveURL(/\/ie\/betting-sites\/?$/);
         await expect(page.locator('main.body_content h1').first()).toBeVisible();
         await expect(page.locator('main.body_content').getByText(/best odds/i).first()).toBeAttached();
     });
 
-    test('@smoke best odds page exposes bookmaker CTAs @journey', async () => {
+    test('@regression best odds page exposes bookmaker CTAs @journey', async () => {
         await expect(comparison.cards.first()).toBeVisible({ timeout: 20_000 });
         const firstCard = comparison.nthCard(0);
         await expect(comparison.ctaLink(firstCard)).toHaveAttribute('href', /\/go\//);
@@ -295,13 +295,13 @@ test.describe('Journey 5.8 — Acca / bet builder page', () => {
         expect(response?.status(), 'Bet builder page should return HTTP 200').toBeLessThan(400);
     });
 
-    test('@smoke bet builder entry lands on betting toplist with H1 @journey', async ({ page }) => {
+    test('@regression bet builder entry lands on betting toplist with H1 @journey', async ({ page }) => {
         await expect(page).toHaveURL(/\/ie\/betting-sites\/?$/);
         await expect(page.locator('main.body_content h1').first()).toBeVisible();
         await expect(page.locator('main.body_content').getByText(/bet builder|acca/i).first()).toBeAttached();
     });
 
-    test('@smoke bet builder page exposes bookmaker CTAs @journey', async () => {
+    test('@regression bet builder page exposes bookmaker CTAs @journey', async () => {
         await expect(comparison.cards.first()).toBeVisible({ timeout: 20_000 });
         const firstCard = comparison.nthCard(0);
         await expect(comparison.ctaLink(firstCard)).toHaveAttribute('href', /\/go\//);
@@ -329,14 +329,14 @@ test.describe('Journey 5.9 — Live scores (betting toplist)', () => {
         expect(response?.status(), 'Betting toplist should return HTTP 200').toBeLessThan(400);
     });
 
-    test('@smoke betting toplist references live scores / livescore bookmaker @journey', async ({ page }) => {
+    test('@regression betting toplist references live scores / livescore bookmaker @journey', async ({ page }) => {
         await expect(page).toHaveURL(/\/ie\/betting-sites\/?$/);
         // Livescore-bet is listed as a bookmaker on the toplist
         const livescoreLink = page.locator('a[href*="livescore"]').first();
         await expect(livescoreLink).toBeAttached();
     });
 
-    test('@smoke bookmaker CTAs are present for live-score journey @journey', async () => {
+    test('@regression bookmaker CTAs are present for live-score journey @journey', async () => {
         await expect(comparison.cards.first()).toBeVisible({ timeout: 20_000 });
         const firstCard = comparison.nthCard(0);
         await expect(comparison.ctaLink(firstCard)).toHaveAttribute('href', /\/go\//);
@@ -357,7 +357,7 @@ test.describe('Journey 5.10 — Bookmaker review page', () => {
         expect(response?.status(), 'Bookmaker review should return HTTP 200').toBeLessThan(400);
     });
 
-    test('@smoke bookmaker review loads with H1 and rating score @journey', async ({ page }) => {
+    test('@regression bookmaker review loads with H1 and rating score @journey', async ({ page }) => {
         await expect(page).toHaveURL(/\/ie\/betting-sites\/bet365/);
         await expect(page.locator('main.body_content h1').first()).toBeVisible();
         await expect(reviewPage.ratingContainer).toBeVisible({ timeout: 15_000 });
@@ -367,13 +367,13 @@ test.describe('Journey 5.10 — Bookmaker review page', () => {
         expect(score).toBeLessThanOrEqual(10);
     });
 
-    test('@smoke bookmaker review exposes Visit Site affiliate CTA @journey', async ({ page }) => {
+    test('@regression bookmaker review exposes Visit Site affiliate CTA @journey', async ({ page }) => {
         const cta = bettingReviewCta(page);
         await expect(cta).toBeVisible();
         await expect(cta).toHaveAttribute('href', /\/go\//);
     });
 
-    test('@smoke bookmaker review shows a bonus offer block @journey', async () => {
+    test('@regression bookmaker review shows a bonus offer block @journey', async () => {
         await expect(reviewPage.bonusOfferBox).toBeVisible({ timeout: 15_000 });
         const text = await reviewPage.bonusOfferBox.innerText();
         expect(text.trim().length).toBeGreaterThan(0);
@@ -398,14 +398,14 @@ test.describe('Journey 5.11 — Betting tips (news article)', () => {
         expect(response?.status(), 'News hub should return HTTP 200').toBeLessThan(400);
     });
 
-    test('@smoke news hub loads with article links for tips content @journey', async ({ page }) => {
+    test('@regression news hub loads with article links for tips content @journey', async ({ page }) => {
         await expect(page).toHaveURL(/\/ie\/news/);
         await expect(page.locator('h1').first()).toBeVisible();
         const articleLinks = page.locator('a[href*="/ie/news/"]');
         await expect(articleLinks.first()).toBeAttached();
     });
 
-    test('@smoke an article from the news hub contains in-content bookmaker links @journey', async ({ page }) => {
+    test('@regression an article from the news hub contains in-content bookmaker links @journey', async ({ page }) => {
         const firstArticle = page.locator('a[href*="/ie/news/"]').first();
         await expect(firstArticle).toBeVisible();
         const href = await firstArticle.getAttribute('href');
@@ -437,17 +437,17 @@ test.describe('Journey 5.12 — World Cup / tournament predictor', () => {
         test.skip(!(await tournamentsPage.hasActiveTournament()), 'No active tournament currently live');
     });
 
-    test('@smoke predictor page loads with H1 and leaderboard @journey', async ({ page }) => {
+    test('@regression predictor page loads with H1 and leaderboard @journey', async ({ page }) => {
         await expect(page).toHaveURL(/\/ie\/games\/tournaments/);
         await expect(page.locator('h1').first()).toBeVisible();
         await expect(tournamentsPage.leaderboard).toBeAttached();
     });
 
-    test('@smoke predictor entry mechanism is present on the page @journey', async () => {
+    test('@regression predictor entry mechanism is present on the page @journey', async () => {
         await expect(tournamentsPage.unauthCta).toBeAttached();
     });
 
-    test('@smoke homepage exposes a link to the predictor @journey', async ({ page }) => {
+    test('@regression homepage exposes a link to the predictor @journey', async ({ page }) => {
         await page.goto(`${BASE}/ie`);
         const predictorLink = page.locator('a[href*="/ie/games/tournaments"]').first();
         await expect(predictorLink).toBeAttached();

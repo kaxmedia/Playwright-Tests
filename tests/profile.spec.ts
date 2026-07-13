@@ -84,7 +84,7 @@ test.describe('Profile Section', () => {
     // Tab navigation
     // ══════════════════════════════════════════════════════════════════════════
 
-    test('@smoke all 6 profile tabs are visible', async () => {
+    test('@regression all 6 profile tabs are visible', async () => {
         await profilePage.gotoTab('rewards');
         await expect(profilePage.tabRewards).toBeVisible();
         await expect(profilePage.tabDetails).toBeVisible();
@@ -94,7 +94,7 @@ test.describe('Profile Section', () => {
         await expect(profilePage.tabRefer).toBeVisible();
     });
 
-    test('@smoke each tab navigates to its correct URL', async ({ page }) => {
+    test('@regression each tab navigates to its correct URL', async ({ page }) => {
         const tabs = [
             ['rewards', PROFILE_URLS.rewards],
             ['details', PROFILE_URLS.details],
@@ -117,20 +117,20 @@ test.describe('Profile Section', () => {
     // Rewards tab — smoke checks
     // ══════════════════════════════════════════════════════════════════════════
 
-    test('@smoke Rewards tab loads and shows chip count', async () => {
+    test('@regression Rewards tab loads and shows chip count', async () => {
         await profilePage.gotoTab('rewards');
         await expect(profilePage.chipCount).toBeVisible({ timeout: 10000 });
         const text = await profilePage.chipCount.innerText();
         expect(text).toMatch(/\d+\s*chips?/i);
     });
 
-    test('@smoke Rewards tab shows Pending and Completed Challenges sections', async () => {
+    test('@regression Rewards tab shows Pending and Completed Challenges sections', async () => {
         await profilePage.gotoTab('rewards');
         await expect(profilePage.pendingChallenges).toBeVisible();
         await expect(profilePage.completedChallenges).toBeVisible();
     });
 
-    test('@smoke Rewards tab shows Spin the Wheel banner', async () => {
+    test('@regression Rewards tab shows Spin the Wheel banner', async () => {
         await profilePage.gotoTab('rewards');
         await profilePage.page
             .getByRole('heading', { name: /what you could win/i })
@@ -142,7 +142,7 @@ test.describe('Profile Section', () => {
     // Profile Details tab
     // ══════════════════════════════════════════════════════════════════════════
 
-    test('@smoke Profile Details tab loads and shows read-only fields', async () => {
+    test('@regression Profile Details tab loads and shows read-only fields', async () => {
         await profilePage.gotoTab('details');
         await expect(profilePage.detailsHeading).toBeVisible();
         await expect(profilePage.displayFirstName).toBeVisible();
@@ -150,7 +150,7 @@ test.describe('Profile Section', () => {
         await expect(profilePage.editDetailsBtn).toBeVisible();
     });
 
-    test('@smoke Edit Details link opens the edit form', async () => {
+    test('@regression Edit Details link opens the edit form', async () => {
         await profilePage.gotoTab('details');
         await profilePage.openEditForm();
         await expect(profilePage.editFormHeading).toBeVisible();
@@ -161,7 +161,7 @@ test.describe('Profile Section', () => {
         await expect(profilePage.cancelBtn).toBeVisible();
     });
 
-    test('@smoke Cancel button dismisses the edit form', async () => {
+    test('@regression Cancel button dismisses the edit form', async () => {
         await profilePage.gotoTab('details');
         await profilePage.openEditForm();
         await profilePage.cancelBtn.click();
@@ -214,7 +214,7 @@ test.describe('Profile Section', () => {
         await expect(profilePage.displayPhone).toContainText(phoneNumber.slice(-4), { timeout: 20000 });
     });
 
-    test('@negative Save Changes with empty First Name shows validation error', async () => {
+    test('@regression @negative Save Changes with empty First Name shows validation error', async () => {
         await profilePage.gotoTab('details');
         await profilePage.openEditForm();
         await profilePage.editFirstNameInput.clear();
@@ -223,7 +223,7 @@ test.describe('Profile Section', () => {
         await expect(profilePage.editFormHeading).toBeVisible();
     });
 
-    test('@smoke Sign Out link is visible on Profile Details tab', async () => {
+    test('@regression Sign Out link is visible on Profile Details tab', async () => {
         await profilePage.gotoTab('details');
         await expect(profilePage.signOutLink).toBeVisible();
     });
@@ -246,7 +246,7 @@ test.describe('Profile Section', () => {
     // Additional Details tab
     // ══════════════════════════════════════════════════════════════════════════
 
-    test('@smoke Additional Details tab loads with all form sections', async () => {
+    test('@regression Additional Details tab loads with all form sections', async () => {
         await profilePage.gotoTab('additional');
         await expect(profilePage.additionalHeading).toBeVisible();
         await expect(profilePage.interestCasino).toBeVisible();
@@ -257,7 +257,7 @@ test.describe('Profile Section', () => {
         await expect(profilePage.additionalSaveBtn).toBeVisible();
     });
 
-    test('@smoke all 5 betting interest options are present', async () => {
+    test('@regression all 5 betting interest options are present', async () => {
         await profilePage.gotoTab('additional');
         await expect(profilePage.interestCasino).toBeVisible();
         await expect(profilePage.interestBetting).toBeVisible();
@@ -320,7 +320,7 @@ test.describe('Profile Section', () => {
     // (API 200 from update-customer-preferences but values revert on reload).
     // ══════════════════════════════════════════════════════════════════════════
 
-    test('@smoke Marketing Preferences tab loads with notification and interest sections', async () => {
+    test('@regression Marketing Preferences tab loads with notification and interest sections', async () => {
         await profilePage.gotoTab('email');
         await expect(profilePage.marketingHeading).toBeVisible({ timeout: 15000 });
         const panel = profilePage.marketingPanel;
@@ -331,7 +331,7 @@ test.describe('Profile Section', () => {
         await expect(panel.getByText(/^casino and games$/i)).toBeVisible();
     });
 
-    test('@smoke all 3 interest toggles are present', async () => {
+    test('@regression all 3 interest toggles are present', async () => {
         await profilePage.gotoTab('email');
         const toggleVisible = { timeout: 15000 };
         await expect(profilePage.toggleGeneralNews).toBeVisible(toggleVisible);
@@ -362,7 +362,7 @@ test.describe('Profile Section', () => {
     // Manage Password tab
     // ══════════════════════════════════════════════════════════════════════════
 
-    test('@smoke Manage Password tab loads with all 3 password fields', async () => {
+    test('@regression Manage Password tab loads with all 3 password fields', async () => {
         await profilePage.gotoTab('password');
         await expect(profilePage.passwordHeading).toBeVisible();
         await expect(profilePage.currentPasswordInput).toBeVisible();
@@ -371,7 +371,7 @@ test.describe('Profile Section', () => {
         await expect(profilePage.updatePasswordBtn).toBeVisible();
     });
 
-    test('@negative wrong current password shows error', async () => {
+    test('@regression @negative wrong current password shows error', async () => {
         await profilePage.gotoTab('password');
         await profilePage.currentPasswordInput.fill('WrongPassword999!');
         await profilePage.newPasswordInput.fill(PROFILE_TEST_DATA.newPassword);
@@ -391,7 +391,7 @@ test.describe('Profile Section', () => {
             .toBeTruthy();
     });
 
-    test('@negative mismatched new passwords shows validation error', async () => {
+    test('@regression @negative mismatched new passwords shows validation error', async () => {
         await profilePage.gotoTab('password');
         await profilePage.currentPasswordInput.fill(PROFILE_TEST_DATA.origPassword);
         await profilePage.newPasswordInput.fill(PROFILE_TEST_DATA.newPassword);
@@ -451,18 +451,18 @@ test.describe('Profile Section', () => {
     // Refer & Earn tab — smoke checks
     // ══════════════════════════════════════════════════════════════════════════
 
-    test('@smoke Refer & Earn tab loads correctly', async () => {
+    test('@regression Refer & Earn tab loads correctly', async () => {
         await profilePage.gotoTab('refer');
         await expect(profilePage.referHeading).toBeVisible();
     });
 
-    test('@smoke Refer & Earn shows email invite input and Send button', async () => {
+    test('@regression Refer & Earn shows email invite input and Send button', async () => {
         await profilePage.gotoTab('refer');
         await expect(profilePage.referEmailInput).toBeVisible({ timeout: 15000 });
         await expect(profilePage.referSendBtn).toBeVisible();
     });
 
-    test('@smoke referral link is displayed and non-empty', async () => {
+    test('@regression referral link is displayed and non-empty', async () => {
         await profilePage.gotoTab('refer');
         await expect(profilePage.referralLinkDisplay).toBeVisible({ timeout: 15000 });
         let value: string;
@@ -476,17 +476,17 @@ test.describe('Profile Section', () => {
         expect(value).toMatch(/referral|refer/i);
     });
 
-    test('@smoke Copy to Clipboard button is present', async () => {
+    test('@regression Copy to Clipboard button is present', async () => {
         await profilePage.gotoTab('refer');
         await expect(profilePage.copyToClipboardBtn).toBeVisible();
     });
 
-    test('@smoke Your Referrals section is present', async () => {
+    test('@regression Your Referrals section is present', async () => {
         await profilePage.gotoTab('refer');
         await expect(profilePage.yourReferralsSection).toBeVisible();
     });
 
-    test('@negative sending referral invite with invalid email shows error', async () => {
+    test('@regression @negative sending referral invite with invalid email shows error', async () => {
         await profilePage.gotoTab('refer');
         await profilePage.referEmailInput.fill('notanemail');
         await profilePage.referSendBtn.click();

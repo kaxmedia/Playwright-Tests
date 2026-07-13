@@ -113,7 +113,7 @@ test.describe('Ktag — udc event @ktag @udc @regression', () => {
    *
    * Any failure here should be raised as a P1 defect on the FE team.
    */
-  test('udc: OAuth tokens must NOT be present (FE must strip before ktag fires) @negative @smoke', async ({ page, ktagEvents }) => {
+  test('udc: OAuth tokens must NOT be present (FE must strip before ktag fires) @negative @regression', async ({ page, ktagEvents }) => {
     await signInForKtag(page);
     await page.waitForTimeout(3000);
 

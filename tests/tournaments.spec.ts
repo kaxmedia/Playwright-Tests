@@ -18,7 +18,7 @@
 //
 // Run with:
 //   npx playwright test tests/tournaments.spec.ts --project=chrome
-//   npx playwright test tests/tournaments.spec.ts --grep @smoke
+//   npx playwright test tests/tournaments.spec.ts --grep @regression
 //   npx playwright test tests/tournaments.spec.ts --grep @regression
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -53,26 +53,26 @@ test.describe('Tournaments Page — Unauthenticated', () => {
 
   test.describe('Page fundamentals', () => {
 
-    test('@smoke page loads with HTTP 200', async ({ request }) => {
+    test('@regression page loads with HTTP 200', async ({ request }) => {
       const response = await request.get('https://www.gambling.com/games/tournaments');
       expect(response.status()).toBe(200);
     });
 
-    test('@smoke page URL is correct', async ({ page }) => {
+    test('@regression page URL is correct', async ({ page }) => {
       await expect(page).toHaveURL(/\/games\/tournaments/);
     });
 
-    test('@smoke page has a descriptive title', async ({ page }) => {
+    test('@regression page has a descriptive title', async ({ page }) => {
       await expect.poll(async () => (await page.title()).trim().length).toBeGreaterThan(0);
     });
 
-    test('@smoke H1 heading is present and non-empty', async () => {
+    test('@regression H1 heading is present and non-empty', async () => {
       await expect(tournamentsPage.heading).toBeVisible({ timeout: 15_000 });
       const text = await tournamentsPage.heading.innerText();
       expect(text.trim().length).toBeGreaterThan(0);
     });
 
-    test('@smoke page has a canonical meta tag', async ({ page }) => {
+    test('@regression page has a canonical meta tag', async ({ page }) => {
       const canonical = await page.locator('link[rel="canonical"]').getAttribute('href');
       expect(canonical).toBeTruthy();
       expect(canonical).toContain('tournaments');
@@ -84,21 +84,21 @@ test.describe('Tournaments Page — Unauthenticated', () => {
 
   test.describe('Tournament card content', () => {
 
-    test('@smoke at least one tournament card is present', async () => {
+    test('@regression at least one tournament card is present', async () => {
       // Wait for client-side render — tournament cards load after DOM is ready
       await expect(tournamentsPage.tournamentCard).toBeVisible({ timeout: 20_000 });
       const count = await tournamentsPage.getCardCount();
       expect(count).toBeGreaterThan(0);
     });
 
-    test('@smoke first tournament card has a non-empty title', async () => {
+    test('@regression first tournament card has a non-empty title', async () => {
       await expect(tournamentsPage.tournamentCard).toBeVisible({ timeout: 20_000 });
       await expect(tournamentsPage.tournamentTitle).toBeVisible();
       const text = await tournamentsPage.tournamentTitle.innerText();
       expect(text.trim().length, 'Tournament title should not be empty').toBeGreaterThan(0);
     });
 
-    test('@smoke first tournament card has a prize displayed', async () => {
+    test('@regression first tournament card has a prize displayed', async () => {
       await expect(tournamentsPage.tournamentCard).toBeVisible({ timeout: 20_000 });
       await expect(tournamentsPage.tournamentPrize).toBeVisible();
       const text = await tournamentsPage.tournamentPrize.innerText();
@@ -111,7 +111,7 @@ test.describe('Tournaments Page — Unauthenticated', () => {
 
   test.describe('Countdown timer', () => {
 
-    test('@smoke countdown timer element is present', async () => {
+    test('@regression countdown timer element is present', async () => {
       // Countdown units are rendered for mobile breakpoints — often hidden on desktop
       const units = tournamentsPage.page.locator('div.countdown-unit');
       expect(await units.count(), 'Countdown units should be present in the DOM').toBeGreaterThan(0);
@@ -140,7 +140,7 @@ test.describe('Tournaments Page — Unauthenticated', () => {
 
   test.describe('Leaderboard', () => {
 
-    test('@smoke leaderboard section is present', async () => {
+    test('@regression leaderboard section is present', async () => {
       await expect(tournamentsPage.leaderboard).toBeVisible({ timeout: 10_000 });
       await expect(tournamentsPage.sectionHeading(/recent tournaments/i)).toBeVisible();
     });
@@ -159,7 +159,7 @@ test.describe('Tournaments Page — Unauthenticated', () => {
 
   test.describe('Unauthenticated CTA', () => {
 
-    test('@smoke sign-up or log-in CTA is present when logged out', async () => {
+    test('@regression sign-up or log-in CTA is present when logged out', async () => {
       await expect(tournamentsPage.unauthCta).toBeVisible({ timeout: 10_000 });
     });
 
@@ -169,7 +169,7 @@ test.describe('Tournaments Page — Unauthenticated', () => {
 
   test.describe('Terms link', () => {
 
-    test('@smoke terms and conditions link is present', async () => {
+    test('@regression terms and conditions link is present', async () => {
       await expect(tournamentsPage.tournamentCard).toBeVisible({ timeout: 20_000 });
       // T&Cs are required on promotional pages — their absence is a compliance issue
       const count = await tournamentsPage.termsLink.count();
@@ -192,7 +192,7 @@ test.describe('Tournaments Page — Unauthenticated', () => {
 
   test.describe('Footer', () => {
 
-    test('@smoke footer is present on the tournaments page', async () => {
+    test('@regression footer is present on the tournaments page', async () => {
       await tournamentsPage.page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
       await expect(tournamentsPage.footer).toBeVisible();
     });
@@ -219,7 +219,7 @@ test.describe('Tournaments Page — Authenticated', () => {
     await tournamentsPage.goto();
   });
 
-  test('@smoke authenticated user sees tournament page with play CTA', async () => {
+  test('@regression authenticated user sees tournament page with play CTA', async () => {
     await expect(tournamentsPage.tournamentCard).toBeVisible({ timeout: 20_000 });
 
     // Verify the auth CTA is visible — we do NOT click it (no real entry)
@@ -235,7 +235,7 @@ test.describe('Tournaments Page — Authenticated', () => {
     }
   });
 
-  test('@smoke authenticated user does not see the unauthenticated sign-up wall', async () => {
+  test('@regression authenticated user does not see the unauthenticated sign-up wall', async () => {
     await expect(tournamentsPage.tournamentCard).toBeVisible({ timeout: 20_000 });
 
     // Logged-in users should not see the primary "Login to Play" gate

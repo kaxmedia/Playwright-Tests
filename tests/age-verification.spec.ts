@@ -42,23 +42,23 @@ for (const geoKey of ['nl', 'es'] as const) {
 
         // ── 1. Modal presence ────────────────────────────────────────────────────
 
-        test('@smoke age verification modal appears on fresh visit', async () => {
+        test('@smoke @regression age verification modal appears on fresh visit', async () => {
             await expect(avPage.modal).toBeVisible({ timeout: 10000 });
         });
 
-        test('@smoke modal heading is visible and contains age threshold', async () => {
+        test('@smoke @regression modal heading is visible and contains age threshold', async () => {
             await expect(avPage.modalHeading).toBeVisible({ timeout: 10000 });
             const headingText = await avPage.modalHeading.innerText();
             expect(headingText.toLowerCase()).toMatch(avPage.geo.modalHeadingText);
         });
 
-        test('@smoke accept button is visible with correct age text', async () => {
+        test('@smoke @regression accept button is visible with correct age text', async () => {
             await expect(avPage.acceptBtn).toBeVisible({ timeout: 10000 });
             const btnText = await avPage.acceptBtn.innerText();
             expect(btnText).toMatch(avPage.geo.acceptBtnText);
         });
 
-        test('@smoke reject button is visible with correct age text', async () => {
+        test('@smoke @regression reject button is visible with correct age text', async () => {
             await expect(avPage.rejectBtn).toBeVisible({ timeout: 10000 });
             const btnText = await avPage.rejectBtn.innerText();
             expect(btnText).toMatch(avPage.geo.rejectBtnText);
@@ -78,13 +78,13 @@ for (const geoKey of ['nl', 'es'] as const) {
 
         // ── 2. Accept flow ───────────────────────────────────────────────────────
 
-        test('@smoke clicking accept dismisses the modal', async () => {
+        test('@smoke @regression clicking accept dismisses the modal', async () => {
             await expect(avPage.acceptBtn).toBeVisible({ timeout: 10000 });
             await avPage.acceptAge();
             await expect(avPage.modal).toBeHidden({ timeout: 8000 });
         });
 
-        test('@smoke page content is accessible after accepting', async () => {
+        test('@smoke @regression page content is accessible after accepting', async () => {
             await avPage.acceptAge();
             await expect(avPage.modal).toBeHidden({ timeout: 8000 });
             await expect(avPage.logo).toBeVisible({ timeout: 8000 });
@@ -98,7 +98,7 @@ for (const geoKey of ['nl', 'es'] as const) {
 
         // ── 3. Reject flow ───────────────────────────────────────────────────────
 
-        test('@smoke clicking reject redirects to responsible gambling page', async ({ page }) => {
+        test('@smoke @regression clicking reject redirects to responsible gambling page', async ({ page }) => {
             await expect(avPage.rejectBtn).toBeVisible({ timeout: 10000 });
             await avPage.rejectAge();
             await expect(page).toHaveURL(geo.underageRedirectUrl, { timeout: 15000 });
@@ -144,7 +144,7 @@ for (const geoKey of ['nl', 'es'] as const) {
 
         // ── 5. Footer opt-out checkbox ───────────────────────────────────────────
 
-        test('@smoke footer opt-out checkbox is present after accepting', async ({ page }) => {
+        test('@smoke @regression footer opt-out checkbox is present after accepting', async ({ page }) => {
             await avPage.acceptAge();
             await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
             // ES: checkbox can be styled hidden like the modal opt-out — prefer attached + NL stays visible smoke
@@ -155,7 +155,7 @@ for (const geoKey of ['nl', 'es'] as const) {
             }
         });
 
-        test('@smoke footer opt-out checkbox label contains correct text', async ({ page }) => {
+        test('@smoke @regression footer opt-out checkbox label contains correct text', async ({ page }) => {
             await avPage.acceptAge();
             await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
             await expect(avPage.footerCheckboxLabel).toBeVisible({ timeout: 8000 });
@@ -197,7 +197,7 @@ for (const geoKey of ['nl', 'es'] as const) {
 
         // ── 6. Footer compliance ──────────────────────────────────────────────────
 
-        test('@smoke footer responsible gambling disclaimer is visible', async ({ page }) => {
+        test('@smoke @regression footer responsible gambling disclaimer is visible', async ({ page }) => {
             await avPage.acceptAge();
             await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
             await expect(avPage.footer).toBeVisible();
@@ -215,7 +215,7 @@ for (const geoKey of ['nl', 'es'] as const) {
 
         // ── 7. Page language ─────────────────────────────────────────────────────
 
-        test(`@smoke HTML lang attribute is "${geo.language}"`, async ({ page }) => {
+        test(`@smoke @regression HTML lang attribute is "${geo.language}"`, async ({ page }) => {
             const lang = await page.locator('html').getAttribute('lang');
             expect(lang).toMatch(new RegExp(`^${geo.language}`, 'i'));
         });
@@ -234,7 +234,7 @@ test.describe('Age Verification — NL specific', () => {
         await avPage.gotoFresh();
     });
 
-    test('@smoke NL modal contains opt-out checkbox', async () => {
+    test('@smoke @regression NL modal contains opt-out checkbox', async () => {
         await expect(avPage.modal).toBeVisible({ timeout: 10000 });
         await expect(avPage.modalCheckbox).toBeVisible();
     });
@@ -252,14 +252,14 @@ test.describe('Age Verification — NL specific', () => {
         expect(acceptText).toMatch(/24/);
     });
 
-    test('@smoke NL footer shows RG messaging (24+ / cost awareness)', async ({ page }) => {
+    test('@smoke @regression NL footer shows RG messaging (24+ / cost awareness)', async ({ page }) => {
         await avPage.acceptAge();
         await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
         const footerText = await avPage.footer.innerText();
         expect(footerText.toLowerCase()).toMatch(/wat kost gokken|24\+|verantwoord gokken/i);
     });
 
-    test('@smoke NL underage redirect URL contains verantwoord-gokken', async ({ page }) => {
+    test('@smoke @regression NL underage redirect URL contains verantwoord-gokken', async ({ page }) => {
         await avPage.rejectAge();
         await expect(page).toHaveURL(/verantwoord-gokken/, { timeout: 15000 });
     });
@@ -276,7 +276,7 @@ test.describe('Age Verification — ES specific', () => {
         await avPage.gotoFresh();
     });
 
-    test('@smoke ES modal includes marketing opt-out checkbox in DOM', async () => {
+    test('@smoke @regression ES modal includes marketing opt-out checkbox in DOM', async () => {
         await expect(avPage.modal).toBeVisible({ timeout: 10000 });
         // ES can hide the native checkbox visually while keeping it for behaviour / a11y
         expect(await avPage.modalCheckbox.count()).toBe(1);
@@ -289,7 +289,7 @@ test.describe('Age Verification — ES specific', () => {
         expect(acceptText).toMatch(/18/);
     });
 
-    test('@smoke ES compliance logos present in footer — Juego Seguro and AutoProhibición', async ({ page }) => {
+    test('@smoke @regression ES compliance logos present in footer — Juego Seguro and AutoProhibición', async ({ page }) => {
         await avPage.acceptAge();
         await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
         const footerImgs = avPage.footer.locator('img');
@@ -305,7 +305,7 @@ test.describe('Age Verification — ES specific', () => {
         expect(hasJuegoSeguro || hasAutoProhibicion).toBe(true);
     });
 
-    test('@smoke ES underage redirect URL contains juego-responsable', async ({ page }) => {
+    test('@smoke @regression ES underage redirect URL contains juego-responsable', async ({ page }) => {
         await avPage.rejectAge();
         await expect(page).toHaveURL(/juego-responsable/, { timeout: 15000 });
     });

@@ -5,7 +5,7 @@
 // regulator links (footer logos and in-page organisations where published).
 //
 // Run with:  npx playwright test tests/responsible-gambling.spec.ts --project=chrome
-//            npx playwright test tests/responsible-gambling.spec.ts --project=chrome --grep @smoke
+//            npx playwright test tests/responsible-gambling.spec.ts --project=chrome --grep @regression
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { test, expect } from '../fixtures/test';
@@ -29,21 +29,21 @@ test.describe('Responsible Gambling — Global page', () => {
 
   test.describe('Page fundamentals', () => {
 
-    test('@smoke page loads with HTTP 200', async ({ request }) => {
+    test('@regression page loads with HTTP 200', async ({ request }) => {
       const response = await request.get(`${BASE_URL}/responsible`);
       expect(response.status()).toBe(200);
     });
 
-    test('@smoke page URL is the global responsible hub', async ({ page }) => {
+    test('@regression page URL is the global responsible hub', async ({ page }) => {
       await expect(page).toHaveURL(responsibleGamblingGeos[''].urlPattern);
     });
 
-    test('@smoke H1 heading is present and non-empty', async () => {
+    test('@regression H1 heading is present and non-empty', async () => {
       await expect(rgPage.heading).toBeVisible();
       expect((await rgPage.heading.innerText()).trim().length).toBeGreaterThan(0);
     });
 
-    test('@smoke page has a descriptive title', async ({ page }) => {
+    test('@regression page has a descriptive title', async ({ page }) => {
       expect((await page.title()).trim().length).toBeGreaterThan(0);
     });
 
@@ -51,11 +51,11 @@ test.describe('Responsible Gambling — Global page', () => {
 
   test.describe('Required content sections', () => {
 
-    test('@smoke safeguarding section is present', async () => {
+    test('@regression safeguarding section is present', async () => {
       await expect(rgPage.safeguardingSection).toBeVisible({ timeout: 15_000 });
     });
 
-    test('@smoke page main content area is present and non-empty', async () => {
+    test('@regression page main content area is present and non-empty', async () => {
       await expect(rgPage.main).toBeVisible();
       expect((await rgPage.main.innerText()).trim().length).toBeGreaterThan(100);
     });
@@ -76,16 +76,16 @@ test.describe('Responsible Gambling — UK', () => {
 
   test.describe('Page fundamentals', () => {
 
-    test('@smoke UK RG hub loads with HTTP 200', async ({ request }) => {
+    test('@regression UK RG hub loads with HTTP 200', async ({ request }) => {
       const response = await request.get(`${BASE_URL}/responsible`);
       expect(response.status()).toBe(200);
     });
 
-    test('@smoke UK RG page URL is the shared responsible hub', async ({ page }) => {
+    test('@regression UK RG page URL is the shared responsible hub', async ({ page }) => {
       await expect(page).toHaveURL(responsibleGamblingGeos.uk.urlPattern);
     });
 
-    test('@smoke UK H1 is present and non-empty', async () => {
+    test('@regression UK H1 is present and non-empty', async () => {
       await expect(rgPage.heading).toBeVisible();
       expect((await rgPage.heading.innerText()).trim().length).toBeGreaterThan(0);
     });
@@ -94,7 +94,7 @@ test.describe('Responsible Gambling — UK', () => {
 
   test.describe('Safeguarding links — UK mandatory', () => {
 
-    test('@smoke GamStop link is present in the UK site footer', async ({ page }) => {
+    test('@regression GamStop link is present in the UK site footer', async ({ page }) => {
       await rgPage.gotoEntryHome();
       await page.locator('footer').scrollIntoViewIfNeeded();
       const gamstopLink = rgPage.footerRegulatoryLink('gamstop.co.uk');
@@ -113,7 +113,7 @@ test.describe('Responsible Gambling — UK', () => {
       expect(response.status(), `GamStop link ${href} returned server error`).toBeLessThan(500);
     });
 
-    test('@smoke BeGambleAware link is present on protection and support page', async ({ page }) => {
+    test('@regression BeGambleAware link is present on protection and support page', async ({ page }) => {
       await rgPage.gotoProtectionAndSupport();
       const bgaLink = rgPage.externalOrganisationLink('begambleaware.org');
       await expect(bgaLink).toBeAttached();
@@ -135,7 +135,7 @@ test.describe('Responsible Gambling — UK', () => {
 
   test.describe('Required content sections — UK', () => {
 
-    test('@smoke safeguarding section is present', async () => {
+    test('@regression safeguarding section is present', async () => {
       await expect(rgPage.safeguardingSection).toBeVisible({ timeout: 15_000 });
     });
 
@@ -153,24 +153,24 @@ test.describe('Responsible Gambling — IE', () => {
     await rgPage.goto('ie');
   });
 
-  test('@smoke IE RG hub loads with HTTP 200', async ({ request }) => {
+  test('@regression IE RG hub loads with HTTP 200', async ({ request }) => {
     expect((await request.get(`${BASE_URL}/responsible`)).status()).toBe(200);
   });
 
-  test('@smoke IE RG page URL is the shared responsible hub', async ({ page }) => {
+  test('@regression IE RG page URL is the shared responsible hub', async ({ page }) => {
     await expect(page).toHaveURL(responsibleGamblingGeos.ie.urlPattern);
   });
 
-  test('@smoke IE H1 is present and non-empty', async () => {
+  test('@regression IE H1 is present and non-empty', async () => {
     await expect(rgPage.heading).toBeVisible();
     expect((await rgPage.heading.innerText()).trim().length).toBeGreaterThan(0);
   });
 
-  test('@smoke IE safeguarding section is present', async () => {
+  test('@regression IE safeguarding section is present', async () => {
     await expect(rgPage.safeguardingSection).toBeVisible({ timeout: 15_000 });
   });
 
-  test('@smoke IE responsible gambling organisation link is present', async () => {
+  test('@regression IE responsible gambling organisation link is present', async () => {
     const byHref = rgPage.externalOrganisationLink('gamblingcare.ie')
       .or(rgPage.externalOrganisationLink('gambleaware'));
     const byLabel = rgPage.linkByText(/gambling care|gambleaware/i);
@@ -189,24 +189,24 @@ test.describe('Responsible Gambling — DE', () => {
     await rgPage.goto('de');
   });
 
-  test('@smoke DE RG page loads with HTTP 200', async ({ request }) => {
+  test('@regression DE RG page loads with HTTP 200', async ({ request }) => {
     expect((await request.get(`${BASE_URL}/de/verantwortung`)).status()).toBe(200);
   });
 
-  test('@smoke DE RG page URL is correct', async ({ page }) => {
+  test('@regression DE RG page URL is correct', async ({ page }) => {
     await expect(page).toHaveURL(responsibleGamblingGeos.de.urlPattern);
   });
 
-  test('@smoke DE H1 is present and non-empty', async () => {
+  test('@regression DE H1 is present and non-empty', async () => {
     await expect(rgPage.heading).toBeVisible();
     expect((await rgPage.heading.innerText()).trim().length).toBeGreaterThan(0);
   });
 
-  test('@smoke DE safeguarding section is present', async () => {
+  test('@regression DE safeguarding section is present', async () => {
     await expect(rgPage.safeguardingSection).toBeVisible({ timeout: 15_000 });
   });
 
-  test('@smoke DE national self-exclusion resource link is present', async ({ page }) => {
+  test('@regression DE national self-exclusion resource link is present', async ({ page }) => {
     // beforeEach lands on /de/verantwortung; national regulator logos live on the DE homepage footer.
     await rgPage.gotoEntryHome();
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
@@ -227,24 +227,24 @@ test.describe('Responsible Gambling — NL', () => {
     await rgPage.goto('nl');
   });
 
-  test('@smoke NL RG page loads with HTTP 200', async ({ request }) => {
+  test('@regression NL RG page loads with HTTP 200', async ({ request }) => {
     expect((await request.get(`${BASE_URL}/nl/verantwoord-gokken`)).status()).toBe(200);
   });
 
-  test('@smoke NL RG page URL is correct', async ({ page }) => {
+  test('@regression NL RG page URL is correct', async ({ page }) => {
     await expect(page).toHaveURL(responsibleGamblingGeos.nl.urlPattern);
   });
 
-  test('@smoke NL H1 is present and non-empty', async () => {
+  test('@regression NL H1 is present and non-empty', async () => {
     await expect(rgPage.heading).toBeVisible();
     expect((await rgPage.heading.innerText()).trim().length).toBeGreaterThan(0);
   });
 
-  test('@smoke NL safeguarding section is present', async () => {
+  test('@regression NL safeguarding section is present', async () => {
     await expect(rgPage.safeguardingSection).toBeVisible({ timeout: 15_000 });
   });
 
-  test('@smoke NL CRUKS self-exclusion link is present', async () => {
+  test('@regression NL CRUKS self-exclusion link is present', async () => {
     await expect(rgPage.externalOrganisationLink('cruks')).toBeAttached();
   });
 
@@ -260,20 +260,20 @@ test.describe('Responsible Gambling — ES', () => {
     await rgPage.goto('es');
   });
 
-  test('@smoke ES RG page loads with HTTP 200', async ({ request }) => {
+  test('@regression ES RG page loads with HTTP 200', async ({ request }) => {
     expect((await request.get(`${BASE_URL}/es/juego-responsable`)).status()).toBe(200);
   });
 
-  test('@smoke ES RG page URL is correct', async ({ page }) => {
+  test('@regression ES RG page URL is correct', async ({ page }) => {
     await expect(page).toHaveURL(responsibleGamblingGeos.es.urlPattern);
   });
 
-  test('@smoke ES H1 is present and non-empty', async () => {
+  test('@regression ES H1 is present and non-empty', async () => {
     await expect(rgPage.heading).toBeVisible();
     expect((await rgPage.heading.innerText()).trim().length).toBeGreaterThan(0);
   });
 
-  test('@smoke ES safeguarding section is present', async () => {
+  test('@regression ES safeguarding section is present', async () => {
     await expect(rgPage.safeguardingSection).toBeVisible({ timeout: 15_000 });
   });
 
@@ -283,7 +283,7 @@ test.describe('Responsible Gambling — ES', () => {
 
 test.describe('Responsible Gambling — Multi-geo HTTP 200 check @audit', () => {
 
-  test('@audit all responsible gambling page URLs return HTTP 200', async ({ request }) => {
+  test('@regression @audit all responsible gambling page URLs return HTTP 200', async ({ request }) => {
     test.setTimeout(60_000);
 
     const results = await Promise.all(

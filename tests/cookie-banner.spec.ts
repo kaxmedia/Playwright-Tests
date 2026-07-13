@@ -27,7 +27,7 @@ test.describe('Cookie Banner', () => {
   // Each Playwright test gets a fresh browser context with no stored cookies,
   // so the banner will always appear here — just as it does for a real new visitor.
   // ───────────────────────────────────────────────────────────────────────────
-  test('banner is visible on a fresh visit with no cookies', async ({ page, cookieBanner }) => {
+  test('@smoke @regression banner is visible on a fresh visit with no cookies', async ({ page, cookieBanner }) => {
     // Navigate to the homepage — this is a fresh context so no consent cookie exists
     await page.goto(HOME_URL);
 
@@ -43,7 +43,7 @@ test.describe('Cookie Banner', () => {
   //
   // This confirms the primary action the user needs to take is clearly present.
   // ───────────────────────────────────────────────────────────────────────────
-  test('Accept All button is visible inside the banner', async ({ page, cookieBanner }) => {
+  test('@smoke @regression Accept All button is visible inside the banner', async ({ page, cookieBanner }) => {
     // Navigate to the homepage to trigger the banner
     await page.goto(HOME_URL);
 
@@ -60,7 +60,7 @@ test.describe('Cookie Banner', () => {
   // After accepting, the banner should disappear completely.
   // This confirms the consent flow works end-to-end.
   // ───────────────────────────────────────────────────────────────────────────
-  test('clicking Accept All dismisses the banner', async ({ page, cookieBanner }) => {
+  test('@smoke @regression clicking Accept All dismisses the banner', async ({ page, cookieBanner }) => {
     // Navigate to the homepage — banner will appear immediately
     await page.goto(HOME_URL);
 
@@ -81,7 +81,7 @@ test.describe('Cookie Banner', () => {
   // GDPR requires that a link to the full cookie policy is available directly
   // from the consent banner. This test verifies that requirement is met.
   // ───────────────────────────────────────────────────────────────────────────
-  test('Cookie Policy link is visible inside the banner', async ({ page, cookieBanner }) => {
+  test('@smoke @regression Cookie Policy link is visible inside the banner', async ({ page, cookieBanner }) => {
     // Navigate to the homepage to trigger the banner
     await page.goto(HOME_URL);
 

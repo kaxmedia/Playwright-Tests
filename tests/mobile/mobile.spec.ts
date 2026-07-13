@@ -19,7 +19,7 @@ async function assertNoHorizontalOverflow(page: Page) {
 
 // ── Navigation ─────────────────────────────────────────────────────────────────
 test.describe('Mobile Navigation', () => {
-  test('@smoke @mobile hamburger menu opens', async ({ page }) => {
+  test('@regression @mobile hamburger menu opens', async ({ page }) => {
     const mobile = new MobilePage(page);
     await mobile.goto('/');
     await mobile.acceptCookiesIfShown();
@@ -29,7 +29,7 @@ test.describe('Mobile Navigation', () => {
     await expect(mobile.menuPopularLinks.first()).toBeVisible();
   });
 
-  test('@mobile hamburger menu closes', async ({ page }) => {
+  test('@regression @mobile hamburger menu closes', async ({ page }) => {
     const mobile = new MobilePage(page);
     await mobile.goto('/');
     await mobile.acceptCookiesIfShown();
@@ -39,7 +39,7 @@ test.describe('Mobile Navigation', () => {
     await expect(mobile.menuPanel).toBeHidden();
   });
 
-  test('@mobile logo is tappable and returns to homepage', async ({ page }) => {
+  test('@regression @mobile logo is tappable and returns to homepage', async ({ page }) => {
     const mobile = new MobilePage(page);
     await mobile.goto(UK_CASINOS);
     await mobile.acceptCookiesIfShown();
@@ -65,7 +65,7 @@ test.describe('Mobile Navigation', () => {
 
 // ── Responsive layout ──────────────────────────────────────────────────────────
 test.describe('Mobile Responsive Layout', () => {
-  test('@smoke @mobile homepage renders correctly', async ({ page }) => {
+  test('@regression @mobile homepage renders correctly', async ({ page }) => {
     const mobile = new MobilePage(page);
     await mobile.goto('/');
     await mobile.acceptCookiesIfShown();
@@ -74,14 +74,14 @@ test.describe('Mobile Responsive Layout', () => {
     await expect(mobile.visibleMainHeading).toBeVisible();
   });
 
-  test('@mobile category landing page has no horizontal scroll', async ({ page }) => {
+  test('@regression @mobile category landing page has no horizontal scroll', async ({ page }) => {
     const mobile = new MobilePage(page);
     await mobile.goto(UK_CASINOS);
     await mobile.acceptCookiesIfShown();
     await assertNoHorizontalOverflow(page);
   });
 
-  test('@mobile news page renders single-column layout', async ({ page }) => {
+  test('@regression @mobile news page renders single-column layout', async ({ page }) => {
     const mobile = new MobilePage(page);
     await mobile.goto('/news');
     await mobile.acceptCookiesIfShown();
@@ -105,7 +105,7 @@ test.describe('Mobile Responsive Layout', () => {
     }
   });
 
-  test('@mobile images are within viewport width', async ({ page }) => {
+  test('@regression @mobile images are within viewport width', async ({ page }) => {
     const mobile = new MobilePage(page);
     await mobile.goto('/');
     await mobile.acceptCookiesIfShown();
@@ -123,7 +123,7 @@ test.describe('Mobile Responsive Layout', () => {
 
 // ── Touch interactions ─────────────────────────────────────────────────────────
 test.describe('Mobile Touch Interactions', () => {
-  test('@smoke @mobile CTA buttons are tappable', async ({ page }) => {
+  test('@regression @mobile CTA buttons are tappable', async ({ page }) => {
     const cp = new ComparisonPage(page);
     await cp.goto(UK_CASINOS);
     await new MobilePage(page).acceptCookiesIfShown();
@@ -167,7 +167,7 @@ test.describe('Mobile Touch Interactions', () => {
     await expect(page).toHaveURL(new RegExp(`${UK_CASINOS}(\\?|$|#)`));
   });
 
-  test('@mobile sign up button is tappable', async ({ page }) => {
+  test('@regression @mobile sign up button is tappable', async ({ page }) => {
     const mobile = new MobilePage(page);
     const auth = new AuthPage(page);
     await mobile.goto('/');
@@ -188,7 +188,7 @@ test.describe('Mobile Touch Interactions', () => {
     await expect(auth.signupModal).toBeVisible({ timeout: 10000 });
   });
 
-  test('@mobile sign in modal opens and form inputs are tappable', async ({ page }) => {
+  test('@regression @mobile sign in modal opens and form inputs are tappable', async ({ page }) => {
     const mobile = new MobilePage(page);
     const auth = new AuthPage(page);
     await mobile.goto('/');
@@ -222,7 +222,7 @@ test.describe('Mobile Touch Interactions', () => {
 // ── Cookie banner ──────────────────────────────────────────────────────────────
 // Deliberately does not call acceptCookiesIfShown() — fresh context must keep the banner up.
 test.describe('Mobile Cookie Banner', () => {
-  test('@smoke @mobile cookie banner is visible and Accept is tappable', async ({ page }) => {
+  test('@regression @mobile cookie banner is visible and Accept is tappable', async ({ page }) => {
     const mobile = new MobilePage(page);
     await mobile.goto('/');
 
@@ -241,7 +241,7 @@ test.describe('Mobile Cookie Banner', () => {
     await expect(banner).toBeHidden({ timeout: 8000 });
   });
 
-  test('@mobile cookie banner does not overflow viewport', async ({ page }) => {
+  test('@regression @mobile cookie banner does not overflow viewport', async ({ page }) => {
     const mobile = new MobilePage(page);
     await mobile.goto('/');
 
@@ -259,7 +259,7 @@ test.describe('Mobile Cookie Banner', () => {
 
 // ── Search ─────────────────────────────────────────────────────────────────────
 test.describe('Mobile Search', () => {
-  test('@smoke @mobile search icon is tappable', async ({ page }) => {
+  test('@regression @mobile search icon is tappable', async ({ page }) => {
     const mobile = new MobilePage(page);
     const search = new SearchPage(page);
     await mobile.goto('/');
@@ -270,7 +270,7 @@ test.describe('Mobile Search', () => {
     await expect(search.searchInput).toBeVisible({ timeout: 8000 });
   });
 
-  test('@mobile search input accepts text', async ({ page }) => {
+  test('@regression @mobile search input accepts text', async ({ page }) => {
     const mobile = new MobilePage(page);
     const search = new SearchPage(page);
     await mobile.goto('/');

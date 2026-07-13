@@ -30,7 +30,7 @@ test.describe('Slots Games Widget — UK', () => {
 
     // ── 1. Page fundamentals ───────────────────────────────────────────────────
 
-    test('@smoke page loads with correct URL and non-empty title', async ({ page }) => {
+    test('@regression page loads with correct URL and non-empty title', async ({ page }) => {
         await expect(page).toHaveURL(SLOTS_PAGE.url);
         const title = await page.title();
         expect(title).not.toBe('');
@@ -38,27 +38,27 @@ test.describe('Slots Games Widget — UK', () => {
         expect(title.toLowerCase()).not.toContain('error');
     });
 
-    test('@smoke H1 is visible and non-empty', async () => {
+    test('@regression H1 is visible and non-empty', async () => {
         await expect(slotsPage.pageTitle).toBeVisible();
         const h1Text = await slotsPage.pageTitle.innerText();
         expect(h1Text.trim()).not.toBe('');
     });
 
-    test('@smoke logo is visible', async () => {
+    test('@regression logo is visible', async () => {
         await expect(slotsPage.logo).toBeVisible();
     });
 
-    test('@smoke main navigation is visible', async () => {
+    test('@regression main navigation is visible', async () => {
         await expect(slotsPage.mainNav).toBeVisible();
     });
 
     // ── 2. Game grid ───────────────────────────────────────────────────────────
 
-    test('@smoke slot widget is present on the page', async () => {
+    test('@regression slot widget is present on the page', async () => {
         await expect(slotsPage.slotWidget).toBeVisible();
     });
 
-    test('@smoke game grid renders at least 10 game cards', async () => {
+    test('@regression game grid renders at least 10 game cards', async () => {
         const count = await slotsPage.getGameCount();
         expect(count).toBeGreaterThanOrEqual(10);
     });
@@ -86,23 +86,23 @@ test.describe('Slots Games Widget — UK', () => {
         }
     });
 
-    test('@smoke game cards have Play Free Demo buttons', async () => {
+    test('@regression game cards have Play Free Demo buttons', async () => {
         const count = await slotsPage.playFreeButtons.count();
         expect(count).toBeGreaterThanOrEqual(1);
     });
 
-    test('@smoke game cards have Play for Real buttons', async () => {
+    test('@regression game cards have Play for Real buttons', async () => {
         const count = await slotsPage.playRealButtons.count();
         expect(count).toBeGreaterThanOrEqual(1);
     });
 
     // ── 3. Filters & sort ──────────────────────────────────────────────────────
 
-    test('@smoke filter bar is visible', async () => {
+    test('@regression filter bar is visible', async () => {
         await expect(slotsPage.filterBar).toBeVisible();
     });
 
-    test('@smoke filter bar has at least 2 filter options', async () => {
+    test('@regression filter bar has at least 2 filter options', async () => {
         const count = await slotsPage.filterButtons.count();
         expect(count).toBeGreaterThanOrEqual(2);
     });
@@ -133,14 +133,14 @@ test.describe('Slots Games Widget — UK', () => {
         }
     });
 
-    test('@smoke sort dropdown is present', async () => {
+    test('@regression sort dropdown is present', async () => {
         await slotsPage.sortDropdown.scrollIntoViewIfNeeded();
         await expect(slotsPage.sortDropdown).toBeVisible();
     });
 
     // ── 4. Search ──────────────────────────────────────────────────────────────
 
-    test('@smoke search input is visible', async () => {
+    test('@regression search input is visible', async () => {
         await slotsPage.searchInput.scrollIntoViewIfNeeded();
         await expect(slotsPage.searchInput).toBeVisible();
     });
@@ -195,7 +195,7 @@ test.describe('Slots Games Widget — UK', () => {
 
     // ── 5. Pagination (UK slot games listing is usually a single-page grid) ────
 
-    test('@smoke pagination controls are visible when present', async () => {
+    test('@regression pagination controls are visible when present', async () => {
         const hasNext = (await slotsPage.nextPageBtn.count()) > 0;
         test.skip(!hasNext, 'No rel=next control — listing has no numbered pagination');
         await slotsPage.nextPageBtn.scrollIntoViewIfNeeded();
@@ -243,7 +243,7 @@ test.describe('Slots Games Widget — UK', () => {
 
     // ── 6. Play for Real ───────────────────────────────────────────────────────
 
-    test('@smoke Play for Real buttons have valid /go/ affiliate hrefs', async () => {
+    test('@regression Play for Real buttons have valid /go/ affiliate hrefs', async () => {
         const count = await slotsPage.playRealButtons.count();
         expect(count).toBeGreaterThanOrEqual(1);
 
@@ -292,14 +292,14 @@ test.describe('Slots Games Widget — UK', () => {
 
     // ── 7. Play Free Demo — full login flow ────────────────────────────────────
 
-    test('@smoke clicking Play Free Demo triggers the login modal', async () => {
+    test('@regression clicking Play Free Demo triggers the login modal', async () => {
         const firstPlayFree = slotsPage.playFreeButtons.first();
         await firstPlayFree.scrollIntoViewIfNeeded();
         await firstPlayFree.click();
         await expect(slotsPage.loginModal).toBeVisible({ timeout: 8000 });
     });
 
-    test('@smoke login modal has email, password and Sign In submit', async () => {
+    test('@regression login modal has email, password and Sign In submit', async () => {
         const firstPlayFree = slotsPage.playFreeButtons.first();
         await firstPlayFree.scrollIntoViewIfNeeded();
         await firstPlayFree.click();
@@ -350,7 +350,7 @@ test.describe('Slots Games Widget — UK', () => {
 
     // ── 8. Game name → review page navigation ─────────────────────────────────
 
-    test('@smoke clicking a game name navigates to a slot review page', async ({ page }) => {
+    test('@regression clicking a game name navigates to a slot review page', async ({ page }) => {
         const firstGameName = slotsPage.gameNames.first();
         await firstGameName.scrollIntoViewIfNeeded();
 
@@ -403,7 +403,7 @@ test.describe('Slots Games Widget — UK', () => {
         await expect(slotsPage.compareButton).toBeVisible({ timeout: 15000 });
     });
 
-    test('@smoke clicking Compare opens a modal', async () => {
+    test('@regression clicking Compare opens a modal', async () => {
         const count = await slotsPage.compareCheckboxes.count();
         expect(count, 'Slot games page must have at least two compare checkboxes').toBeGreaterThanOrEqual(2);
 
@@ -441,7 +441,7 @@ test.describe('Slots Games Widget — UK', () => {
 
     // ── 10. Key page checks ────────────────────────────────────────────────────
 
-    test('@smoke footer is visible', async () => {
+    test('@regression footer is visible', async () => {
         await slotsPage.page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
         await expect(slotsPage.footer).toBeVisible();
     });
@@ -452,7 +452,7 @@ test.describe('Slots Games Widget — UK', () => {
         expect(count).toBeGreaterThan(5);
     });
 
-    test('@smoke responsible gambling disclaimer is visible in footer', async ({ page }) => {
+    test('@regression responsible gambling disclaimer is visible in footer', async ({ page }) => {
         await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
         const footerText = await slotsPage.footer.innerText();
         expect(footerText.toLowerCase()).toMatch(/responsible|addictive|gamble aware|gamstop/i);

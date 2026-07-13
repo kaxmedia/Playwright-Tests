@@ -28,7 +28,7 @@ const BASE_URL = 'https://www.gambling.com';
 test.describe('SEO — sitemap-index.xml', () => {
 
   // Test 1: The sitemap index is reachable and served as XML
-  test('@smoke returns 200 with XML content type', async ({ request }) => {
+  test('@regression returns 200 with XML content type', async ({ request }) => {
     // robots.txt tells Google to read this URL — it must always be reachable
     const res = await request.get(`${BASE_URL}/sitemap-index.xml`);
     expect(res.status()).toBe(200);
@@ -37,7 +37,7 @@ test.describe('SEO — sitemap-index.xml', () => {
   });
 
   // Test 2: The root element confirms this is a sitemap index, not a flat sitemap
-  test('@smoke body declares a valid sitemap index', async ({ request }) => {
+  test('@regression body declares a valid sitemap index', async ({ request }) => {
     const res = await request.get(`${BASE_URL}/sitemap-index.xml`);
     const body = await res.text();
     // <sitemapindex> is the required root element for Google to treat the file as an index
@@ -48,7 +48,7 @@ test.describe('SEO — sitemap-index.xml', () => {
   });
 
   // Test 3: All key geo child sitemaps are referenced inside the index
-  test('@smoke contains child sitemaps for all key geos', async ({ request }) => {
+  test('@regression contains child sitemaps for all key geos', async ({ request }) => {
     const res = await request.get(`${BASE_URL}/sitemap-index.xml`);
     const body = await res.text();
     // These are the geos we actively maintain — losing any one from the index means
@@ -83,7 +83,7 @@ test.describe('SEO — sitemap-index.xml', () => {
 test.describe('SEO — sitemap.xml (global)', () => {
 
   // Test 5: The global sitemap is reachable and served as XML
-  test('@smoke returns 200 with XML content type', async ({ request }) => {
+  test('@regression returns 200 with XML content type', async ({ request }) => {
     const res = await request.get(`${BASE_URL}/sitemap.xml`);
     expect(res.status()).toBe(200);
     expect(res.headers()['content-type']).toContain('xml');
@@ -107,7 +107,7 @@ test.describe('SEO — sitemap.xml (global)', () => {
 test.describe('SEO — robots.txt', () => {
 
   // Test 7: robots.txt is reachable and served as plain text
-  test('@smoke returns 200 with text/plain content type', async ({ request }) => {
+  test('@regression returns 200 with text/plain content type', async ({ request }) => {
     const res = await request.get(`${BASE_URL}/robots.txt`);
     expect(res.status()).toBe(200);
     // If robots.txt returns HTML (e.g. a redirect to a login page), all crawlers ignore
@@ -116,7 +116,7 @@ test.describe('SEO — robots.txt', () => {
   });
 
   // Test 8: The Sitemap directive points to the index file, not a flat sitemap
-  test('@smoke Sitemap directive references sitemap-index.xml', async ({ request }) => {
+  test('@regression Sitemap directive references sitemap-index.xml', async ({ request }) => {
     const res = await request.get(`${BASE_URL}/robots.txt`);
     const body = await res.text();
     // Google reads this line to discover all sitemaps — pointing at the index
@@ -125,7 +125,7 @@ test.describe('SEO — robots.txt', () => {
   });
 
   // Test 9: Affiliate redirect paths are blocked from all crawlers
-  test('@smoke /go/ is Disallowed for all crawlers', async ({ request }) => {
+  test('@regression /go/ is Disallowed for all crawlers', async ({ request }) => {
     const res = await request.get(`${BASE_URL}/robots.txt`);
     const body = await res.text();
     // /go/ is the affiliate redirect path — if Google follows and indexes these,
@@ -134,7 +134,7 @@ test.describe('SEO — robots.txt', () => {
   });
 
   // Test 10: Paid landing pages are blocked from all crawlers
-  test('@smoke /lp/ is Disallowed for all crawlers', async ({ request }) => {
+  test('@regression /lp/ is Disallowed for all crawlers', async ({ request }) => {
     const res = await request.get(`${BASE_URL}/robots.txt`);
     const body = await res.text();
     // /lp/ contains paid/A-B test landing pages that must not appear in organic search —
@@ -152,7 +152,7 @@ test.describe('SEO — robots.txt', () => {
 // Each object in seoPages defines a URL and its expected values.
 // The for...of loop below creates one test.describe block per page entry.
 // Playwright names each generated test like:
-//   "SEO head tags — DE homepage  ›  @smoke canonical is correct"
+//   "SEO head tags — DE homepage  ›  @regression canonical is correct"
 // To add a new page, add one object to seoPages — no test code changes needed.
 //
 // Groups 9-16 (Tests 23-30) also iterate over seoPages but run as a single test
@@ -213,7 +213,7 @@ for (const pg of seoPages) {
     });
 
     // Tests 11–16: canonical is self-referencing and hreflang tags are present
-    test('@smoke canonical is present, self-referencing, and hreflang tags are present', async ({ page }) => {
+    test('@regression canonical is present, self-referencing, and hreflang tags are present', async ({ page }) => {
       const canonical = await page
         .locator('link[rel="canonical"]')
         .getAttribute('href', { timeout: 5000 })
@@ -227,7 +227,7 @@ for (const pg of seoPages) {
     });
 
     // Tests 17–22: og:url matches canonical, twitter:card is declared, page is not noindex
-    test('@smoke og:url matches canonical, twitter:card is present, and page is not noindex', async ({ page }) => {
+    test('@regression og:url matches canonical, twitter:card is present, and page is not noindex', async ({ page }) => {
       const ogUrl = await page
         .locator('meta[property="og:url"]')
         .getAttribute('content', { timeout: 5000 })
@@ -262,7 +262,7 @@ test.describe('SEO — title tag', () => {
   // over 65 chars gets truncated in Google search results.
   // Lower bound is 20 (not 30) to accommodate short review-page titles
   // such as "Bet365 Casino Bonus 2026" (24 chars).
-  test('@smoke title exists, is non-empty, and is between 20 and 65 characters', async ({ page }) => {
+  test('@regression title exists, is non-empty, and is between 20 and 65 characters', async ({ page }) => {
     for (const pg of seoPages) {
       await page.goto(pg.url, { waitUntil: 'domcontentloaded' });
       const title = await page.title();
@@ -287,7 +287,7 @@ test.describe('SEO — meta description', () => {
 
   // Test 24: meta description exists, is non-empty, and is 50–160 characters
   // Under 50 is too thin; over 160 gets truncated by Google in the snippet.
-  test('@smoke meta description exists, is non-empty, and is between 50 and 160 characters', async ({ page }) => {
+  test('@regression meta description exists, is non-empty, and is between 50 and 160 characters', async ({ page }) => {
     for (const pg of seoPages) {
       await page.goto(pg.url, { waitUntil: 'domcontentloaded' });
       const rawDesc = await page
@@ -316,7 +316,7 @@ test.describe('SEO — H1 heading', () => {
 
   // Test 25: exactly one H1 element is present
   // Zero means no main heading; more than one confuses Google about content hierarchy.
-  test('@smoke exactly one H1 element is present', async ({ page }) => {
+  test('@regression exactly one H1 element is present', async ({ page }) => {
     for (const pg of seoPages) {
       await page.goto(pg.url, { waitUntil: 'domcontentloaded' });
       const h1Count = await page.locator('h1').count();
@@ -333,7 +333,7 @@ test.describe('SEO — HTML lang attribute', () => {
 
   // Test 26: <html lang="..."> matches the expected BCP-47 language code for the geo
   // A wrong or missing lang tag causes Google and screen readers to use the wrong language.
-  test('@smoke html lang attribute matches expected language for the geo', async ({ page }) => {
+  test('@regression html lang attribute matches expected language for the geo', async ({ page }) => {
     for (const pg of seoPages) {
       await page.goto(pg.url, { waitUntil: 'domcontentloaded' });
       const lang = await page.locator('html').getAttribute('lang');
@@ -415,7 +415,7 @@ test.describe('SEO — mixed content', () => {
   // Checks loaded resources only (images, scripts, stylesheets, fonts, media).
   // Outbound link hrefs are anchor attributes, not network requests — they are
   // intentionally excluded from this test.
-  test('@smoke no resources load over http://', async ({ page }) => {
+  test('@regression no resources load over http://', async ({ page }) => {
     const resourceTypes = new Set(['image', 'script', 'stylesheet', 'font', 'media']);
     // Collect insecure requests across all 6 page navigations in one listener.
     // req.frame().url() labels which page triggered each request.
@@ -485,7 +485,7 @@ test.describe('SEO — Open Graph completeness', () => {
   // Test 30: all four core Open Graph tags exist and are non-empty
   // og:url accuracy is already verified in Group 4 (Tests 17–22).
   // This test adds the three sibling tags that complete the social share block.
-  test('@smoke all four core Open Graph tags are present', async ({ page }) => {
+  test('@regression all four core Open Graph tags are present', async ({ page }) => {
     const ogTags = ['og:title', 'og:description', 'og:url', 'og:image'];
 
     for (const pg of seoPages) {
@@ -514,7 +514,7 @@ test.describe('SEO — soft 404 detection', () => {
   // Test 31: a clearly non-existent URL returns HTTP 404, not 200
   // A soft 404 (200 on a missing page) fools Google into indexing error pages,
   // wastes crawl budget, and pollutes search results with useless URLs.
-  test('@smoke non-existent page returns 404, not 200', async ({ request }) => {
+  test('@regression non-existent page returns 404, not 200', async ({ request }) => {
     const res = await request.get(`${BASE_URL}/this-page-does-not-exist-12345`);
     expect(
       res.status(),
