@@ -10,7 +10,7 @@ if (!caFrCasino) {
 // https://www.gambling.com/ca/fr/casinos-en-ligne — not used on other comparison URLs.
 
 test.describe('CA FR Casino — editorial TOP 3 strip', () => {
-  test('@smoke editorial label and horizontal strip are visible', async ({ page }) => {
+  test('@regression editorial label and horizontal strip are visible', async ({ page }) => {
     const cp = new ComparisonPage(page);
     await cp.goto(caFrCasino.url);
 
@@ -21,7 +21,7 @@ test.describe('CA FR Casino — editorial TOP 3 strip', () => {
     await expect(cp.editorialTopThreeStrip().locator('li.operator-item')).toHaveCount(3);
   });
 
-  test('@smoke each of the 3 editorial picks has logo, /go/ CTA, and operator identity', async ({
+  test('@regression each of the 3 editorial picks has logo, /go/ CTA, and operator identity', async ({
     page,
   }) => {
     const cp = new ComparisonPage(page);
@@ -35,7 +35,7 @@ test.describe('CA FR Casino — editorial TOP 3 strip', () => {
     }
   });
 
-  test('@smoke main operator table still lists picks after the featured strip', async ({ page }) => {
+  test('@regression main operator table still lists picks after the featured strip', async ({ page }) => {
     const cp = new ComparisonPage(page);
     await cp.goto(caFrCasino.url);
 

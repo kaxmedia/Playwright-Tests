@@ -22,19 +22,19 @@ for (const config of geoHomepages) {
     });
 
     // T1 ─ @smoke ─────────────────────────────────────────────────────────────
-    test(`${config.name} — @smoke nav is visible`, async () => {
+    test(`${config.name} — @smoke @regression nav is visible`, async () => {
       await expect(gh.nav).toBeVisible();
     });
 
     // T2 ─ @smoke ─────────────────────────────────────────────────────────────
-    test(`${config.name} — @smoke nav has at least 2 dropdown triggers`, async () => {
+    test(`${config.name} — @smoke @regression nav has at least 2 dropdown triggers`, async () => {
       // IS geos use a flat nav with no href="#" triggers — different nav structure, not a bug.
       test.fixme(config.skipNavTriggerCheck === true, `${config.name} nav has no href="#" dropdown triggers — flat nav structure`);
       expect(await gh.navDropdownTriggers.count()).toBeGreaterThanOrEqual(2);
     });
 
     // T3 ─ @smoke ─────────────────────────────────────────────────────────────
-    test(`${config.name} — @smoke every dropdown trigger has non-empty text`, async () => {
+    test(`${config.name} — @smoke @regression every dropdown trigger has non-empty text`, async () => {
       const count = await gh.navDropdownTriggers.count();
       for (let i = 0; i < count; i++) {
         const text = (await gh.navDropdownTriggers.nth(i).textContent())?.trim();
@@ -43,12 +43,12 @@ for (const config of geoHomepages) {
     });
 
     // T4 ─ @smoke ─────────────────────────────────────────────────────────────
-    test(`${config.name} — @smoke nav has at least 20 real links`, async () => {
+    test(`${config.name} — @smoke @regression nav has at least 20 real links`, async () => {
       expect(await gh.navRealLinks.count()).toBeGreaterThanOrEqual(20);
     });
 
     // T5 ─ @smoke ─────────────────────────────────────────────────────────────
-    test(`${config.name} — @smoke first 10 nav real links return HTTP < 400`, async ({ request }) => {
+    test(`${config.name} — @smoke @regression first 10 nav real links return HTTP < 400`, async ({ request }) => {
       const count = await gh.navRealLinks.count();
       const hrefs: string[] = [];
       for (let i = 0; i < count && hrefs.length < 10; i++) {
@@ -67,7 +67,7 @@ for (const config of geoHomepages) {
     });
 
     // T6 ─ @smoke ─────────────────────────────────────────────────────────────
-    test(`${config.name} — @smoke logo home link exists in nav`, async () => {
+    test(`${config.name} — @smoke @regression logo home link exists in nav`, async () => {
       const logoLink = globalNavLogoLink(gh.page);
       await expect(logoLink).toBeAttached();
       const href = await logoLink.getAttribute('href');

@@ -7,7 +7,7 @@
 //
 // Run with:
 //   npx playwright test tests/journeys/organic-landing.spec.ts --project=chrome
-//   npx playwright test tests/journeys/organic-landing.spec.ts --grep @smoke
+//   npx playwright test tests/journeys/organic-landing.spec.ts --grep @regression
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { test, expect } from '../../fixtures/test';
@@ -28,13 +28,13 @@ test.describe('Organic Landing Journeys — IE', () => {
       expect(response?.status(), 'Slot review should return HTTP 200').toBeLessThan(400);
     });
 
-    test('@smoke lands on IE slot review URL with Starburst in the title', async ({ page }) => {
+    test('@regression lands on IE slot review URL with Starburst in the title', async ({ page }) => {
       await expect(page).toHaveURL(/\/ie\/online-casinos\/slots\/starburst/);
       await expect(journey.slotHeading).toBeVisible();
       await expect(journey.slotHeading).toContainText(/starburst/i);
     });
 
-    test('@smoke related slot games carousel is present', async () => {
+    test('@regression related slot games carousel is present', async () => {
       // `{ page }` omitted — navigation and assertions use the journey POM from beforeEach.
       await journey.relatedSlotGamesSection.scrollIntoViewIfNeeded();
       await expect(journey.relatedSlotGamesSection).toBeVisible({ timeout: 15_000 });
@@ -42,7 +42,7 @@ test.describe('Organic Landing Journeys — IE', () => {
       await expect(journey.relatedSlotCarousel.locator('.carousel__slide').first()).toBeAttached();
     });
 
-    test('@smoke in-page slot review oplist exposes affiliate CTAs', async () => {
+    test('@regression in-page slot review oplist exposes affiliate CTAs', async () => {
       // `{ page }` omitted — navigation and assertions use the journey POM from beforeEach.
       await expect(journey.slotReviewOplist).toBeVisible({ timeout: 15_000 });
       const cta = journey.slotReviewOplist.locator('a[href*="/go/"]').first();
@@ -62,7 +62,7 @@ test.describe('Organic Landing Journeys — IE', () => {
       expect(response?.status(), 'Casino review should return HTTP 200').toBeLessThan(400);
     });
 
-    test('@smoke lands on kingmaker review with rating widget visible', async ({ page }) => {
+    test('@regression lands on kingmaker review with rating widget visible', async ({ page }) => {
       await expect(page).toHaveURL(/\/ie\/online-casinos\/kingmaker/);
       // Review score widget — `div[class*="bg-gdc-gray-200"]`, not broad `[class*="rating"]`
       await expect(reviewPage.ratingContainer).toBeVisible({ timeout: 15_000 });
@@ -72,12 +72,12 @@ test.describe('Organic Landing Journeys — IE', () => {
       expect(score).toBeLessThanOrEqual(10);
     });
 
-    test('@smoke review exposes a primary affiliate CTA', async () => {
+    test('@regression review exposes a primary affiliate CTA', async () => {
       await expect(reviewPage.ctaButton).toBeVisible();
       await expect(reviewPage.ctaButton).toHaveAttribute('href', /\/go\//);
     });
 
-    test('@smoke review hero shows a bonus offer block', async () => {
+    test('@regression review hero shows a bonus offer block', async () => {
       await expect(reviewPage.bonusOfferBox).toBeVisible({ timeout: 15_000 });
       const text = await reviewPage.bonusOfferBox.innerText();
       expect(text.trim().length).toBeGreaterThan(0);
@@ -95,7 +95,7 @@ test.describe('Organic Landing Journeys — IE', () => {
       expect(response?.status()).toBeLessThan(400);
     });
 
-    test('@smoke IE casino comparison loads with operator cards and affiliate CTAs', async ({ page }) => {
+    test('@regression IE casino comparison loads with operator cards and affiliate CTAs', async ({ page }) => {
       await expect(page).toHaveURL(/\/ie\/online-casinos\/?$/);
 
       await expect(comparison.cards.first()).toBeVisible({ timeout: 20_000 });
@@ -119,7 +119,7 @@ test.describe('Organic Landing Journeys — IE', () => {
       expect(response?.status()).toBeLessThan(400);
     });
 
-    test('@smoke lands on a long-form article with a descriptive H1', async ({ page }) => {
+    test('@regression lands on a long-form article with a descriptive H1', async ({ page }) => {
       await expect(page).toHaveURL(new RegExp(ORGANIC_LANDING.newsArticleSlug));
       const h1 = page.locator('main h1').first();
       await expect(h1).toBeVisible();
@@ -127,7 +127,7 @@ test.describe('Organic Landing Journeys — IE', () => {
       expect(title.length).toBeGreaterThan(10);
     });
 
-    test('@smoke article body contains in-content affiliate toplist links', async () => {
+    test('@regression article body contains in-content affiliate toplist links', async () => {
       await expect(journey.articleInContentGoLinks.first()).toBeAttached();
       expect(await journey.articleInContentGoLinks.count()).toBeGreaterThanOrEqual(3);
       const href = await journey.articleInContentGoLinks.first().getAttribute('href');
@@ -150,7 +150,7 @@ test.describe('Organic Landing Journeys — IE', () => {
       expect(response?.status()).toBeLessThan(400);
     });
 
-    test('@smoke strategy hub loads with guide listings', async ({ page }) => {
+    test('@regression strategy hub loads with guide listings', async ({ page }) => {
       await expect(page).toHaveURL(/\/ie\/strategy\/?$/);
       // Page-level h1 rather than `main h1`: the strategy hub renders no <main>
       // landmark, so scoping to main matched nothing. The <h1> ("Gambling Strategy")
@@ -159,7 +159,7 @@ test.describe('Organic Landing Journeys — IE', () => {
       await expect(journey.strategyArticleLinks.nth(2)).toBeAttached();
     });
 
-    test('@smoke strategy hub exposes commercial paths for organic visitors', async () => {
+    test('@regression strategy hub exposes commercial paths for organic visitors', async () => {
       const commercialLinks = journey.page.locator('main a[href*="/go/"], main a[href*="/online-casinos/"]');
       await expect(commercialLinks.first()).toBeAttached();
     });

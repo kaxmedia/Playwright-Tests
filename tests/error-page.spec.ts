@@ -8,7 +8,7 @@ const geos = [
 
 for (const { geo, url } of geos) {
   test.describe(`404 error page – ${geo}`, () => {
-    test(`returns 404 and renders branded page @smoke`, async ({ page }) => {
+    test(`returns 404 and renders branded page @smoke @regression`, async ({ page }) => {
       const errorPage = new ErrorPage(page);
       const response = await errorPage.goto(url);
       expect(response?.status()).toBe(404);

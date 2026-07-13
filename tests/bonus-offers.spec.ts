@@ -25,7 +25,7 @@
 //
 // Run with:
 //   npx playwright test tests/bonus-offers.spec.ts --project=chrome
-//   npx playwright test tests/bonus-offers.spec.ts --grep @smoke
+//   npx playwright test tests/bonus-offers.spec.ts --grep @regression
 //   npx playwright test tests/bonus-offers.spec.ts --grep @audit
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -140,13 +140,13 @@ for (const config of bonusPages) {
 
         // ── T1: Page URL is correct ───────────────────────────────────────────
 
-        test('@smoke page loads with correct URL', async ({ page }) => {
+        test('@regression page loads with correct URL', async ({ page }) => {
             await expect(page).toHaveURL(new RegExp(escapeForRegex(config.url)));
         });
 
         // ── T2: Operator cards are present ────────────────────────────────────
 
-        test(`@smoke at least ${config.expectedCardCountMin} operator cards are present`, async () => {
+        test(`@regression at least ${config.expectedCardCountMin} operator cards are present`, async () => {
             const count = await bonusPage.cards.count();
             expect(
                 count,
@@ -156,7 +156,7 @@ for (const config of bonusPages) {
 
         // ── T3: First card has required data attributes ────────────────────────
 
-        test('@smoke first card has operator name and position data attributes', async () => {
+        test('@regression first card has operator name and position data attributes', async () => {
             const card = bonusPage.nthCard(0);
             const operator = await bonusPage.operatorName(card);
             const position = await bonusPage.position(card);
@@ -166,7 +166,7 @@ for (const config of bonusPages) {
 
         // ── T4: Operator logo is present ──────────────────────────────────────
 
-        test('@smoke first card operator logo is attached with a valid src', async () => {
+        test('@regression first card operator logo is attached with a valid src', async () => {
             const card = bonusPage.nthCard(0);
             const logo = bonusPage.logoImg(card);
             await expect(logo).toBeAttached();
@@ -176,7 +176,7 @@ for (const config of bonusPages) {
 
         // ── T5: CTA link has affiliate href ───────────────────────────────────
 
-        test('@smoke first card CTA link has a /go/ affiliate href', async () => {
+        test('@regression first card CTA link has a /go/ affiliate href', async () => {
             const card = bonusPage.nthCard(0);
             const cta = bonusPage.ctaLink(card);
             await expect(cta).toBeVisible();
@@ -211,7 +211,7 @@ for (const config of bonusPages) {
 
         // ── T7: Offer text is present ─────────────────────────────────────────
 
-        test('@smoke first card has offer text', async () => {
+        test('@regression first card has offer text', async () => {
             const card = bonusPage.nthCard(0);
             const offer = await bonusPage.offerText(card);
             expect(offer?.trim().length, 'data-offer should not be empty on a bonus page').toBeGreaterThan(0);
@@ -219,7 +219,7 @@ for (const config of bonusPages) {
 
         // ── T8: Age limit is correct for this geo ─────────────────────────────
 
-        test(`@smoke first card terms text contains ${config.ageLimit}`, async () => {
+        test(`@regression first card terms text contains ${config.ageLimit}`, async () => {
             const card = bonusPage.nthCard(0);
             const terms = bonusPage.termsText(card);
             await expect(terms).toContainText(config.ageLimit);
@@ -228,7 +228,7 @@ for (const config of bonusPages) {
         // ── T9: Regulator badge (geo-conditional) ─────────────────────────────
 
         if (config.hasBadge) {
-            test('@smoke first card has a regulator badge', async () => {
+            test('@regression first card has a regulator badge', async () => {
                 const card = bonusPage.nthCard(0);
                 await expect(bonusPage.regulatorBadge(card)).toBeAttached();
             });
@@ -237,7 +237,7 @@ for (const config of bonusPages) {
         // ── T10: Review link (geo-conditional) ────────────────────────────────
 
         if (config.hasReviewLink !== false) {
-            test('@smoke first card review link is present', async () => {
+            test('@regression first card review link is present', async () => {
                 const card = bonusPage.nthCard(0);
                 const reviewLink = bonusPage.reviewLink(card);
                 await expect(reviewLink).toBeAttached();
@@ -248,7 +248,7 @@ for (const config of bonusPages) {
 
         // ── T11: Rank label is visible ────────────────────────────────────────
 
-        test('@smoke first card rank label is visible', async () => {
+        test('@regression first card rank label is visible', async () => {
             const card = bonusPage.nthCard(0);
             await expect(bonusPage.rankLabel(card)).toBeVisible();
         });
@@ -287,11 +287,11 @@ for (const subPage of bonusSubPages) {
             await subPageComparison.goto(subPage.url);
         });
 
-        test('@smoke page URL is correct', async ({ page }) => {
+        test('@regression page URL is correct', async ({ page }) => {
             await expect(page).toHaveURL(new RegExp(escapeForRegex(subPage.url)));
         });
 
-        test(`@smoke at least ${subPage.expectedCardCountMin} operator cards are present`, async () => {
+        test(`@regression at least ${subPage.expectedCardCountMin} operator cards are present`, async () => {
             const count = await subPageComparison.cards.count();
             expect(
                 count,
@@ -299,7 +299,7 @@ for (const subPage of bonusSubPages) {
             ).toBeGreaterThanOrEqual(subPage.expectedCardCountMin);
         });
 
-        test('@smoke first card CTA has a /go/ affiliate href', async () => {
+        test('@regression first card CTA has a /go/ affiliate href', async () => {
             const card = subPageComparison.nthCard(0);
             const cta = subPageComparison.ctaLink(card);
             await expect(cta).toBeVisible();
@@ -307,7 +307,7 @@ for (const subPage of bonusSubPages) {
             expect(href).toMatch(/\/go\//);
         });
 
-        test('@smoke first card has offer text', async () => {
+        test('@regression first card has offer text', async () => {
             const card = subPageComparison.nthCard(0);
             const offer = await subPageComparison.offerText(card);
             expect(offer?.trim().length).toBeGreaterThan(0);
@@ -328,7 +328,7 @@ const allBonusUrls: { name: string; url: string }[] = [
 
 test.describe('Bonus Pages — Multi-URL HTTP 200 check @audit', () => {
 
-    test('@audit all bonus page URLs return HTTP 200', async ({ request }) => {
+    test('@regression @audit all bonus page URLs return HTTP 200', async ({ request }) => {
         test.setTimeout(60_000);
 
         const results = await Promise.all(

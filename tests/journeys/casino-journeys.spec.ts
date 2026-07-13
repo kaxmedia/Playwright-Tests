@@ -9,7 +9,7 @@
 //
 // Run with:
 //   npx playwright test tests/journeys/casino-journeys.spec.ts --project=chrome
-//   npx playwright test tests/journeys/casino-journeys.spec.ts --grep @smoke
+//   npx playwright test tests/journeys/casino-journeys.spec.ts --grep @regression
 //
 // Design principles:
 //   - No off-site CTA clicks — /go/ links asserted present, never followed.
@@ -61,7 +61,7 @@ test.describe('Journey 3.1 — Casino research via toplist', () => {
         expect(response?.status(), 'Casino toplist should return HTTP 200').toBeLessThan(400);
     });
 
-    test('@smoke toplist loads with H1 and multiple operator cards @journey', async ({ page }) => {
+    test('@regression toplist loads with H1 and multiple operator cards @journey', async ({ page }) => {
         await expect(page).toHaveURL(/\/ie\/online-casinos\/?$/);
         await expect(page.locator('h1').first()).toBeVisible();
         await expect(comparison.cards.first()).toBeVisible({ timeout: 20_000 });
@@ -69,7 +69,7 @@ test.describe('Journey 3.1 — Casino research via toplist', () => {
         await expect(comparison.cards.nth(4)).toBeAttached();
     });
 
-    test('@smoke first operator card exposes logo, name, and affiliate CTA @journey', async ({ page }) => {
+    test('@regression first operator card exposes logo, name, and affiliate CTA @journey', async ({ page }) => {
         await expect(comparison.cards.first()).toBeVisible({ timeout: 20_000 });
         const firstCard = comparison.nthCard(0);
         await expect(comparison.logoImg(firstCard)).toBeVisible();
@@ -89,13 +89,13 @@ test.describe('Journey 3.2 — New casinos page', () => {
         expect(response?.status(), 'New casinos page should return HTTP 200').toBeLessThan(400);
     });
 
-    test('@smoke new casinos page loads with correct H1 @journey', async ({ page }) => {
+    test('@regression new casinos page loads with correct H1 @journey', async ({ page }) => {
         await expect(page).toHaveURL(/\/ie\/online-casinos\/new/);
         await expect(page.locator('h1').first()).toBeVisible();
         await expect(page.locator('h1').first()).toContainText(/new.*casino|casino.*new/i);
     });
 
-    test('@smoke new casinos page exposes operator CTAs @journey', async ({ page }) => {
+    test('@regression new casinos page exposes operator CTAs @journey', async ({ page }) => {
         const ctas = page.locator('a[href*="/go/"]');
         await expect(ctas.first()).toBeAttached();
         await expect(ctas.nth(2)).toBeAttached();
@@ -113,13 +113,13 @@ test.describe('Journey 3.3 — Slots casinos page', () => {
         expect(response?.status(), 'Slots casino page should return HTTP 200').toBeLessThan(400);
     });
 
-    test('@smoke slots casino page loads with correct H1 @journey', async ({ page }) => {
+    test('@regression slots casino page loads with correct H1 @journey', async ({ page }) => {
         await expect(page).toHaveURL(/\/ie\/online-casinos\/slots\/?$/);
         await expect(page.locator('h1').first()).toBeVisible();
         await expect(page.locator('h1').first()).toContainText(/slot/i);
     });
 
-    test('@smoke slots casino page exposes operator CTAs @journey', async ({ page }) => {
+    test('@regression slots casino page exposes operator CTAs @journey', async ({ page }) => {
         await expect(page.locator('a[href*="/go/"]').first()).toBeAttached();
     });
 
@@ -142,16 +142,16 @@ test.describe('Journey 3.4 — Live casinos (toplist section)', () => {
         expect(response?.status(), 'Live casino entry URL should return HTTP 200').toBeLessThan(400);
     });
 
-    test('@smoke legacy live URL lands on the casino toplist @journey', async ({ page }) => {
+    test('@regression legacy live URL lands on the casino toplist @journey', async ({ page }) => {
         await expect(page).toHaveURL(/\/ie\/online-casinos\/?$/);
         await expect(page.locator('h1').first()).toBeVisible();
     });
 
-    test('@smoke live dealer section is present on the toplist @journey', async ({ page }) => {
+    test('@regression live dealer section is present on the toplist @journey', async ({ page }) => {
         await expect(page.getByRole('heading', { name: /live dealer/i }).first()).toBeAttached();
     });
 
-    test('@smoke live casino operators expose affiliate CTAs @journey', async ({ page }) => {
+    test('@regression live casino operators expose affiliate CTAs @journey', async ({ page }) => {
         await expect(page.locator('a[href*="/go/"]').first()).toBeAttached();
     });
 });
@@ -167,13 +167,13 @@ test.describe('Journey 3.5 — Mobile casinos / apps page', () => {
         expect(response?.status(), 'Mobile casino apps page should return HTTP 200').toBeLessThan(400);
     });
 
-    test('@smoke mobile casino apps page loads with correct H1 @journey', async ({ page }) => {
+    test('@regression mobile casino apps page loads with correct H1 @journey', async ({ page }) => {
         await expect(page).toHaveURL(/\/ie\/online-casinos\/apps\/?$/);
         await expect(page.locator('h1').first()).toBeVisible();
         await expect(page.locator('h1').first()).toContainText(/mobile|app/i);
     });
 
-    test('@smoke mobile casino page exposes operator CTAs @journey', async ({ page }) => {
+    test('@regression mobile casino page exposes operator CTAs @journey', async ({ page }) => {
         await expect(page.locator('a[href*="/go/"]').first()).toBeAttached();
     });
 
@@ -197,7 +197,7 @@ test.describe('Journey 3.6 — Fast payout casinos (toplist section)', () => {
         expect(response?.status(), 'Casino toplist should return HTTP 200').toBeLessThan(400);
     });
 
-    test('@smoke fast payout section or content is present on the casino toplist @journey', async ({ page }) => {
+    test('@regression fast payout section or content is present on the casino toplist @journey', async ({ page }) => {
         await expect(page).toHaveURL(/\/ie\/online-casinos/);
         // Fast payout content is a named section within the toplist page
         const fastPayoutContent = page.locator(
@@ -206,7 +206,7 @@ test.describe('Journey 3.6 — Fast payout casinos (toplist section)', () => {
         await expect(fastPayoutContent).toBeAttached();
     });
 
-    test('@smoke fast payout operators expose affiliate CTAs @journey', async ({ page }) => {
+    test('@regression fast payout operators expose affiliate CTAs @journey', async ({ page }) => {
         await expect(page.locator('a[href*="/go/"]').first()).toBeAttached();
     });
 });
@@ -223,12 +223,12 @@ test.describe('Journey 3.7 — Crypto / Bitcoin casinos (legacy URL → toplist)
         expect(response?.status(), 'Bitcoin casino entry URL should return HTTP 200').toBeLessThan(400);
     });
 
-    test('@smoke legacy bitcoin URL lands on the casino toplist @journey', async ({ page }) => {
+    test('@regression legacy bitcoin URL lands on the casino toplist @journey', async ({ page }) => {
         await expect(page).toHaveURL(/\/ie\/online-casinos\/?$/);
         await expect(page.locator('h1').first()).toBeVisible();
     });
 
-    test('@smoke redirected toplist exposes operator CTAs @journey', async ({ page }) => {
+    test('@regression redirected toplist exposes operator CTAs @journey', async ({ page }) => {
         await expect(page.locator('a[href*="/go/"]').first()).toBeAttached();
     });
 });
@@ -244,13 +244,13 @@ test.describe('Journey 3.8 — Payment method casino page (PayPal)', () => {
         expect(response?.status(), 'PayPal casino page should return HTTP 200').toBeLessThan(400);
     });
 
-    test('@smoke PayPal casino page loads with correct H1 @journey', async ({ page }) => {
+    test('@regression PayPal casino page loads with correct H1 @journey', async ({ page }) => {
         await expect(page).toHaveURL(/\/ie\/online-casinos\/paypal/);
         await expect(page.locator('h1').first()).toBeVisible();
         await expect(page.locator('h1').first()).toContainText(/paypal/i);
     });
 
-    test('@smoke PayPal casino page exposes operator CTAs @journey', async ({ page }) => {
+    test('@regression PayPal casino page exposes operator CTAs @journey', async ({ page }) => {
         await expect(page.locator('a[href*="/go/"]').first()).toBeAttached();
     });
 
@@ -273,18 +273,18 @@ test.describe('Journey 3.9 — Safe / licensed casinos (how-we-review guide)', (
         expect(response?.status(), 'How-we-review page should return HTTP 200').toBeLessThan(400);
     });
 
-    test('@smoke how-we-review guide loads with H1 @journey', async ({ page }) => {
+    test('@regression how-we-review guide loads with H1 @journey', async ({ page }) => {
         await expect(page).toHaveURL(/\/ie\/reviews\/casino/);
         await expect(page.locator('h1').first()).toBeVisible();
     });
 
-    test('@smoke licensing / safety content is present in the guide @journey', async ({ page }) => {
+    test('@regression licensing / safety content is present in the guide @journey', async ({ page }) => {
         await expect(
             page.locator('main').getByText(/licens|regulat|safe|trusted/i).first()
         ).toBeAttached();
     });
 
-    test('@smoke guide links back to casino toplist for operator comparison @journey', async ({ page }) => {
+    test('@regression guide links back to casino toplist for operator comparison @journey', async ({ page }) => {
         const toplistLink = page.locator('a[href*="/ie/online-casinos"]').first();
         await expect(toplistLink).toBeAttached();
     });
@@ -304,7 +304,7 @@ test.describe('Journey 3.10 — Operator review page', () => {
         expect(response?.status(), 'Casino review should return HTTP 200').toBeLessThan(400);
     });
 
-    test('@smoke review page loads with H1 and rating widget @journey', async ({ page }) => {
+    test('@regression review page loads with H1 and rating widget @journey', async ({ page }) => {
         await expect(page).toHaveURL(/\/ie\/online-casinos\/kingmaker/);
         await expect(page.locator('h1').first()).toBeVisible();
         await expect(reviewPage.ratingContainer).toBeVisible({ timeout: 15_000 });
@@ -314,12 +314,12 @@ test.describe('Journey 3.10 — Operator review page', () => {
         expect(score).toBeLessThanOrEqual(10);
     });
 
-    test('@smoke review exposes a primary Visit Site / Play Now affiliate CTA @journey', async ({ page }) => {
+    test('@regression review exposes a primary Visit Site / Play Now affiliate CTA @journey', async ({ page }) => {
         await expect(reviewPage.ctaButton).toBeVisible();
         await expect(reviewPage.ctaButton).toHaveAttribute('href', /\/go\//);
     });
 
-    test('@smoke review hero shows a bonus offer block @journey', async ({ page }) => {
+    test('@regression review hero shows a bonus offer block @journey', async ({ page }) => {
         await expect(reviewPage.bonusOfferBox).toBeVisible({ timeout: 15_000 });
         const text = await reviewPage.bonusOfferBox.innerText();
         expect(text.trim().length).toBeGreaterThan(0);
@@ -342,18 +342,18 @@ test.describe('Journey 3.11 — Slot game review / play page', () => {
         expect(response?.status(), 'Slot page should return HTTP 200').toBeLessThan(400);
     });
 
-    test('@smoke slot page loads with correct H1 @journey', async ({ page }) => {
+    test('@regression slot page loads with correct H1 @journey', async ({ page }) => {
         await expect(page).toHaveURL(/\/ie\/online-casinos\/slots\/starburst/);
         await expect(page.locator('h1').first()).toBeVisible();
         await expect(page.locator('h1').first()).toContainText(/starburst/i);
     });
 
-    test('@smoke slot page exposes "Play for real" operator CTA @journey', async ({ page }) => {
+    test('@regression slot page exposes "Play for real" operator CTA @journey', async ({ page }) => {
         await expect(page.locator('a[href*="/go/"]').first()).toBeAttached();
         await expect(page.locator('a[href*="/go/"]').first()).toBeVisible();
     });
 
-    test('@smoke slot page links to parent slots toplist @journey', async ({ page }) => {
+    test('@regression slot page links to parent slots toplist @journey', async ({ page }) => {
         const slotsLink = page.locator('a[href*="/ie/online-casinos/slots"]').first();
         await expect(slotsLink).toBeAttached();
     });
@@ -375,13 +375,13 @@ test.describe('Journey 3.12 — Casino strategy guide', () => {
         expect(response?.status(), 'Strategy hub should return HTTP 200').toBeLessThan(400);
     });
 
-    test('@smoke strategy hub loads with correct H1 @journey', async ({ page }) => {
+    test('@regression strategy hub loads with correct H1 @journey', async ({ page }) => {
         await expect(page).toHaveURL(/\/ie\/online-casinos\/strategy\/?$/);
         await expect(page.locator('h1').first()).toBeVisible();
         await expect(page.locator('h1').first()).toContainText(/strategy/i);
     });
 
-    test('@smoke strategy hub lists individual guide articles @journey', async ({ page }) => {
+    test('@regression strategy hub lists individual guide articles @journey', async ({ page }) => {
         // Article links render in a content container that is a sibling of <main>
         // (the <main> landmark holds only the breadcrumb), so scope by the article
         // URL pattern rather than the main landmark. The trailing slash excludes the
@@ -391,7 +391,7 @@ test.describe('Journey 3.12 — Casino strategy guide', () => {
         await expect(guideLinks.nth(1)).toBeAttached();
     });
 
-    test('@smoke strategy hub exposes commercial paths to casino toplist @journey', async ({ page }) => {
+    test('@regression strategy hub exposes commercial paths to casino toplist @journey', async ({ page }) => {
         const toplistLink = page.locator('a[href*="/ie/online-casinos"]').first();
         await expect(toplistLink).toBeAttached();
     });

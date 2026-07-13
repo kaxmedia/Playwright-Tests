@@ -14,21 +14,21 @@ test.describe('Global News Page', () => {
   // ─── 1. Page fundamentals ───────────────────────────────────────────────────
   test.describe('Page fundamentals', () => {
 
-    test('@smoke page loads and has correct title', async ({ page }) => {
+    test('@regression page loads and has correct title', async ({ page }) => {
       await expect(page).toHaveTitle(/news/i);
       await expect(page).not.toHaveTitle('');
     });
 
-    test('@smoke page URL is correct', async ({ page }) => {
+    test('@regression page URL is correct', async ({ page }) => {
       await expect(page).toHaveURL(/\/news/);
     });
 
-    test('@smoke logo is visible', async () => {
+    test('@regression logo is visible', async () => {
       await expect(newsPage.logo).toBeVisible({ timeout: 25_000 });
       await newsPage.logo.scrollIntoViewIfNeeded();
     });
 
-    test('@smoke main navigation is visible', async () => {
+    test('@regression main navigation is visible', async () => {
       await expect(newsPage.mainNav).toBeVisible();
     });
 
@@ -37,7 +37,7 @@ test.describe('Global News Page', () => {
   // ─── 2. News sections ───────────────────────────────────────────────────────
   test.describe('News sections', () => {
 
-    test('@smoke page contains expected category sections', async () => {
+    test('@regression page contains expected category sections', async () => {
       // Section titles live in carousels; inactive slides are often `visibility: hidden`, so assert
       // copy in `<main>` instead of per-heading visibility.
       const main = newsPage.categoryLabelsInMain();
@@ -49,7 +49,7 @@ test.describe('Global News Page', () => {
       await expect(main).toContainText('Betting News');
     });
 
-    test('@smoke at least 6 article cards are rendered', async () => {
+    test('@regression at least 6 article cards are rendered', async () => {
       const count = await newsPage.getArticleCount();
       expect(count).toBeGreaterThanOrEqual(6);
     });
@@ -91,7 +91,7 @@ test.describe('Global News Page', () => {
   // ─── 3. Article navigation ──────────────────────────────────────────────────
   test.describe('Article navigation', () => {
 
-    test('@smoke clicking an article navigates to an article page', async ({ page }) => {
+    test('@regression clicking an article navigates to an article page', async ({ page }) => {
       const firstArticleLink = newsPage.firstArticleCardLink();
       const href = await firstArticleLink.getAttribute('href');
 
@@ -128,7 +128,7 @@ test.describe('Global News Page', () => {
   // ─── 4. Sidebar CTA ─────────────────────────────────────────────────────────
   test.describe('Sidebar CTA', () => {
 
-    test('@smoke "Create a Free Account" CTA is visible', async () => {
+    test('@regression "Create a Free Account" CTA is visible', async () => {
       await expect(newsPage.createAccountCTA).toBeVisible();
     });
 
@@ -142,7 +142,7 @@ test.describe('Global News Page', () => {
   // ─── 5. Footer ──────────────────────────────────────────────────────────────
   test.describe('Footer', () => {
 
-    test('@smoke footer is visible', async () => {
+    test('@regression footer is visible', async () => {
       await newsPage.page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
       await expect(newsPage.footer).toBeVisible();
     });

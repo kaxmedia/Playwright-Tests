@@ -9,7 +9,7 @@
 //
 // Run with:
 //   npx playwright test tests/journeys/content-discovery.spec.ts --project=chrome
-//   npx playwright test tests/journeys/content-discovery.spec.ts --grep @smoke
+//   npx playwright test tests/journeys/content-discovery.spec.ts --grep @regression
 //
 // Design principles:
 //   - No off-site CTA clicks — /go/ links asserted present, never followed.
@@ -55,13 +55,13 @@ test.describe('Journey 9.1 — How-to guide (strategy hub)', () => {
         expect(response?.status(), 'Strategy hub should return HTTP 200').toBeLessThan(400);
     });
 
-    test('@smoke strategy hub loads with correct H1 @journey', async ({ page }) => {
+    test('@regression strategy hub loads with correct H1 @journey', async ({ page }) => {
         await expect(page).toHaveURL(/\/ie\/online-casinos\/strategy\/?$/);
         await expect(page.locator('h1').first()).toBeVisible();
         await expect(page.locator('h1').first()).toContainText(/strategy/i);
     });
 
-    test('@smoke strategy hub lists individual guide articles @journey', async ({ page }) => {
+    test('@regression strategy hub lists individual guide articles @journey', async ({ page }) => {
         // Article links render in a container that is a sibling of <main> (the
         // <main> landmark holds only the breadcrumb), so scope by the article URL
         // pattern rather than main. The trailing slash excludes the category card
@@ -72,7 +72,7 @@ test.describe('Journey 9.1 — How-to guide (strategy hub)', () => {
         await expect(guideLinks.nth(1)).toBeAttached();
     });
 
-    test('@smoke strategy hub exposes commercial toplist link @journey', async ({ page }) => {
+    test('@regression strategy hub exposes commercial toplist link @journey', async ({ page }) => {
         const toplistLink = page.locator('a[href*="/ie/online-casinos"]').first();
         await expect(toplistLink).toBeAttached();
     });
@@ -100,17 +100,17 @@ test.describe('Journey 9.2 — Game rules (blackjack rules page)', () => {
         expect(response?.status(), 'Game rules page should return HTTP 200').toBeLessThan(400);
     });
 
-    test('@smoke game rules page loads with correct H1 @journey', async ({ page }) => {
+    test('@regression game rules page loads with correct H1 @journey', async ({ page }) => {
         await expect(page).toHaveURL(/\/ie\/online-casinos\/blackjack/);
         await expect(page.locator('h1').first()).toBeVisible();
         await expect(page.locator('h1').first()).toContainText(/blackjack/i);
     });
 
-    test('@smoke game rules page exposes operator CTAs @journey', async ({ page }) => {
+    test('@regression game rules page exposes operator CTAs @journey', async ({ page }) => {
         await expect(page.locator('a[href*="/go/"]').first()).toBeAttached();
     });
 
-    test('@smoke game rules page links to casino toplist or strategy guide @journey', async ({ page }) => {
+    test('@regression game rules page links to casino toplist or strategy guide @journey', async ({ page }) => {
         const relatedLink = page.locator(
             'a[href*="/ie/online-casinos/strategy/"], a[href*="/ie/online-casinos"]'
         ).first();
@@ -138,13 +138,13 @@ test.describe('Journey 9.3 — Site search', () => {
         expect(response?.status(), 'Homepage should return HTTP 200').toBeLessThan(400);
     });
 
-    test('@smoke search input is present on the homepage @journey', async ({ page }) => {
+    test('@regression search input is present on the homepage @journey', async ({ page }) => {
         await expect(page).toHaveURL(/gambling\.com\/ie\/?$/);
         const searchInput = page.locator('input.search-input').first();
         await expect(searchInput).toBeAttached();
     });
 
-    test('@smoke search input accepts text input @journey', async ({ page }) => {
+    test('@regression search input accepts text input @journey', async ({ page }) => {
         // Interactive search panel opens on global `/`, not the IE geo nav —
         // navigates away from the beforeEach URL intentionally (same pattern as §4/5/7).
         await page.goto(URLS.globalHomepage);
@@ -174,7 +174,7 @@ test.describe('Journey 9.4 — Author / expert page', () => {
         expect(response?.status(), 'Authors hub should return HTTP 200').toBeLessThan(400);
     });
 
-    test('@smoke authors hub loads with H1 and author links @journey', async ({ page }) => {
+    test('@regression authors hub loads with H1 and author links @journey', async ({ page }) => {
         await expect(page).toHaveURL(/\/authors\/?$/);
         await expect(page.locator('h1').first()).toBeVisible();
         await expect(page.locator('h1').first()).toContainText(/author/i);
@@ -183,14 +183,14 @@ test.describe('Journey 9.4 — Author / expert page', () => {
         await expect(authorLinks.first()).toBeAttached();
     });
 
-    test('@smoke individual author page loads with H1 @journey', async ({ page }) => {
+    test('@regression individual author page loads with H1 @journey', async ({ page }) => {
         await page.goto(URLS.authorPage);
         await expect(page).toHaveURL(/\/authors\/larry-henry/);
         await expect(page.locator('h1').first()).toBeVisible();
         await expect(page.locator('h1').first()).toContainText(/larry/i);
     });
 
-    test('@smoke author page exposes their published articles or reviews @journey', async ({ page }) => {
+    test('@regression author page exposes their published articles or reviews @journey', async ({ page }) => {
         await page.goto(URLS.authorPage);
         const authorContent = page.locator('a[href*="/news/"], a[href*="/online-casinos/"]').first();
         await expect(authorContent).toBeAttached();

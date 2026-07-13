@@ -9,7 +9,7 @@
 //
 // Run with:
 //   npx playwright test tests/journeys/bonus-journeys.spec.ts --project=chrome
-//   npx playwright test tests/journeys/bonus-journeys.spec.ts --grep @smoke
+//   npx playwright test tests/journeys/bonus-journeys.spec.ts --grep @regression
 //
 // Design principles:
 //   - Complements (does not duplicate) bonus-offers.spec.ts. That suite owns
@@ -47,13 +47,13 @@ test.describe('Journey 4.1 — Welcome bonus hub', () => {
         expect(response?.status(), 'Bonus hub should return HTTP 200').toBeLessThan(400);
     });
 
-    test('@smoke bonus hub loads with correct H1 @journey', async ({ page }) => {
+    test('@regression bonus hub loads with correct H1 @journey', async ({ page }) => {
         await expect(page).toHaveURL(/\/ie\/online-casinos\/bonus\/?$/);
         await expect(page.locator('h1').first()).toBeVisible();
         await expect(page.locator('h1').first()).toContainText(/bonus|offer/i);
     });
 
-    test('@smoke bonus hub lists operator cards with claim CTAs @journey', async () => {
+    test('@regression bonus hub lists operator cards with claim CTAs @journey', async () => {
         await expect(comparison.cards.first()).toBeVisible({ timeout: 20_000 });
         // nth(4) = at least 5 cards present (0-indexed)
         await expect(comparison.cards.nth(4)).toBeAttached();
@@ -61,7 +61,7 @@ test.describe('Journey 4.1 — Welcome bonus hub', () => {
         await expect(comparison.ctaLink(firstCard)).toHaveAttribute('href', /\/go\//);
     });
 
-    test('@smoke bonus hub exposes sub-category navigation links @journey', async ({ page }) => {
+    test('@regression bonus hub exposes sub-category navigation links @journey', async ({ page }) => {
         // User can narrow from "all bonuses" to no-deposit or free spins
         const noDepositLink = page.locator('a[href*="no-deposit"]').first();
         await expect(noDepositLink).toBeAttached();
@@ -90,20 +90,20 @@ test.describe('Journey 4.2 — No-deposit bonus page', () => {
         expect(response?.status(), 'No-deposit page should return HTTP 200').toBeLessThan(400);
     });
 
-    test('@smoke no-deposit page loads with correct H1 @journey', async ({ page }) => {
+    test('@regression no-deposit page loads with correct H1 @journey', async ({ page }) => {
         await expect(page).toHaveURL(/\/ie\/online-casinos\/no-deposit-bonus/);
         await expect(page.locator('h1').first()).toBeVisible();
         await expect(page.locator('h1').first()).toContainText(/no.?deposit/i);
     });
 
-    test('@smoke no-deposit page lists operator cards with claim CTAs @journey', async () => {
+    test('@regression no-deposit page lists operator cards with claim CTAs @journey', async () => {
         await expect(comparison.cards.first()).toBeVisible({ timeout: 20_000 });
         await expect(comparison.cards.nth(2)).toBeAttached();
         const firstCard = comparison.nthCard(0);
         await expect(comparison.ctaLink(firstCard)).toHaveAttribute('href', /\/go\//);
     });
 
-    test('@smoke no-deposit page links back to bonus hub @journey', async ({ page }) => {
+    test('@regression no-deposit page links back to bonus hub @journey', async ({ page }) => {
         const bonusHubLink = page.locator('a[href*="/ie/online-casinos/bonus"]').first();
         await expect(bonusHubLink).toBeAttached();
     });
@@ -130,20 +130,20 @@ test.describe('Journey 4.3 — Free spins no-deposit page', () => {
         expect(response?.status(), 'Free spins page should return HTTP 200').toBeLessThan(400);
     });
 
-    test('@smoke free spins page loads with correct H1 @journey', async ({ page }) => {
+    test('@regression free spins page loads with correct H1 @journey', async ({ page }) => {
         await expect(page).toHaveURL(/\/ie\/online-casinos\/bonus\/free-spins-no-deposit/);
         await expect(page.locator('h1').first()).toBeVisible();
         await expect(page.locator('h1').first()).toContainText(/free.?spin/i);
     });
 
-    test('@smoke free spins page lists operator cards with claim CTAs @journey', async () => {
+    test('@regression free spins page lists operator cards with claim CTAs @journey', async () => {
         await expect(comparison.cards.first()).toBeVisible({ timeout: 20_000 });
         await expect(comparison.cards.nth(2)).toBeAttached();
         const firstCard = comparison.nthCard(0);
         await expect(comparison.ctaLink(firstCard)).toHaveAttribute('href', /\/go\//);
     });
 
-    test('@smoke free spins page links back to bonus hub @journey', async ({ page }) => {
+    test('@regression free spins page links back to bonus hub @journey', async ({ page }) => {
         const bonusHubLink = page.locator('a[href*="/ie/online-casinos/bonus"]').first();
         await expect(bonusHubLink).toBeAttached();
     });
@@ -176,13 +176,13 @@ test.describe('Journey 4.4 — Promo code (bonus hub inline content)', () => {
         expect(response?.status(), 'Bonus hub should return HTTP 200').toBeLessThan(400);
     });
 
-    test('@smoke promo code content is present on the bonus hub @journey', async ({ page }) => {
+    test('@regression promo code content is present on the bonus hub @journey', async ({ page }) => {
         await expect(page).toHaveURL(/\/ie\/online-casinos\/bonus/);
         const promoContent = page.getByText(/promo.?code|bonus.?code/i).first();
         await expect(promoContent).toBeAttached();
     });
 
-    test('@smoke operator cards expose claim CTAs alongside promo code content @journey', async () => {
+    test('@regression operator cards expose claim CTAs alongside promo code content @journey', async () => {
         await expect(comparison.cards.first()).toBeVisible({ timeout: 20_000 });
         const firstCard = comparison.nthCard(0);
         await expect(comparison.ctaLink(firstCard)).toHaveAttribute('href', /\/go\//);

@@ -13,7 +13,7 @@ for (const config of comparisonPages) {
     // These run against every entry in the array — no conditional skipping.
 
     // T1 ─ @smoke ─────────────────────────────────────────────────────────────
-    test(`${config.name} — @smoke page loads with HTTP 200 and non-empty title`, async ({ page }) => {
+    test(`${config.name} — @smoke @regression page loads with HTTP 200 and non-empty title`, async ({ page }) => {
       const cp = new ComparisonPage(page);
       const response = await cp.goto(config.url);
       expect(response?.status()).toBeLessThan(400);
@@ -21,14 +21,14 @@ for (const config of comparisonPages) {
     });
 
     // T2 ─ @smoke ─────────────────────────────────────────────────────────────
-    test(`${config.name} — @smoke comparison list of operator cards is visible`, async ({ page }) => {
+    test(`${config.name} — @smoke @regression comparison list of operator cards is visible`, async ({ page }) => {
       const cp = new ComparisonPage(page);
       await cp.goto(config.url);
       await expect(cp.cards.first()).toBeVisible();
     });
 
     // T3 ─ @smoke ─────────────────────────────────────────────────────────────
-    test(`${config.name} — @smoke at least ${config.expectedCardCountMin} operator cards rendered`, async ({ page }) => {
+    test(`${config.name} — @smoke @regression at least ${config.expectedCardCountMin} operator cards rendered`, async ({ page }) => {
       const cp = new ComparisonPage(page);
       await cp.goto(config.url);
       if (config.hasOplistPagination) {
@@ -38,7 +38,7 @@ for (const config of comparisonPages) {
     });
 
     // T4 ─ @smoke ─────────────────────────────────────────────────────────────
-    test(`${config.name} — @smoke first 5 cards each have logo, CTA link, and operator name`, async ({ page }) => {
+    test(`${config.name} — @smoke @regression first 5 cards each have logo, CTA link, and operator name`, async ({ page }) => {
       const cp = new ComparisonPage(page);
       await cp.goto(config.url);
       for (let i = 0; i < 5; i++) {
@@ -50,7 +50,7 @@ for (const config of comparisonPages) {
     });
 
     // T5 ─ @smoke ─────────────────────────────────────────────────────────────
-    test(`${config.name} — @smoke all CTA links match the /go/ affiliate pattern`, async ({ page }) => {
+    test(`${config.name} — @smoke @regression all CTA links match the /go/ affiliate pattern`, async ({ page }) => {
       const cp = new ComparisonPage(page);
       await cp.goto(config.url);
       const count = await cp.cards.count();
@@ -61,7 +61,7 @@ for (const config of comparisonPages) {
     });
 
     // T6 ─ @smoke ─────────────────────────────────────────────────────────────
-    test(`${config.name} — @smoke first 10 cards each have product-type, position, and offer attributes`, async ({ page }) => {
+    test(`${config.name} — @smoke @regression first 10 cards each have product-type, position, and offer attributes`, async ({ page }) => {
       const cp = new ComparisonPage(page);
       await cp.goto(config.url);
       const limit = Math.min(10, await cp.cards.count());
@@ -158,7 +158,7 @@ for (const config of comparisonPages) {
     // Deferred to follow-up PR (PR #9 candidate) — would need to integrate
     // cookieBanner fixture and add expand interaction. Document in PR
     // description as known coverage gap.
-    test(`${config.name} — @smoke rating value is numeric and within range 0–10`, async ({ page }) => {
+    test(`${config.name} — @smoke @regression rating value is numeric and within range 0–10`, async ({ page }) => {
       test.skip(!config.hasRating, 'No numeric rating on this geo');
       test.skip(!!config.hasLazyRating, 'Rating panel is lazy-rendered — requires click-to-expand (deferred to PR #9)');
       const cp = new ComparisonPage(page);
@@ -173,7 +173,7 @@ for (const config of comparisonPages) {
     });
 
     // T10 ─ @smoke ─ skip when hasBadge: false ────────────────────────────────
-    test(`${config.name} — @smoke regulator badge wrapper is present on the page`, async ({ page }) => {
+    test(`${config.name} — @smoke @regression regulator badge wrapper is present on the page`, async ({ page }) => {
       test.skip(!config.hasBadge, 'No regulator badge on this geo');
       const cp = new ComparisonPage(page);
       await cp.goto(config.url);
@@ -185,7 +185,7 @@ for (const config of comparisonPages) {
     // Individual operators sometimes substitute verbose bonus T&C copy in
     // span.terms-and-conditions instead of the standard "18+..." line, so a
     // per-card assertion produces false failures on IT and ES.
-    test(`${config.name} — @smoke at least one of the first 5 cards contains age limit ${config.ageLimit}`, async ({ page }) => {
+    test(`${config.name} — @smoke @regression at least one of the first 5 cards contains age limit ${config.ageLimit}`, async ({ page }) => {
       const cp = new ComparisonPage(page);
       await cp.goto(config.url);
       const matches: string[] = [];

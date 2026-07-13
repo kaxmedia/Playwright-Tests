@@ -105,7 +105,7 @@ test.describe('Ktag — redirectv2 event @ktag @redirectv2 @regression', () => {
     assertRedirectv2Specific(event);
   });
 
-  test('redirectv2: aclid is populated (conversion attribution key) @smoke', async ({ page }) => {
+  test('redirectv2: aclid is populated (conversion attribution key) @regression', async ({ page }) => {
     await page.goto(OPLIST_PAGE);
     await page.waitForLoadState('networkidle');
 

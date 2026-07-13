@@ -12,7 +12,7 @@
 //
 // Run with:
 //   npx playwright test tests/giveaways.spec.ts --project=chrome
-//   npx playwright test tests/giveaways.spec.ts --grep @smoke
+//   npx playwright test tests/giveaways.spec.ts --grep @regression
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { test, expect } from '../fixtures/test';
@@ -38,32 +38,32 @@ test.describe('Giveaways Page', () => {
 
   test.describe('Page fundamentals', () => {
 
-    test('@smoke page loads with HTTP 200', async ({ request }) => {
+    test('@regression page loads with HTTP 200', async ({ request }) => {
       const response = await request.get(`https://www.gambling.com/${TEST_GEO}/giveaways`);
       expect(response.status()).toBe(200);
     });
 
-    test('@smoke page URL contains /giveaways', async ({ page }) => {
+    test('@regression page URL contains /giveaways', async ({ page }) => {
       await expect(page).toHaveURL(/\/giveaways/);
     });
 
-    test('@smoke page title is descriptive', async ({ page }) => {
+    test('@regression page title is descriptive', async ({ page }) => {
       const title = await page.title();
       expect(title.trim().length).toBeGreaterThan(0);
       expect(title).toMatch(/giveaway/i);
     });
 
-    test('@smoke page has a canonical meta tag', async ({ page }) => {
+    test('@regression page has a canonical meta tag', async ({ page }) => {
       const canonical = page.locator('link[rel="canonical"]');
       await expect(canonical).toHaveAttribute('href', /giveaway/);
     });
 
-    test('@smoke page has an OG title meta tag', async ({ page }) => {
+    test('@regression page has an OG title meta tag', async ({ page }) => {
       const ogTitle = page.locator('meta[property="og:title"]');
       await expect(ogTitle).toHaveAttribute('content', /.+/);
     });
 
-    test('@smoke page has an OG image', async ({ page }) => {
+    test('@regression page has an OG image', async ({ page }) => {
       const ogImage = page.locator('meta[property="og:image"]');
       await expect(ogImage).toHaveAttribute('content', /.+/);
     });
@@ -80,18 +80,18 @@ test.describe('Giveaways Page', () => {
       }
     });
 
-    test('@smoke at least one giveaway card is present', async () => {
+    test('@regression at least one giveaway card is present', async () => {
       await expect(giveawaysPage.firstCard).toBeVisible({ timeout: 20_000 });
       const count = await giveawaysPage.getCardCount();
       expect(count, 'At least one giveaway card should be present').toBeGreaterThan(0);
     });
 
-    test('@smoke first giveaway card has a non-empty title', async () => {
+    test('@regression first giveaway card has a non-empty title', async () => {
       await expect(giveawaysPage.firstCard).toBeVisible({ timeout: 20_000 });
       await expect(giveawaysPage.cardTitle).toHaveAttribute('alt', /.+/);
     });
 
-    test('@smoke first giveaway card has an image', async () => {
+    test('@regression first giveaway card has an image', async () => {
       await expect(giveawaysPage.firstCard).toBeVisible({ timeout: 20_000 });
       const imgCount = await giveawaysPage.cardImage.count();
       if (imgCount > 0) {
@@ -126,13 +126,13 @@ test.describe('Giveaways Page', () => {
       }
     });
 
-    test('@smoke entry CTA links to a competition detail page', async () => {
+    test('@regression entry CTA links to a competition detail page', async () => {
       await expect(giveawaysPage.firstCard).toBeVisible({ timeout: 20_000 });
       await expect(giveawaysPage.entryCta).toBeVisible();
       await expect(giveawaysPage.entryCta).toHaveAttribute('href', /\/giveaways\/.+/);
     });
 
-    test('@smoke competition detail exposes a registration form without site login', async () => {
+    test('@regression competition detail exposes a registration form without site login', async () => {
       await giveawaysPage.openFirstGiveawayRegistration();
 
       await expect(giveawaysPage.registrationNameInput).toBeVisible();
@@ -161,7 +161,7 @@ test.describe('Giveaways Page', () => {
       }
     });
 
-    test('@smoke terms and conditions link is present', async () => {
+    test('@regression terms and conditions link is present', async () => {
       await expect(giveawaysPage.firstCard).toBeVisible({ timeout: 20_000 });
       const count = await giveawaysPage.termsLink.count();
       if (count > 0) {
@@ -181,7 +181,7 @@ test.describe('Giveaways Page', () => {
 
   test.describe('Footer', () => {
 
-    test('@smoke footer is visible', async () => {
+    test('@regression footer is visible', async () => {
       await giveawaysPage.page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
       await expect(giveawaysPage.footer).toBeVisible();
     });
@@ -196,7 +196,7 @@ test.describe('Giveaways Page', () => {
 
 test.describe('Giveaways — HTTP 200 check @audit', () => {
 
-  test('@audit giveaway page URLs return HTTP 200', async ({ request }) => {
+  test('@regression @audit giveaway page URLs return HTTP 200', async ({ request }) => {
     const urls = [
       { name: 'UK Giveaways', url: 'https://www.gambling.com/uk/giveaways' },
       // IE /giveaways returns 404 from CI runners (June 2026) — UK is the primary market.

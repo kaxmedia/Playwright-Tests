@@ -18,7 +18,7 @@
 //
 // Run with:
 //   npx playwright test tests/review-page.spec.ts --project=chrome
-//   npx playwright test tests/review-page.spec.ts --grep @smoke
+//   npx playwright test tests/review-page.spec.ts --grep @regression
 //   npx playwright test tests/review-page.spec.ts --grep @regression
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -43,22 +43,22 @@ test.describe('Bookmaker Review Page', () => {
 
   test.describe('Page fundamentals', () => {
 
-    test('@smoke review page loads with correct title', async ({ page }) => {
+    test('@regression review page loads with correct title', async ({ page }) => {
       const title = await page.title();
       expect(title).toContain(BOOKMAKER_NAME);
     });
 
-    test('@smoke page URL contains the operator slug', async ({ page }) => {
+    test('@regression page URL contains the operator slug', async ({ page }) => {
       await expect(page).toHaveURL(new RegExp(TEST_SLUG));
     });
 
-    test('@smoke page has a canonical meta tag', async ({ page }) => {
+    test('@regression page has a canonical meta tag', async ({ page }) => {
       const canonical = await page.locator('link[rel="canonical"]').getAttribute('href');
       expect(canonical, 'Canonical link should be present').toBeTruthy();
       expect(canonical).toContain(TEST_SLUG);
     });
 
-    test('@smoke page has an OG title meta tag', async ({ page }) => {
+    test('@regression page has an OG title meta tag', async ({ page }) => {
       const ogTitle = await page.locator('meta[property="og:title"]').getAttribute('content');
       expect(ogTitle?.trim().length, 'og:title should not be empty').toBeGreaterThan(0);
     });
@@ -70,11 +70,11 @@ test.describe('Bookmaker Review Page', () => {
   test.describe('Rating widget', () => {
 
     // Carried over from original suite
-    test('@smoke rating container is visible', async () => {
+    test('@regression rating container is visible', async () => {
       await expect(reviewPage.ratingContainer).toBeVisible();
     });
 
-    test('@smoke rating container contains a non-zero numeric score', async () => {
+    test('@regression rating container contains a non-zero numeric score', async () => {
       await expect(reviewPage.ratingScore).toBeVisible();
       const score = parseFloat((await reviewPage.ratingScore.innerText()).trim());
       expect(score, 'Rating score should be greater than zero').toBeGreaterThan(0);
@@ -87,12 +87,12 @@ test.describe('Bookmaker Review Page', () => {
 
   test.describe('Pros and Cons section', () => {
 
-    test('@smoke pros list has at least one item', async () => {
+    test('@regression pros list has at least one item', async () => {
       await expect(reviewPage.prosList.first()).toBeVisible({ timeout: 10_000 });
       expect(await reviewPage.prosList.count()).toBeGreaterThan(0);
     });
 
-    test('@smoke cons list has at least one item', async () => {
+    test('@regression cons list has at least one item', async () => {
       await expect(reviewPage.consList.first()).toBeVisible({ timeout: 10_000 });
       expect(await reviewPage.consList.count()).toBeGreaterThan(0);
     });
@@ -103,18 +103,18 @@ test.describe('Bookmaker Review Page', () => {
 
   test.describe('Bonus offer box', () => {
 
-    test('@smoke bonus offer box is visible', async () => {
+    test('@regression bonus offer box is visible', async () => {
       // The bonus callout block is a key commercial element on every review page
       await expect(reviewPage.bonusOfferBox).toBeVisible({ timeout: 10_000 });
     });
 
-    test('@smoke bonus offer box contains non-empty text', async () => {
+    test('@regression bonus offer box contains non-empty text', async () => {
       await expect(reviewPage.bonusOfferBox).toBeVisible({ timeout: 10_000 });
       const text = await reviewPage.bonusOfferBox.innerText();
       expect(text.trim().length, 'Bonus offer box should not be empty').toBeGreaterThan(0);
     });
 
-    test('@smoke bonus CTA link points to an affiliate /go/ redirect', async () => {
+    test('@regression bonus CTA link points to an affiliate /go/ redirect', async () => {
       await expect(reviewPage.bonusCtaLink).toBeVisible();
       const href = await reviewPage.bonusCtaLink.getAttribute('href');
       expect(href, 'Bonus CTA should have an affiliate /go/ href').toMatch(/\/go\//);
@@ -127,7 +127,7 @@ test.describe('Bookmaker Review Page', () => {
   test.describe('CTA button', () => {
 
     // Carried over from original suite
-    test('@smoke CTA button is visible and opens affiliate redirect in new tab', async () => {
+    test('@regression CTA button is visible and opens affiliate redirect in new tab', async () => {
       await expect(reviewPage.ctaButton).toBeVisible();
       const newTab = await reviewPage.clickCtaAndGetNewTab();
       await expect
@@ -147,11 +147,11 @@ test.describe('Bookmaker Review Page', () => {
 
   test.describe('Breadcrumb navigation', () => {
 
-    test('@smoke breadcrumb is present on the page', async () => {
+    test('@regression breadcrumb is present on the page', async () => {
       await expect(reviewPage.breadcrumb).toBeVisible({ timeout: 10_000 });
     });
 
-    test('@smoke breadcrumb contains at least 2 links', async () => {
+    test('@regression breadcrumb contains at least 2 links', async () => {
       await expect(reviewPage.breadcrumb).toBeVisible({ timeout: 10_000 });
       const count = await reviewPage.breadcrumbLinks.count();
       expect(count, 'Breadcrumb should have at least 2 links (Home > Category)').toBeGreaterThanOrEqual(2);
@@ -174,7 +174,7 @@ test.describe('Bookmaker Review Page', () => {
 
   test.describe('Author byline', () => {
 
-    test('@smoke review has a named author byline', async () => {
+    test('@regression review has a named author byline', async () => {
       await expect(reviewPage.authorByline).toBeVisible({ timeout: 10_000 });
       const text = await reviewPage.authorByline.innerText();
       expect(text.trim().length, 'Author byline should not be empty').toBeGreaterThan(0);
@@ -186,7 +186,7 @@ test.describe('Bookmaker Review Page', () => {
 
   test.describe('Review body images', () => {
 
-    test('@smoke at least one review body image is present and has a valid src', async () => {
+    test('@regression at least one review body image is present and has a valid src', async () => {
       const count = await reviewPage.reviewImages.count();
       expect(count, 'Review page should contain at least one content image').toBeGreaterThan(0);
 
@@ -213,7 +213,7 @@ test.describe('Bookmaker Review Page', () => {
 
   test.describe('Related reviews widget', () => {
 
-    test('@smoke related reviews widget is present', async () => {
+    test('@regression related reviews widget is present', async () => {
       await expect(reviewPage.relatedReviewsWidget).toBeVisible({ timeout: 10_000 });
       await expect(
         reviewPage.relatedReviewsWidget.getByRole('heading', { name: /more .+ casino sites/i })
@@ -255,7 +255,7 @@ test.describe('Bookmaker Review Page', () => {
 
 // Separate describe — avoids loading bet365 in beforeEach before navigating to the second slug.
 test.describe('Bookmaker Review Page — multi-slug template consistency', () => {
-  test('@smoke second operator review page loads and has a rating container', async ({ page }) => {
+  test('@regression second operator review page loads and has a rating container', async ({ page }) => {
     const reviewPage = new ReviewPage(page);
     await reviewPage.goto(SECOND_SLUG);
 
@@ -264,7 +264,7 @@ test.describe('Bookmaker Review Page — multi-slug template consistency', () =>
     await expect(reviewPage.ctaButton).toBeVisible();
   });
 
-  test('@smoke second operator review page has a non-empty title', async ({ page }) => {
+  test('@regression second operator review page has a non-empty title', async ({ page }) => {
     const reviewPage = new ReviewPage(page);
     await reviewPage.goto(SECOND_SLUG);
     const title = await page.title();

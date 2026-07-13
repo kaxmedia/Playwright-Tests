@@ -15,7 +15,7 @@ const geos = [
 ];
 
 for (const { geo, path } of geos) {
-  test(`@smoke ${geo} ${path} loads with H1 and operator list`, async ({ page }) => {
+  test(`@regression ${geo} ${path} loads with H1 and operator list`, async ({ page }) => {
     const response = await page.goto(path, { waitUntil: 'domcontentloaded' });
     expect(response?.ok(), `${path} response should be ok`).toBeTruthy();
 

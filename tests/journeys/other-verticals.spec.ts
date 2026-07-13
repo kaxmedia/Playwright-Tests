@@ -10,7 +10,7 @@
 //
 // Run with:
 //   npx playwright test tests/journeys/other-verticals.spec.ts --project=chrome
-//   npx playwright test tests/journeys/other-verticals.spec.ts --grep @smoke
+//   npx playwright test tests/journeys/other-verticals.spec.ts --grep @regression
 //
 // Design principles:
 //   - No off-site CTA clicks — /go/ links asserted present, never followed.
@@ -53,13 +53,13 @@ test.describe('Journey 6.1 — Poker toplist', () => {
         expect(response?.status(), 'Poker sites page should return HTTP 200').toBeLessThan(400);
     });
 
-    test('@smoke poker toplist loads with correct H1 @journey', async ({ page }) => {
+    test('@regression poker toplist loads with correct H1 @journey', async ({ page }) => {
         await expect(page).toHaveURL(/\/ie\/poker-sites/);
         await expect(page.locator('h1').first()).toBeVisible();
         await expect(page.locator('h1').first()).toContainText(/poker/i);
     });
 
-    test('@smoke poker toplist lists operator cards with CTAs @journey', async () => {
+    test('@regression poker toplist lists operator cards with CTAs @journey', async () => {
         await expect(comparison.cards.first()).toBeVisible({ timeout: 20_000 });
         // nth(2) = at least 3 cards (live IE page has 6 operator rows)
         await expect(comparison.cards.nth(2)).toBeAttached();
@@ -67,7 +67,7 @@ test.describe('Journey 6.1 — Poker toplist', () => {
         await expect(comparison.ctaLink(firstCard)).toHaveAttribute('href', /\/go\//);
     });
 
-    test('@smoke poker toplist exposes operator name and logo @journey', async () => {
+    test('@regression poker toplist exposes operator name and logo @journey', async () => {
         await expect(comparison.cards.first()).toBeVisible({ timeout: 20_000 });
         const firstCard = comparison.nthCard(0);
         await expect(comparison.logoImg(firstCard)).toBeVisible();
@@ -96,13 +96,13 @@ test.describe('Journey 6.2 — Bingo toplist', () => {
         expect(response?.status(), 'Bingo sites page should return HTTP 200').toBeLessThan(400);
     });
 
-    test('@smoke bingo toplist loads with correct H1 @journey', async ({ page }) => {
+    test('@regression bingo toplist loads with correct H1 @journey', async ({ page }) => {
         await expect(page).toHaveURL(/\/ie\/bingo-sites/);
         await expect(page.locator('h1').first()).toBeVisible();
         await expect(page.locator('h1').first()).toContainText(/bingo/i);
     });
 
-    test('@smoke bingo toplist lists operator cards with CTAs @journey', async () => {
+    test('@regression bingo toplist lists operator cards with CTAs @journey', async () => {
         await expect(comparison.cards.first()).toBeVisible({ timeout: 20_000 });
         // nth(2) = at least 3 cards (live IE page has 4 operator rows)
         await expect(comparison.cards.nth(2)).toBeAttached();
@@ -110,7 +110,7 @@ test.describe('Journey 6.2 — Bingo toplist', () => {
         await expect(comparison.ctaLink(firstCard)).toHaveAttribute('href', /\/go\//);
     });
 
-    test('@smoke bingo toplist exposes operator name and logo @journey', async () => {
+    test('@regression bingo toplist exposes operator name and logo @journey', async () => {
         await expect(comparison.cards.first()).toBeVisible({ timeout: 20_000 });
         const firstCard = comparison.nthCard(0);
         await expect(comparison.logoImg(firstCard)).toBeVisible();
@@ -132,13 +132,13 @@ test.describe('Journey 6.3 — Lottery toplist', () => {
         expect(response?.status(), 'Lottery page should return HTTP 200').toBeLessThan(400);
     });
 
-    test('@smoke lottery page loads with correct H1 @journey', async ({ page }) => {
+    test('@regression lottery page loads with correct H1 @journey', async ({ page }) => {
         await expect(page).toHaveURL(/\/ie\/lottery/);
         await expect(page.locator('h1').first()).toBeVisible();
         await expect(page.locator('h1').first()).toContainText(/lott/i);
     });
 
-    test('@smoke lottery page lists operator cards with CTAs @journey', async () => {
+    test('@regression lottery page lists operator cards with CTAs @journey', async () => {
         await expect(comparison.cards.first()).toBeVisible({ timeout: 20_000 });
         // nth(1) = at least 2 cards — lottery is a small vertical (live IE has 3 rows);
         // nth(2) would fail on any editorial drop to 2 operators.
@@ -147,7 +147,7 @@ test.describe('Journey 6.3 — Lottery toplist', () => {
         await expect(comparison.ctaLink(firstCard)).toHaveAttribute('href', /\/go\//);
     });
 
-    test('@smoke lottery page exposes operator name and logo @journey', async () => {
+    test('@regression lottery page exposes operator name and logo @journey', async () => {
         await expect(comparison.cards.first()).toBeVisible({ timeout: 20_000 });
         const firstCard = comparison.nthCard(0);
         await expect(comparison.logoImg(firstCard)).toBeVisible();
@@ -172,18 +172,18 @@ test.describe('Journey 6.4 — Sweepstakes / social casino (slots/games hub)', (
         await page.getByRole('button', { name: /accept all/i }).click({ timeout: 5000 }).catch(() => {});
     });
 
-    test('@smoke casino-games entry lands on slots/games hub with H1 @journey', async ({ page }) => {
+    test('@regression casino-games entry lands on slots/games hub with H1 @journey', async ({ page }) => {
         await expect(page).toHaveURL(/\/ie\/online-casinos\/slots\/games/);
         await expect(page.locator('h1').first()).toBeVisible();
         await expect(page.locator('h1').first()).toContainText(/slot|game/i);
     });
 
-    test('@smoke slots/games hub exposes game or operator CTAs @journey', async ({ page }) => {
+    test('@regression slots/games hub exposes game or operator CTAs @journey', async ({ page }) => {
         const cta = page.locator('a[href*="/go/"], a[href*="/ie/online-casinos/slots/"]').first();
         await expect(cta).toBeAttached();
     });
 
-    test('@smoke slots/games hub breadcrumb links to casino toplist @journey', async ({ page }) => {
+    test('@regression slots/games hub breadcrumb links to casino toplist @journey', async ({ page }) => {
         const casinoBreadcrumb = page.locator(
             'nav#breadcrumb a[href="/ie/online-casinos"], nav.automation-breadcrumb a[href="/ie/online-casinos"]'
         ).first();

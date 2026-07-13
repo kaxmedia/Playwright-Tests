@@ -10,7 +10,7 @@
 //
 // Run with:
 //   npx playwright test tests/journeys/free-to-play.spec.ts --project=chrome
-//   npx playwright test tests/journeys/free-to-play.spec.ts --grep @smoke
+//   npx playwright test tests/journeys/free-to-play.spec.ts --grep @regression
 //
 // Design principles:
 //   - No form submissions — email/signup forms asserted present, never submitted.
@@ -53,13 +53,13 @@ test.describe('Journey 7.1 — Free game (Cosmo Spins)', () => {
         expect(response?.status(), 'Cosmo Spins should return HTTP 200').toBeLessThan(400);
     });
 
-    test('@smoke Cosmo Spins page loads with correct H1 @journey', async ({ page }) => {
+    test('@regression Cosmo Spins page loads with correct H1 @journey', async ({ page }) => {
         await expect(page).toHaveURL(/\/ie\/games\/cosmo-spins/);
         await expect(page.locator('h1').first()).toBeVisible();
         await expect(page.locator('h1').first()).toContainText(/cosmo.?spin/i);
     });
 
-    test('@smoke free game mechanism is present on the page @journey', async ({ page }) => {
+    test('@regression free game mechanism is present on the page @journey', async ({ page }) => {
         // The spin wheel / game canvas is the primary engagement element
         const gameElement = page.locator(
             '[class*="cosmo"], [class*="spin"], [class*="wheel"], canvas, [id*="game"]'
@@ -67,7 +67,7 @@ test.describe('Journey 7.1 — Free game (Cosmo Spins)', () => {
         await expect(gameElement).toBeAttached();
     });
 
-    test('@smoke casino toplist link is present for post-play conversion @journey', async ({ page }) => {
+    test('@regression casino toplist link is present for post-play conversion @journey', async ({ page }) => {
         // After playing, user is shown casino toplist links to convert to real money
         const casinoLink = page.locator('a[href*="/ie/online-casinos"]').first();
         await expect(casinoLink).toBeAttached();
@@ -89,17 +89,17 @@ test.describe('Journey 7.2 — Daily free game (Cosmo Spins daily spin)', () => 
         expect(response?.status(), 'Cosmo Spins should return HTTP 200').toBeLessThan(400);
     });
 
-    test('@smoke daily spin page loads with H1 @journey', async ({ page }) => {
+    test('@regression daily spin page loads with H1 @journey', async ({ page }) => {
         await expect(page).toHaveURL(/\/ie\/games\/cosmo-spins/);
         await expect(page.locator('h1').first()).toBeVisible();
     });
 
-    test('@smoke sign-up prompt is present to convert free player to registered user @journey', async ({ page }) => {
+    test('@regression sign-up prompt is present to convert free player to registered user @journey', async ({ page }) => {
         const signupCta = page.locator('#gdc-signup-text').first();
         await expect(signupCta).toBeAttached();
     });
 
-    test('@smoke games hub link is reachable from daily game page @journey', async ({ page }) => {
+    test('@regression games hub link is reachable from daily game page @journey', async ({ page }) => {
         const gamesLink = page.locator('a[href*="/ie/games"]').first();
         await expect(gamesLink).toBeAttached();
     });
@@ -120,13 +120,13 @@ test.describe('Journey 7.3 — Email lead funnel (Cosmo Spins email capture)', (
         expect(response?.status(), 'Cosmo Spins should return HTTP 200').toBeLessThan(400);
     });
 
-    test('@smoke email capture input is present on the Cosmo Spins page @journey', async ({ page }) => {
+    test('@regression email capture input is present on the Cosmo Spins page @journey', async ({ page }) => {
         await expect(page).toHaveURL(/\/ie\/games\/cosmo-spins/);
         const emailInput = page.locator('input[type="email"]').first();
         await expect(emailInput).toBeAttached();
     });
 
-    test('@smoke email form submit element is present @journey', async ({ page }) => {
+    test('@regression email form submit element is present @journey', async ({ page }) => {
         // Submit button / CTA adjacent to the email input
         const submitEl = page.locator(
             'button[type="submit"], input[type="submit"], button:has-text("Submit"), button:has-text("Sign")'
@@ -151,13 +151,13 @@ test.describe('Journey 7.4 — Weekly offers (bonus hub)', () => {
         expect(response?.status(), 'Bonus hub should return HTTP 200').toBeLessThan(400);
     });
 
-    test('@smoke bonus hub loads with H1 for weekly offers entry @journey', async ({ page }) => {
+    test('@regression bonus hub loads with H1 for weekly offers entry @journey', async ({ page }) => {
         await expect(page).toHaveURL(/\/ie\/online-casinos\/bonus/);
         await expect(page.locator('h1').first()).toBeVisible();
         await expect(page.locator('h1').first()).toContainText(/bonus|offer/i);
     });
 
-    test('@smoke bonus hub lists offers with claim CTAs @journey', async () => {
+    test('@regression bonus hub lists offers with claim CTAs @journey', async () => {
         await expect(comparison.cards.first()).toBeVisible({ timeout: 20_000 });
         // nth(4) = at least 5 offers present (0-indexed)
         await expect(comparison.cards.nth(4)).toBeAttached();
@@ -187,7 +187,7 @@ test.describe('Journey 7.5 — Newsletter signup (homepage email capture)', () =
         expect(response?.status(), 'Homepage should return HTTP 200').toBeLessThan(400);
     });
 
-    test('@smoke homepage loads and email signup element is present in DOM @journey', async ({ page }) => {
+    test('@regression homepage loads and email signup element is present in DOM @journey', async ({ page }) => {
         await expect(page).toHaveURL(/gambling\.com\/ie\/?$/);
         await expect(page.locator('h1').first()).toBeVisible();
         // Element is CSS-hidden until auth state — assert attached (in DOM), not visible
@@ -195,7 +195,7 @@ test.describe('Journey 7.5 — Newsletter signup (homepage email capture)', () =
         await expect(emailSignup).toBeAttached();
     });
 
-    test('@smoke sign-up CTA is reachable from homepage for new user lead capture @journey', async ({ page }) => {
+    test('@regression sign-up CTA is reachable from homepage for new user lead capture @journey', async ({ page }) => {
         const signupCta = page.locator('#gdc-signup-text').first();
         await expect(signupCta).toBeAttached();
     });
