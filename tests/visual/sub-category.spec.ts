@@ -11,7 +11,7 @@ const configs = [
 ];
 
 for (const config of configs) {
-  test(`@smoke ${config.geo} ${config.slug} operator list renders deterministically`, async ({ page }) => {
+  test(`@visual ${config.geo} ${config.slug} operator list renders deterministically`, async ({ page }) => {
     const response = await page.goto(config.path, { waitUntil: 'domcontentloaded' });
     expect(response?.ok(), `${config.path} response should be ok`).toBeTruthy();
     await expect(page.locator('li.operator-item').first()).toBeVisible();
