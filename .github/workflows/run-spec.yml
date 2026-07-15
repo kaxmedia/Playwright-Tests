@@ -25,6 +25,10 @@ run-name: Run Spec — ${{ inputs.spec_file }}${{ inputs.grep != '' && format(' 
 jobs:
   run-spec:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false          # a failing shard must not cancel the others
+      matrix:
+        shard: [1, 2, 3, 4]     # 4 shards; strategy.job-total keeps --shard N in sync
     container:
       image: mcr.microsoft.com/playwright:v1.59.1-noble
 
@@ -40,26 +44,60 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run Playwright spec
+      - name: Run Playwright spec (shard ${{ matrix.shard }}/${{ strategy.job-total }})
         env:
           HOME: /root
-          PLAYWRIGHT_JSON_OUTPUT_NAME: test-results/results.json
-        run: npx playwright test "${{ inputs.spec_file }}"${{ inputs.grep != '' && format(' --grep "{0}"', inputs.grep) || '' }} --reporter=json,line
+        run: npx playwright test "${{ inputs.spec_file }}"${{ inputs.grep != '' && format(' --grep "{0}"', inputs.grep) || '' }} --shard=${{ matrix.shard }}/${{ strategy.job-total }} --reporter=blob,line
 
-      - name: Upload JSON results
+      - name: Upload blob report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-results-json
+          name: blob-report-${{ matrix.shard }}
+          path: blob-report/
+          retention-days: 1
+
+  merge-report:
+    needs: run-spec
+    if: always()                # merge even when some shards failed
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.59.1-noble
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download all shard blob reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: blob-report-*
+          path: all-blob-reports
+          merge-multiple: true
+
+      - name: Merge into single JSON + HTML report
+        env:
+          HOME: /root
+        run: |
+          mkdir -p test-results
+          npx playwright merge-reports --reporter json ./all-blob-reports > test-results/results.json
+          npx playwright merge-reports --reporter html ./all-blob-reports
+
+      - name: Upload merged JSON results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-json          # same name the dashboard already downloads
           path: test-results/results.json
           retention-days: 30
 
-      - name: Upload report and results on failure
-        if: failure()
+      - name: Upload merged HTML report
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: run-spec-report
-          path: |
-            playwright-report/
-            test-results/
+          name: run-spec-report            # same name; now the merged HTML report
+          path: playwright-report/
           retention-days: 30
