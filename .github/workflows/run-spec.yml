@@ -15,6 +15,12 @@ on:
         description: 'Optional grep filter for individual journey'
         required: false
         default: ''
+      correlation_id:
+        description: 'Client-generated id to correlate this dispatch to its run (blank for manual dispatch)'
+        required: false
+        default: ''
+
+run-name: Run Spec — ${{ inputs.spec_file }}${{ inputs.grep != '' && format(' [{0}]', inputs.grep) || '' }}${{ inputs.correlation_id != '' && format(' #{0}', inputs.correlation_id) || '' }}
 
 jobs:
   run-spec:
