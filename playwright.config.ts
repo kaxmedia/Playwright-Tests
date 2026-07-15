@@ -12,8 +12,8 @@ export default defineConfig({
   use: {
     baseURL: 'https://www.gambling.com',
     screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
-    trace: 'retain-on-failure',  // was 'on-first-retry'
+    video: 'off',
+    trace: 'on-first-retry',
     navigationTimeout: 90000,
   },
   projects: [
@@ -40,8 +40,8 @@ export default defineConfig({
       use: {
         ...iphone15Pro,
         screenshot: 'only-on-failure',
-        video: 'retain-on-failure',
-        trace: 'retain-on-failure',
+        video: 'off',
+        trace: 'on-first-retry',
       },
     },
     {
@@ -51,8 +51,8 @@ export default defineConfig({
       use: {
         ...galaxyS25,
         screenshot: 'only-on-failure',
-        video: 'retain-on-failure',
-        trace: 'retain-on-failure',
+        video: 'off',
+        trace: 'on-first-retry',
       },
     },
     // ── Visual regression projects ────────────────────────────────────────────

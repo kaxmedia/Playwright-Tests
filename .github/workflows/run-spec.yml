@@ -86,6 +86,27 @@ jobs:
           npx playwright merge-reports --reporter json ./all-blob-reports > test-results/results.json
           npx playwright merge-reports --reporter html ./all-blob-reports
 
+      - name: Collect failure screenshots (slim, content-addressed)
+        run: |
+          mkdir -p failure-screenshots
+          node -e '
+            const fs = require("fs"), path = require("path");
+            const d = JSON.parse(fs.readFileSync("test-results/results.json", "utf8"));
+            const shas = new Set();
+            (function walk(su) {
+              (su.specs || []).forEach(sp => (sp.tests || []).forEach(t => (t.results || []).forEach(r => (r.attachments || []).forEach(a => {
+                if (a.name === "screenshot" && a.path && a.path.endsWith(".png")) shas.add(path.basename(a.path));
+              }))));
+              (su.suites || []).forEach(walk);
+            })({ suites: d.suites || [] });
+            let n = 0;
+            for (const s of shas) {
+              const src = path.join("all-blob-reports", "resources", s);
+              if (fs.existsSync(src)) { fs.copyFileSync(src, path.join("failure-screenshots", s)); n++; }
+            }
+            console.log("collected " + n + "/" + shas.size + " failure screenshot(s)");
+          '
+
       - name: Upload merged JSON results
         if: always()
         uses: actions/upload-artifact@v4
@@ -98,6 +119,14 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: run-spec-report            # same name; now the merged HTML report
+          name: run-spec-report            # same name; now the (trimmed) merged HTML report
           path: playwright-report/
+          retention-days: 30
+
+      - name: Upload failure screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failure-screenshots        # slim, content-addressed <sha>.png — what the dashboard ingests
+          path: failure-screenshots/
           retention-days: 30
