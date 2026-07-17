@@ -170,11 +170,13 @@ test.describe('Footer', () => {
     ];
 
     // Step 1: Check every logo is present in the footer DOM with the correct href.
-    // a:has(img[alt="..."]) finds the <a> wrapping the logo <img> by the image's alt text.
+    // a:has(img[alt="..." i]) finds the <a> wrapping the logo <img> by its alt text.
+    // The " i" flag makes the match case-insensitive, so "Gamcare" also matches the
+    // site's "GamCare" spelling (both appear across geo/variant footers).
     // toBeAttached() is used instead of toBeVisible() because logos sit at the very bottom of
     // the footer and may be below the visible viewport — they are in the DOM but not on-screen.
     for (const logo of logos) {
-      const link = footerPage.footer.locator(`a:has(img[alt="${logo.alt}"])`);
+      const link = footerPage.footer.locator(`a:has(img[alt="${logo.alt}" i])`);
       await expect(link, `Expected logo "${logo.alt}" to be in the footer`).toBeAttached();
       const href = await link.getAttribute('href');
       expect(href, `Expected correct href for logo "${logo.alt}"`).toBe(logo.href);
