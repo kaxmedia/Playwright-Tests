@@ -23,7 +23,7 @@ export class HomePage {
   // The gambling.com logo image in the header
   readonly logo: Locator;
 
-  // The "Reviews" link in the main navigation menu
+  // Primary commercial nav link (Reviews was removed; Casino / Betting remain)
   readonly reviewsNavLink: Locator;
 
   // The main heading (the big <h1> title at the top of the page)
@@ -36,7 +36,9 @@ export class HomePage {
     this.page = page;
     // Header mark is an inline SVG in the primary nav (scoped to avoid auth-modal duplicates).
     this.logo          = globalNavLogo(page);
-    this.reviewsNavLink = page.getByRole('link', { name: 'Reviews' }).first();
+    this.reviewsNavLink = page
+      .getByRole('link', { name: /Online Casinos|Betting Sites|^Casino$/i })
+      .first();
     this.mainHeading   = page.getByRole('heading', { level: 1 });
   }
 

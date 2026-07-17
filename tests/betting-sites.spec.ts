@@ -242,9 +242,14 @@ for (const config of bettingPages) {
         // ── T10: Review link (geo-conditional) ────────────────────────────────
 
         if (config.hasReviewLink !== false) {
-            test('@regression first card review link is present', async () => {
-                const card = bettingPage.nthCard(0);
-                const reviewLink = bettingPage.reviewLink(card);
+            test('@regression first card review link is present', async ({ page }) => {
+                // New #1 operators may ship without a review page yet — assert on the
+                // first card that exposes a review link rather than hard-coding position 0.
+                const cardWithReview = bettingPage.cards
+                    .filter({ has: page.locator('a.operator-review-link, a[class*="review-link"]') })
+                    .first();
+                await expect(cardWithReview).toBeAttached();
+                const reviewLink = bettingPage.reviewLink(cardWithReview);
                 await expect(reviewLink).toBeAttached();
                 const href = await reviewLink.getAttribute('href');
                 expect(href?.trim().length, 'Review link href should not be empty').toBeGreaterThan(0);

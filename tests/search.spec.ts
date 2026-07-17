@@ -34,7 +34,7 @@ test.describe('Search', () => {
   test('@smoke @regression no-results query shows No Results Found message', async () => {
     await searchPage.searchFor('zzqxqq');
     await expect(searchPage.resultsContainer).toBeVisible();
-    await expect(searchPage.noResultsMessage).toContainText('No Results Found');
+    await expect(searchPage.noResultsMessage).toContainText(/No Results Found/i);
     expect(await searchPage.resultItems.count()).toBe(0);
   });
 

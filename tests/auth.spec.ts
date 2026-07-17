@@ -591,15 +591,19 @@ test.describe('Authentication — Sign Up & Sign In', () => {
     // 9. Sign In — Returning user (“Welcome back”)
     // ══════════════════════════════════════════════════════════════════════════
 
-    test('@smoke @regression returning user sees Welcome back and Google last sign-in hint', async ({ page, context }, testInfo) => {
+    test('@smoke @regression returning user sees Welcome back and Google last sign-in hint', async ({ page }, testInfo) => {
         test.setTimeout(120000);
 
         await authPage.signIn(SIGN_IN_USER.email, SIGN_IN_USER.password);
         await expect(authPage.modal).toBeHidden({ timeout: 20000 });
         await expect(page.locator('#supabase-logout-button')).toBeAttached({ timeout: 20000 });
 
-        // Session cookie cleared — user is logged out but origin storage can keep “last sign-in method” hints.
-        await context.clearCookies();
+        // clearCookies alone does not end the Supabase session (localStorage). Sign out via the
+        // profile menu so origin storage can still keep any “last sign-in method” hints.
+        await page.keyboard.press('Escape');
+        await authPage.openProfileDropdown();
+        await page.getByText(/^sign out$/i).click();
+        await expect(authPage.headerSignUpBtn).toBeVisible({ timeout: 15000 });
         await page.goto('/');
         await page.getByRole('button', { name: /accept all/i }).click({ timeout: 3000 }).catch(() => { });
 

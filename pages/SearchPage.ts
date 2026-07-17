@@ -30,9 +30,10 @@ export class SearchPage {
     // in CSS so Playwright’s pointer click can fail; openSearch() uses a DOM click via evaluate().
     this.searchIcon     = page.locator('img.search-icon:not(#search-icon-placeholder)');
     this.searchInput    = page.locator('input.search-input');
-    this.resultsContainer = page.locator('div.search-result');
-    this.resultItems    = page.locator('div.search-result a');
-    this.noResultsMessage = page.locator('div.search-result li');
+    // Prefer the stable id — class alone matches before Algolia expands max-height (stays offsetHeight 0).
+    this.resultsContainer = page.locator('#js-search-result');
+    this.resultItems    = page.locator('#js-search-result a');
+    this.noResultsMessage = page.locator('#js-search-result li');
   }
 
   /** Activates the header search control (DOM click — the img is positioned outside Playwright’s hit viewport). */
@@ -41,11 +42,15 @@ export class SearchPage {
   }
 
   // Opens the search box by clicking the nav icon, then types the search term.
-  // Call this instead of clicking and typing manually in every test.
+  // Algolia listens to real input events — fill() sets the value without triggering a query,
+  // so results stay collapsed (hidden). pressSequentially fires per-keystroke events.
   async searchFor(term: string) {
     await this.openSearch();
     await this.searchInput.waitFor({ state: 'visible' });
-    await this.searchInput.fill(term);
+    await this.searchInput.clear();
+    await this.searchInput.pressSequentially(term, { delay: 40 });
+    // Wait until the dropdown has non-zero height (results or "No Results Found…").
+    await this.resultsContainer.waitFor({ state: 'visible', timeout: 15_000 });
   }
 
 }
