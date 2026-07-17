@@ -1,6 +1,13 @@
 import { test, expect } from '../fixtures/test';
 import { ComparisonPage, comparisonPages } from '../pages/ComparisonPage';
 import { FirstPartyPageGuards, unexpectedPageErrors, unexpectedConsoleErrors } from './helpers/firstPartyPageGuards';
+import { blockVwoExperiments } from './helpers/vwo';
+
+// Keep every test in this file out of VWO A/B experiments so operator-card counts
+// are deterministic (control page, not a reduced-card variant). See helpers/vwo.ts.
+test.beforeEach(async ({ page }) => {
+  await blockVwoExperiments(page);
+});
 
 // Parameterised suite — one describe block per entry in comparisonPages.
 // To add a new geo or category: add an entry to comparisonPages in

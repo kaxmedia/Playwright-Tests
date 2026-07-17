@@ -31,6 +31,7 @@
 
 import { test, expect } from '../fixtures/test';
 import { ComparisonPage, type ComparisonPageConfig } from '../pages/ComparisonPage';
+import { blockVwoExperiments } from './helpers/vwo';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Main bonus page config — one entry per geo/URL.
@@ -134,6 +135,7 @@ for (const config of bonusPages) {
         let bonusPage: ComparisonPage;
 
         test.beforeEach(async ({ page }) => {
+            await blockVwoExperiments(page);
             bonusPage = new ComparisonPage(page);
             await bonusPage.goto(config.url);
         });
@@ -283,6 +285,7 @@ for (const subPage of bonusSubPages) {
         let subPageComparison: ComparisonPage;
 
         test.beforeEach(async ({ page }) => {
+            await blockVwoExperiments(page);
             subPageComparison = new ComparisonPage(page);
             await subPageComparison.goto(subPage.url);
         });
