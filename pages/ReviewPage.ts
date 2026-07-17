@@ -117,9 +117,11 @@ export class ReviewPage {
       'main img[src*="objects.kaxmedia"], main img[class*="review"], article img'
     );
 
-    // Related operators — geo-specific "More {Country} Casino Sites" section at page bottom
+    // Related operators — bottom-of-page grid of other reviews.
+    // Copy used to be "More {Country} Casino Sites"; post-sprint it is
+    // "{Locale} Casino Reviews" / "{Locale} Betting Reviews" (e.g. Irish Casino Reviews).
     this.relatedReviewsWidget = page.locator('section').filter({
-      has: page.getByRole('heading', { name: /more .+ casino sites/i }),
+      has: page.getByRole('heading', { name: /(?:more .+ )?(?:casino|betting) (?:sites|reviews)/i }),
     }).first();
   }
 

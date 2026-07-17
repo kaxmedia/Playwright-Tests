@@ -14,6 +14,8 @@ const BASE_URL = 'https://www.gambling.com';
 
 for (const config of geoHomepages) {
   test.describe(`Global Nav — ${config.name} geo`, () => {
+    test.skip(!!config.geoRestricted, `${config.name} is geo-restricted — nav suite requires a local VPN`);
+
     let gh: GeoHomepage;
 
     test.beforeEach(async ({ page }) => {

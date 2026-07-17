@@ -422,6 +422,8 @@ for (const geo of geoVariants) {
 
 for (const config of geoHomepages) {
   test.describe(`Footer — ${config.name} geo`, () => {
+    test.skip(!!config.geoRestricted, `${config.name} is geo-restricted — footer suite requires a local VPN`);
+
     let gh: GeoHomepage;
 
     test.beforeEach(async ({ page }) => {

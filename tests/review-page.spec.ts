@@ -216,7 +216,9 @@ test.describe('Bookmaker Review Page', () => {
     test('@regression related reviews widget is present', async () => {
       await expect(reviewPage.relatedReviewsWidget).toBeVisible({ timeout: 10_000 });
       await expect(
-        reviewPage.relatedReviewsWidget.getByRole('heading', { name: /more .+ casino sites/i })
+        reviewPage.relatedReviewsWidget.getByRole('heading', {
+          name: /(?:more .+ )?(?:casino|betting) (?:sites|reviews)/i,
+        })
       ).toBeVisible();
     });
 

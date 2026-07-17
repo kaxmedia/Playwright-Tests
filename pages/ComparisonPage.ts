@@ -636,9 +636,10 @@ export class ComparisonPage {
     return card.locator('div.gambling-comission-logo img').first();
   }
 
-  // Review/read-more anchor — carries data-review-url with the canonical path.
+  // Review/read-more anchor — class varies by oplist version
+  // (operator-review-link historically; read-review-link-2 on current IE/UK cards).
   reviewLink(card: Locator): Locator {
-    return card.locator('a.operator-review-link').first();
+    return card.locator('a.operator-review-link, a[class*="review-link"]').first();
   }
 
   // ── Expandable details panel ────────────────────────────────────────────────

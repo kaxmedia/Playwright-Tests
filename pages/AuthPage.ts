@@ -110,9 +110,13 @@ export class AuthPage {
             .first();
         this.welcomeBackHeading = this.modal.getByText(/Welcome back/i).first();
         this.lastSignedInWithGoogleHint = this.modal.getByText(/You last signed in with Google/i).first();
+        // Sign In may render as a link or button; after recent auth UI changes it is
+        // sometimes outside #signup-modal, so fall back to a page-level control.
         this.signInLink = this.modal
             .getByRole('link', { name: /^sign in$/i })
             .or(this.modal.getByRole('button', { name: /^sign in$/i }))
+            .or(page.getByRole('button', { name: /^sign in$/i }))
+            .or(page.getByRole('link', { name: /^sign in$/i }))
             .first();
         this.signUpLink = this.modal
             .getByRole('link', { name: /^sign up$/i })
@@ -178,6 +182,12 @@ export class AuthPage {
     async openSignInFromHeader(): Promise<void> {
         await acceptRegionPromptIfVisible(this.page);
 
+        // If a prior session is still active, end it first — otherwise Sign In is unavailable.
+        if (await this.profileAvatar.isVisible().catch(() => false)) {
+            await this.signOut();
+            await this.headerSignUpBtn.waitFor({ state: 'visible', timeout: 15000 });
+        }
+
         if (await this.headerSignInBtn.isVisible().catch(() => false)) {
             try {
                 await this.headerSignInBtn.click({ timeout: 8000, force: true });
@@ -189,7 +199,21 @@ export class AuthPage {
         }
 
         await this.openSignUpModal();
-        await this.signInLink.click();
+        // Prefer an in-modal control; Sign In may be a link/button or plain text control.
+        const inModalSignIn = this.signupModal
+            .getByRole('button', { name: /^sign in$/i })
+            .or(this.signupModal.getByRole('link', { name: /^sign in$/i }))
+            .or(this.signupModal.getByText(/^sign in$/i));
+        if (await inModalSignIn.first().isVisible({ timeout: 5000 }).catch(() => false)) {
+            await inModalSignIn.first().click();
+        } else {
+            await this.page
+                .getByRole('button', { name: /^sign in$/i })
+                .or(this.page.getByRole('link', { name: /^sign in$/i }))
+                .or(this.page.getByText(/^sign in$/i))
+                .last()
+                .click({ timeout: 10000 });
+        }
         await this.signupModal.waitFor({ state: 'visible', timeout: 10000 });
     }
 
@@ -198,7 +222,12 @@ export class AuthPage {
 
         await acceptRegionPromptIfVisible(this.page);
 
-        const trigger = this.headerSignUpBtn;
+        // Prefer the auth trigger wrapper — `#gdc-signup-text` alone can miss the click handler
+        // after a same-page sign-out until the nav rebinds.
+        const trigger = this.page
+            .locator('[data-custom-open-supabase="modal-authentication"]')
+            .or(this.headerSignUpBtn)
+            .first();
         try {
             await trigger.click({ timeout: 8000, force: true });
         } catch {
@@ -286,8 +315,18 @@ export class AuthPage {
     async signOut(): Promise<void> {
         const logout = this.page.locator('#supabase-logout-button');
         await logout.waitFor({ state: 'attached', timeout: 20000 });
-        await logout.scrollIntoViewIfNeeded().catch(() => { });
-        await logout.click({ force: true, timeout: 20000 });
+
+        // Button lives in the profile dropdown — open it if Sign Out is not already visible.
+        if (!(await logout.isVisible().catch(() => false))) {
+            await this.openProfileDropdown();
+        }
+
+        const visibleSignOut = this.profileDropdown
+            .getByRole('button', { name: /sign out/i })
+            .or(this.profileDropdown.getByRole('link', { name: /sign out/i }))
+            .or(logout);
+        await visibleSignOut.first().click({ timeout: 10000 });
         await logout.waitFor({ state: 'detached', timeout: 20000 }).catch(() => { });
+        await this.headerSignUpBtn.waitFor({ state: 'visible', timeout: 15000 }).catch(() => { });
     }
 }

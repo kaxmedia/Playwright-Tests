@@ -27,6 +27,11 @@ export interface GeoHomepageConfig {
   // Set true when the geo's nav uses no href="#" dropdown triggers.
   // Marks the T2 dropdown-trigger assertion as fixme for that geo.
   skipNavTriggerCheck?: boolean;
+
+  // Set true when the geo homepage is IP-gated (e.g. Norway). Non-local visitors
+  // are redirected away from the geo path — content smoke tests are skipped and
+  // replaced by a redirect assertion in geo-homepage.spec.ts.
+  geoRestricted?: boolean;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -51,7 +56,7 @@ export const geoHomepages: GeoHomepageConfig[] = [
   { name: 'SE',      path: '/se',     expectedLang: 'sv-SE', skipEmptyHrefCheck: true },
   { name: 'ES',      path: '/es',     expectedLang: 'es-ES' },
   { name: 'NL',      path: '/nl',     expectedLang: 'nl-NL' },
-  { name: 'NO',      path: '/no',     expectedLang: 'no-NO' },
+  { name: 'NO',      path: '/no',     expectedLang: 'no-NO', geoRestricted: true },
   { name: 'DK',      path: '/dk',     expectedLang: 'da-DK' },
   { name: 'AT',      path: '/at',     expectedLang: 'de-AT' },
   { name: 'BR',      path: '/br',     expectedLang: 'pt-BR' },

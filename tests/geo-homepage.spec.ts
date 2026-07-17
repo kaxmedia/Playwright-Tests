@@ -7,6 +7,10 @@ import { GeoHomepage, geoHomepages } from '../pages/GeoHomepage';
 
 for (const config of geoHomepages) {
   test.describe(config.name, () => {
+    // Norway (/no) is IP-gated — only a Norway VPN reaches the local homepage.
+    // Non-NO visitors are redirected away; full content smoke is skipped below.
+    test.skip(!!config.geoRestricted, `${config.name} is geo-restricted — content suite requires a local VPN`);
+
     let gh: GeoHomepage;
 
     test.beforeEach(async ({ page }) => {
@@ -55,5 +59,19 @@ for (const config of geoHomepages) {
       await expect(gh.footer).toBeVisible();
     });
 
+  });
+}
+
+// Geo-restricted markets — assert non-local visitors cannot stay on the geo path.
+const geoRestrictedHomepages = geoHomepages.filter((g) => g.geoRestricted);
+
+for (const config of geoRestrictedHomepages) {
+  test.describe(`${config.name} — geo restriction`, () => {
+    test(`${config.name} — @smoke @regression ${config.path} redirects away for non-local visitors`, async ({ page }) => {
+      const response = await page.goto(config.path, { waitUntil: 'domcontentloaded' });
+      expect(response?.status(), `${config.path} should respond`).toBeLessThan(400);
+      // Outside the geo (e.g. IE VPN), /no lands on the global homepage — not the NO site.
+      await expect(page).not.toHaveURL(new RegExp(`${config.path.replace('/', '\\/')}(\\/|$|\\?)`));
+    });
   });
 }

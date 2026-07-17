@@ -26,7 +26,12 @@ test.describe('Games Pages', () => {
   test('@regression /games/free-slots loads and renders slot grid', async ({ page }) => {
     const response = await page.goto('/games/free-slots', { waitUntil: 'domcontentloaded' });
     expect(response?.ok(), 'free-slots response should be ok').toBeTruthy();
-    await expect(page.locator('.slot-games-grid-wrapper').first()).toBeVisible();
+    // Cookie banner can delay hydration of the slot catalogue.
+    await page.getByRole('button', { name: /accept all/i }).click({ timeout: 5000 }).catch(() => {});
+    // Slot catalogue moved from .slot-games-grid-wrapper to category carousels.
+    const slotCarousel = page.locator('.gdc-v-game-category-carousel').first();
+    await expect(slotCarousel).toBeVisible({ timeout: 20000 });
+    await expect(slotCarousel.locator('img, [class*="cursor-pointer"]').first()).toBeVisible();
   });
 
   test('@regression /games has h1', async ({ page }) => {
