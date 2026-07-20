@@ -135,6 +135,11 @@ for (const config of bonusPages) {
         let bonusPage: ComparisonPage;
 
         test.beforeEach(async ({ page }) => {
+            // NOTE: blockVwoExperiments() (added in PR #106) strips VWO A/B experiment
+            // scripts so they cannot mutate the operator card list. It does NOT address
+            // the T2 card-count failure below — that failure is a CI-IP personalization
+            // variant served by gdc-oplist-d1-worker-api / adtech-personalisation-api,
+            // NOT a VWO experiment. VWO was ruled out as the cause; see the T2 skip reason.
             await blockVwoExperiments(page);
             bonusPage = new ComparisonPage(page);
             await bonusPage.goto(config.url);
@@ -147,8 +152,16 @@ for (const config of bonusPages) {
         });
 
         // ── T2: Operator cards are present ────────────────────────────────────
+        // SKIPPED — CI environment limitation, not a site regression.
+        // The CI datacenter IP is served a reduced personalization variant (2–3 cards)
+        // by gdc-oplist-d1-worker-api and adtech-personalisation-api, instead of the
+        // full operator list a normal visitor sees. This is unrelated to VWO (see the
+        // blockVwoExperiments() note in beforeEach — VWO was ruled out as the cause).
+        // Same treatment as the Norway geo-restriction skip in geo-homepage.spec.ts.
+        // Re-enable once personalization exclusion for CI is sorted with the site team.
 
         test(`@regression at least ${config.expectedCardCountMin} operator cards are present`, async () => {
+            test.skip(true, 'CI datacenter IP receives a reduced personalization variant (2–3 cards) from gdc-oplist-d1-worker-api / adtech-personalisation-api — CI environment limitation, unrelated to VWO. Re-enable once personalization exclusion is sorted with the site team.');
             const count = await bonusPage.cards.count();
             expect(
                 count,
@@ -299,7 +312,13 @@ for (const subPage of bonusSubPages) {
             await expect(page).toHaveURL(new RegExp(escapeForRegex(subPage.url)));
         });
 
+        // SKIPPED — same CI environment limitation as the main-page T2 card-count test.
+        // The CI datacenter IP is served a reduced personalization variant (2–3 cards) by
+        // gdc-oplist-d1-worker-api and adtech-personalisation-api, unrelated to VWO.
+        // Same treatment as the Norway geo-restriction skip in geo-homepage.spec.ts.
+        // Re-enable once personalization exclusion for CI is sorted with the site team.
         test(`@regression at least ${subPage.expectedCardCountMin} operator cards are present`, async () => {
+            test.skip(true, 'CI datacenter IP receives a reduced personalization variant (2–3 cards) from gdc-oplist-d1-worker-api / adtech-personalisation-api — CI environment limitation, unrelated to VWO. Re-enable once personalization exclusion is sorted with the site team.');
             const count = await subPageComparison.cards.count();
             expect(
                 count,
