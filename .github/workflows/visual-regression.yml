@@ -11,6 +11,12 @@ on:
         description: 'Capture new baselines and upload as artifact'
         type: boolean
         default: false
+      correlation_id:
+        description: 'Client-generated id to correlate this dispatch to its run (blank for manual dispatch)'
+        required: false
+        default: ''
+
+run-name: "Visual Regression${{ inputs.correlation_id != '' && format(' #{0}', inputs.correlation_id) || '' }}"
 
 # Auto-cancel superseded runs on the same ref so pushes/reopens don't leave
 # long (~78 min) visual runs stacking up and competing for runners.
