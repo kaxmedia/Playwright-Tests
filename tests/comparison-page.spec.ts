@@ -59,7 +59,10 @@ for (const config of comparisonPages) {
     });
 
     // T4 ─ @smoke ─────────────────────────────────────────────────────────────
+    // US Casino skipped in CI — depends on the first 5 cards existing; same
+    // op_list_region_* IP-geo reduction (2–3 cards) as the T3 card-count skip. See T3.
     test(`${config.name} — @smoke @regression first 5 cards each have logo, CTA link, and operator name`, async ({ page }) => {
+      test.skip(config.name === 'US Casino', 'US Casino: iterates the first 5 operator cards, but the CI runner IP is geo-classified into a reduced operator-list region that server-renders only 2–3 cards (op_list_region_* cookies) — same CI/IP-geo root cause as the T3 card-count skip in this file and PR #109/#111, unrelated to VWO. BACKLOG (design-level, not just unblock-CI): make this geo-aware rather than a permanent skip. Re-enable once the test is made geo-aware or CI geo exclusion is sorted with the site team.');
       const cp = new ComparisonPage(page);
       await cp.goto(config.url);
       for (let i = 0; i < 5; i++) {
@@ -207,6 +210,9 @@ for (const config of comparisonPages) {
     // span.terms-and-conditions instead of the standard "18+..." line, so a
     // per-card assertion produces false failures on IT and ES.
     test(`${config.name} — @smoke @regression at least one of the first 5 cards contains age limit ${config.ageLimit}`, async ({ page }) => {
+      // US Casino skipped in CI — checks the first 5 cards; same op_list_region_* IP-geo
+      // reduction (2–3 cards) as the T3 card-count skip. See T3.
+      test.skip(config.name === 'US Casino', 'US Casino: checks the first 5 operator cards for the 21+ age limit, but the CI runner IP is geo-classified into a reduced operator-list region that server-renders only 2–3 cards (op_list_region_* cookies) — same CI/IP-geo root cause as the T3 card-count skip in this file and PR #109/#111, unrelated to VWO. BACKLOG (design-level, not just unblock-CI): make this geo-aware rather than a permanent skip. Re-enable once the test is made geo-aware or CI geo exclusion is sorted with the site team.');
       const cp = new ComparisonPage(page);
       await cp.goto(config.url);
       const matches: string[] = [];
