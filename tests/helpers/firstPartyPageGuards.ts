@@ -19,6 +19,19 @@ export const KNOWN_PAGE_ERROR_ALLOWLIST: ReadonlyArray<{
       /ReferenceError:\s*AgeChecker is not defined[\s\S]*RelatedContentCollectionSlots/i,
     note: 'DE/RO casino comparison — mountAgeCheckerGB runs before AgeChecker global is defined',
   },
+  {
+    id: 'clarity-collect-cors',
+    pattern: /k\.clarity\.ms\/collect/i,
+    // THIRD-PARTY analytics — Microsoft Clarity's beacon (https://k.clarity.ms/collect) is
+    // CORS-blocked in the CI/test network (webkit + firefox), long-standing (4+ days).
+    // Unlike detectIncognito this is NOT a first-party bug and needs NO site-owner
+    // escalation — it's an external analytics endpoint gambling.com doesn't control, and
+    // the block is environment-specific (didn't reproduce from a normal network).
+    // Listed in BOTH allowlists because the browser attributes the CORS error inconsistently
+    // (uncaught pageerror vs console error on the document) and it couldn't be reproduced
+    // locally to pin the bucket — see news-page.spec.ts.
+    note: 'Third-party Microsoft Clarity CORS (k.clarity.ms/collect) — external analytics, not a first-party bug, no escalation',
+  },
 ];
 
 /** Tracked first-party console errors — remove when dev fixes ship. */
@@ -32,6 +45,15 @@ export const KNOWN_CONSOLE_ERROR_ALLOWLIST: ReadonlyArray<{
     pattern:
       /Failed to load resource.*404.*%22https:\/\/s3\.eu-west-1\.amazonaws\.com\/objects\.kaxmedia\.com/i,
     note: 'US Sportsbooks — logo src wrapped in extra quotes, 404 on gambling.com origin',
+  },
+  {
+    id: 'clarity-collect-cors',
+    pattern: /k\.clarity\.ms\/collect/i,
+    // Same third-party Microsoft Clarity CORS beacon as the page-error allowlist entry —
+    // duplicated here because on some browsers the CORS failure surfaces as a console error
+    // attributed to the gambling.com document rather than an uncaught pageerror. Not a
+    // first-party bug; no site-owner escalation. See the page-error entry for details.
+    note: 'Third-party Microsoft Clarity CORS (k.clarity.ms/collect) — external analytics, not a first-party bug, no escalation',
   },
 ];
 
