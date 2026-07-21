@@ -136,7 +136,11 @@ for (const config of comparisonPages) {
           }
         });
 
-        const allowlistIds = config.knownPageErrorIds ?? [];
+        // detectincognito-firefox-unhandled-rejection is a global, all-geo, Firefox-specific
+        // first-party bug (see KNOWN_PAGE_ERROR_ALLOWLIST) — allowlisted for every config
+        // rather than duplicated onto each config.knownPageErrorIds. Temporary until the
+        // site-side fix ships.
+        const allowlistIds = ['detectincognito-firefox-unhandled-rejection', ...(config.knownPageErrorIds ?? [])];
         const consoleAllowlistIds = config.knownConsoleErrorIds ?? [];
         const uncaughtPageErrors = unexpectedPageErrors(guards.pageErrors, allowlistIds);
         const uncaughtConsoleErrors = unexpectedConsoleErrors(
