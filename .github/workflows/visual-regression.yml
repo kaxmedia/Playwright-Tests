@@ -43,7 +43,24 @@ jobs:
         run: npm ci
 
       - name: Run visual regression tests
-        run: npx playwright test --project=visual-chromium-desktop --project=visual-chromium-android --project=visual-webkit-desktop --project=visual-webkit-ios ${{ inputs.update_baselines && '--update-snapshots' || '' }}
+        env:
+          # Emit a machine-readable JSON report alongside the HTML one so the dashboard can
+          # ingest per-page/project pass/fail + diff-image attachment paths. The diff PNGs
+          # themselves live under test-results/ (uploaded by the failure step below).
+          PLAYWRIGHT_JSON_OUTPUT_NAME: visual-results.json
+        run: npx playwright test --project=visual-chromium-desktop --project=visual-chromium-android --project=visual-webkit-desktop --project=visual-webkit-ios --reporter=html,json ${{ inputs.update_baselines && '--update-snapshots' || '' }}
+
+      # Publish the JSON report on every comparison run (pass or fail) so the dashboard has
+      # per-page status each time — not only on failure. Skipped for baseline-capture runs
+      # (update_baselines), which don't compare. `always()` so a failing run still uploads it.
+      - name: Upload visual results JSON
+        if: ${{ always() && !inputs.update_baselines }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-results-json
+          path: visual-results.json
+          retention-days: 30
+          if-no-files-found: warn
 
       - name: Upload baselines
         if: ${{ always() && inputs.update_baselines }}
