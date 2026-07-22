@@ -67,10 +67,17 @@ test.describe('Slots Games Widget — UK', () => {
         const count = await slotsPage.gameCards.count();
         const limit = Math.min(count, 12);
         for (let i = 0; i < limit; i++) {
-            const img = slotsPage.gameCards.nth(i).locator('img').first();
-            await expect(img).toBeVisible();
+            const card = slotsPage.gameCards.nth(i);
+            // Card images are loading="lazy". Firefox defers off-screen lazy images more
+            // aggressively than Chromium, so an un-scrolled card image has zero intrinsic
+            // size and toBeVisible() fails (Firefox-only, stable 5+ days). Scroll the card
+            // in to trigger the load, then assert the image is attached with a real src
+            // rather than relying on rendered visibility.
+            await card.scrollIntoViewIfNeeded();
+            const img = card.locator('img').first();
+            await expect(img).toBeAttached();
             const src = await img.getAttribute('src');
-            expect(src).toBeTruthy();
+            expect(src, 'Game card image should have a real http(s) src').toMatch(/^https?:\/\//);
         }
     });
 
