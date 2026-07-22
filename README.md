@@ -201,6 +201,12 @@ If you see timeout errors when running tests, first check that:
 
 The default timeout is set to **60 seconds** per test (double Playwright's default of 30s). This accounts for the additional latency from the corporate network proxy. This is configured in `playwright.config.ts`.
 
+### Shared QA account — parallel-worker auth races (intermittent)
+
+The authenticated specs (`profile.spec.ts`, `auth.spec.ts`, `slots-games-widget.spec.ts`) all sign in as the same shared QA account (**`testpot209@gmail.com`**, via `SIGN_IN_USER`). When Playwright runs multiple workers in parallel they log into the *same* account concurrently and can race on server-side login/session state — one worker's session can invalidate another's mid-run. This surfaces as **occasional `beforeEach` auth failures** (e.g. the logged-in avatar never becoming visible) that are flaky and **unrelated** to the CI datacenter-IP personalization gating documented for the Rewards tab.
+
+**Future work (not addressed yet):** give each worker its own authenticated storage state (per-worker `storageState`), or serialize the auth-dependent specs so only one worker holds the session at a time.
+
 ---
 
 ## Contributing
