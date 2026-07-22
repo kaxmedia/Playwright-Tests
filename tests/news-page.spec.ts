@@ -1,6 +1,6 @@
 import { test, expect } from '../fixtures/test';
 import { NewsPage } from '../pages/NewsPage';
-import { FirstPartyPageGuards } from './helpers/firstPartyPageGuards';
+import { FirstPartyPageGuards, unexpectedPageErrors, unexpectedConsoleErrors } from './helpers/firstPartyPageGuards';
 
 // ─── Shared setup ────────────────────────────────────────────────────────────
 test.describe('Global News Page', () => {
@@ -171,10 +171,14 @@ test.describe('Global News Page', () => {
 
     test('@regression page has no console errors on load', async ({ page }) => {
       const guards = new FirstPartyPageGuards(page);
+      // Allowlist the long-standing third-party Microsoft Clarity CORS beacon
+      // (k.clarity.ms/collect) — see KNOWN_PAGE_ERROR_ALLOWLIST / KNOWN_CONSOLE_ERROR_ALLOWLIST.
+      // Filter both buckets since the CORS failure lands inconsistently across webkit/firefox.
+      const clarity = ['clarity-collect-cors'];
       try {
         await newsPage.goto();
-        expect(guards.pageErrors).toEqual([]);
-        expect(guards.firstPartyConsoleErrors).toEqual([]);
+        expect(unexpectedPageErrors(guards.pageErrors, clarity)).toEqual([]);
+        expect(unexpectedConsoleErrors(guards.firstPartyConsoleErrors, clarity)).toEqual([]);
       } finally {
         guards.detach();
       }
