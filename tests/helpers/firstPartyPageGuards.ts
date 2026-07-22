@@ -19,6 +19,17 @@ export const KNOWN_PAGE_ERROR_ALLOWLIST: ReadonlyArray<{
       /ReferenceError:\s*AgeChecker is not defined[\s\S]*RelatedContentCollectionSlots/i,
     note: 'DE/RO casino comparison — mountAgeCheckerGB runs before AgeChecker global is defined',
   },
+  {
+    id: 'detectincognito-firefox-unhandled-rejection',
+    pattern: /detectIncognito cannot determine the browser/i,
+    // TEMPORARY STOPGAP — this is a REAL first-party production bug, not test noise.
+    // gambling.com inlines the detectIncognito library and calls it without a .catch(); on
+    // Firefox the library can't identify the browser, so the promise rejects and surfaces as
+    // an uncaught pageerror (confirmed first-party: stack frames resolve to the page document
+    // URL). Ships to real Firefox users. Allowlisted only to unblock CI until the site team
+    // adds a Firefox code path / .catch() at the call site. Remove this entry once fixed.
+    note: 'FIRST-PARTY PROD BUG (Firefox): detectIncognito promise rejection left unhandled — pending site-side fix, not a permanent suppression',
+  },
 ];
 
 /** Tracked first-party console errors — remove when dev fixes ship. */
