@@ -382,7 +382,6 @@ test.describe('Profile Section', () => {
     // ══════════════════════════════════════════════════════════════════════════
 
     test('@regression Manage Password tab loads with all 3 password fields', async () => {
-        test.fixme(true, 'blocked: prod Manage Password form not rendering - see [ticket]');
         await profilePage.gotoTab('password');
         await expect(profilePage.passwordHeading).toBeVisible();
         await expect(profilePage.currentPasswordInput).toBeVisible();
@@ -392,7 +391,6 @@ test.describe('Profile Section', () => {
     });
 
     test('@regression @negative wrong current password shows error', async () => {
-        test.fixme(true, 'blocked: prod Manage Password form not rendering - see [ticket]');
         await profilePage.gotoTab('password');
         await profilePage.currentPasswordInput.fill('WrongPassword999!');
         await profilePage.newPasswordInput.fill(PROFILE_TEST_DATA.newPassword);
@@ -413,7 +411,6 @@ test.describe('Profile Section', () => {
     });
 
     test('@regression @negative mismatched new passwords shows validation error', async () => {
-        test.fixme(true, 'blocked: prod Manage Password form not rendering - see [ticket]');
         await profilePage.gotoTab('password');
         await profilePage.currentPasswordInput.fill(PROFILE_TEST_DATA.origPassword);
         await profilePage.newPasswordInput.fill(PROFILE_TEST_DATA.newPassword);
@@ -434,7 +431,6 @@ test.describe('Profile Section', () => {
     });
 
     test('@regression change password then restore original (same session)', async ({ page }) => {
-        test.fixme(true, 'blocked: prod Manage Password form not rendering - see [ticket]');
         test.setTimeout(120_000);
         let restored = false;
         try {
