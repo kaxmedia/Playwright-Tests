@@ -90,7 +90,13 @@ export class AuthPage {
         this.page = page;
 
         this.headerSignUpBtn = page.locator('#gdc-signup-text');
-        this.headerSignInBtn = page.locator('#login-button');
+        // Top-nav Sign In. The old `#login-button` id was dropped in a nav redesign (confirmed
+        // live — fails outside CI too, genuine selector drift, not a personalization/geo issue).
+        // Scope to the top `nav` so we don't match the auth modal's "Already have an account?
+        // Sign In", and match by role + text so it survives future id/class churn (it's a
+        // <button> today; link kept as a resilient fallback).
+        this.headerSignInBtn = page.locator('nav').first().getByRole('button', { name: /sign\s*in/i })
+            .or(page.locator('nav').first().getByRole('link', { name: /sign\s*in/i }));
         /** Post–sign-in initials chip in the global nav (prod: `#logged-in-user-icon`). */
         this.profileAvatar = page.locator('nav').first().locator('#logged-in-user-icon');
         this.userAvatar = this.profileAvatar;
