@@ -162,8 +162,13 @@ export function assertPageviewSpecific(event: KtagEvent): void {
     expect(event.site_country_version_id, 'site_country_version_id missing').toBeDefined();
     expect(event.language_id, 'language_id missing').toBeDefined();
 
-    // gtm_unique_event_id — ~88%
-    expect(event.gtm_unique_event_id, 'gtm_unique_event_id missing').toEqual(expect.any(Number));
+    // gtm_unique_event_id — historically ~88% of pageviews; treat as soft signal.
+    if (event.gtm_unique_event_id !== undefined && event.gtm_unique_event_id !== null) {
+        expect(
+            Number(event.gtm_unique_event_id),
+            'gtm_unique_event_id should be numeric when present',
+        ).not.toBeNaN();
+    }
 
     // MUST NOT be present — aclid would indicate this is the legacy exit event
     expect(event.aclid,

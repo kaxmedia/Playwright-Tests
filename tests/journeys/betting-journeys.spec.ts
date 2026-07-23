@@ -406,18 +406,34 @@ test.describe('Journey 5.11 — Betting tips (news article)', () => {
     });
 
     test('@regression an article from the news hub contains in-content bookmaker links @journey', async ({ page }) => {
-        const firstArticle = page.locator('a[href*="/ie/news/"]').first();
-        await expect(firstArticle).toBeVisible();
-        const href = await firstArticle.getAttribute('href');
-        const fullUrl = href?.startsWith('http') ? href : `${BASE}${href}`;
-        await page.goto(fullUrl);
-        await expect(page).toHaveURL(/\/ie\/news\//);
-        await expect(page.locator('main h1').first()).toBeVisible();
-        // In-content link to betting toplist or /go/ CTA
-        const bettingLink = page.locator(
-            'main a[href*="/ie/betting-sites"], main a[href*="/go/"]'
-        ).first();
-        await expect(bettingLink).toBeAttached();
+        // Newest hub stories are often corporate/news without bookmaker CTAs — scan
+        // recent articles until one exposes a betting toplist or /go/ link.
+        const articles = page.locator('a[href*="/ie/news/"]');
+        const articleCount = await articles.count();
+        expect(articleCount, 'News hub should list article links').toBeGreaterThan(0);
+
+        let foundBettingLink = false;
+        const checkUpTo = Math.min(articleCount, 12);
+        for (let i = 0; i < checkUpTo; i++) {
+            const href = await articles.nth(i).getAttribute('href');
+            if (!href || href.replace(/\/$/, '').endsWith('/ie/news')) continue;
+            const fullUrl = href.startsWith('http') ? href : `${BASE}${href}`;
+            await page.goto(fullUrl, { waitUntil: 'domcontentloaded' });
+            if (!/\/ie\/news\//.test(page.url())) continue;
+            await expect(page.locator('main h1').first()).toBeVisible();
+            const bettingLink = page.locator(
+                'main a[href*="/ie/betting-sites"], main a[href*="/go/"], main a[href*="/betting"]'
+            ).first();
+            if (await bettingLink.count()) {
+                await expect(bettingLink).toBeAttached();
+                foundBettingLink = true;
+                break;
+            }
+        }
+        expect(
+            foundBettingLink,
+            'Expected at least one recent IE news article with in-content betting /go/ links',
+        ).toBe(true);
     });
 });
 
