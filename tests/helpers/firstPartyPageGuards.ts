@@ -31,6 +31,8 @@ export const KNOWN_PAGE_ERROR_ALLOWLIST: ReadonlyArray<{
     // (uncaught pageerror vs console error on the document) and it couldn't be reproduced
     // locally to pin the bucket — see news-page.spec.ts.
     note: 'Third-party Microsoft Clarity CORS (k.clarity.ms/collect) — external analytics, not a first-party bug, no escalation',
+  },
+  {
     id: 'detectincognito-firefox-unhandled-rejection',
     pattern: /detectIncognito cannot determine the browser/i,
     // TEMPORARY STOPGAP — this is a REAL first-party production bug, not test noise.
@@ -75,7 +77,11 @@ export function unexpectedPageErrors(
     allowlistIds.includes(entry.id),
   ).map(entry => entry.pattern);
 
-  return pageErrors.filter(err => !patterns.some(pattern => pattern.test(err)));
+  return pageErrors.filter(err => {
+    // WebKit sometimes emits empty pageerror events with no message/stack.
+    if (!err || !err.trim()) return false;
+    return !patterns.some(pattern => pattern.test(err));
+  });
 }
 
 /** Returns console errors not on the known-issue allowlist (by id). */

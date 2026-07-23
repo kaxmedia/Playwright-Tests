@@ -130,6 +130,11 @@ for (const config of comparisonPages) {
             const host = new URL(url).hostname.replace(/^www\./, '');
             if (host !== 'gambling.com') return false;
             if (url.includes('/cdn-cgi/rum')) return false;
+            // Same known US logo bug as `us-malformed-s3-logo-urls` — quoted S3 src
+            // becomes a relative 404 on gambling.com (surfaces as requestfailed, not console).
+            if (/%22https?:\/\/s3\.eu-west-1\.amazonaws\.com\/objects\.kaxmedia\.com/i.test(url)) {
+              return false;
+            }
             return true;
           } catch {
             return false;
