@@ -16,7 +16,8 @@ export class FooterPage {
   // "Privacy and Cookies Policy" compliance link — same reason for exact:true and .first()
   readonly privacyLink: Locator;
 
-  // The <p> at the bottom of the footer — contains both the disclaimer and the copyright line
+  // The <p> at the bottom of the footer — disclaimer + copyright (entity may be
+  // "GDC Media Ltd" or the longer "GDC Media Limited" depending on geo/copy).
   readonly legalText: Locator;
 
   // Every <a> tag inside the footer — used for the bulk link count and broken-link check
@@ -32,8 +33,9 @@ export class FooterPage {
     this.termsLink               = this.footer.getByRole('link', { name: 'Terms and Conditions',        exact: true }).first();
     this.privacyLink             = this.footer.getByRole('link', { name: 'Privacy and Cookies Policy', exact: true }).first();
 
-    // Filter to the <p> that contains "GDC Media Limited" — that is the copyright paragraph
-    this.legalText = this.footer.locator('p').filter({ hasText: 'GDC Media Limited' });
+    // Copyright / disclaimer paragraph — site copy shortened "Limited" → "Ltd" on
+    // several geos; accept both forms so the locator still resolves.
+    this.legalText = this.footer.locator('p').filter({ hasText: /GDC Media Ltd\.?(?:imited)?/i });
 
     this.allLinks = this.footer.locator('a');
   }
