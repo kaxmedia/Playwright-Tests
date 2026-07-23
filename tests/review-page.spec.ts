@@ -129,15 +129,16 @@ test.describe('Bookmaker Review Page', () => {
     // Carried over from original suite
     test('@regression CTA button is visible and opens affiliate redirect in new tab', async () => {
       await expect(reviewPage.ctaButton).toBeVisible();
+      // CTA href must be our /go/ affiliate hop (commercial contract).
+      const href = await reviewPage.ctaButton.getAttribute('href');
+      expect(href, 'Review CTA should have an affiliate /go/ href').toMatch(/\/go\//);
+
       const newTab = await reviewPage.clickCtaAndGetNewTab();
-      // The CTA opens the affiliate /go/ redirect in a new tab. The downstream operator /
-      // cross-site tracking URL is outside our control and no longer carries an "affiliate="
-      // param (the /go/ URL now uses source=oplist/ct=cta/operator_item_id), so assert the
-      // /go/ redirect hop itself — the same affiliate-redirect signal the bonus CTA href test
-      // above checks (toMatch(/\/go\//)). Poll: the new tab starts at about:blank first.
+      // /go/ often redirects to the operator instantly, so the tab URL may already be
+      // off-site by the time we poll — assert we left about:blank for an http(s) URL.
       await expect
         .poll(() => newTab.url(), { timeout: 20_000 })
-        .toMatch(/\/go\//);
+        .toMatch(/^https?:\/\//i);
       await newTab.close();
     });
 

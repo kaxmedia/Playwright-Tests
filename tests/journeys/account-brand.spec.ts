@@ -23,7 +23,7 @@
 //         /ie/online-casinos toplist — URL assertion uses contains match.
 //       * Authors hub at /ie/authors redirects to /authors (global).
 //       * Auth UI uses Welcome Rewards modal (#signup-modal) for both sign-up and
-//         sign-in; header triggers are #gdc-signup-text and #login-button.
+//         sign-in; header trigger is #gdc-signup-text (Sign In lives inside the modal).
 //       * Geo homepage journey uses /uk as the representative alternate geo.
 //   - Existing POMs reused: AuthPage, TournamentsPage. No new POM code.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -98,8 +98,11 @@ test.describe('Journey 8.2 — Returning user (sign-in flow)', () => {
     });
 
     test('@regression sign-in CTA is present in the top nav @journey', async () => {
-        // #login-button is often CSS-hidden — assert attached, not visible
-        await expect(authPage.headerSignInBtn).toBeAttached();
+        // Header no longer exposes a dedicated Sign In control (sprint UX) — entry is
+        // Sign Up → "Sign In" inside the Welcome Rewards modal.
+        await expect(authPage.headerSignUpBtn).toBeVisible();
+        await authPage.openSignUpModal();
+        await expect(authPage.signInLink).toBeVisible();
     });
 
     test('@regression sign-in reuses the Welcome Rewards modal shell @journey', async () => {
