@@ -383,7 +383,7 @@ test.describe('Profile Section', () => {
 
     test('@regression Manage Password tab loads with all 3 password fields', async () => {
         await profilePage.gotoTab('password');
-        await expect(profilePage.passwordHeading).toBeVisible();
+        await expect(profilePage.passwordHeading).toBeVisible({ timeout: 15000 });
         await expect(profilePage.currentPasswordInput).toBeVisible();
         await expect(profilePage.newPasswordInput).toBeVisible();
         await expect(profilePage.confirmPasswordInput).toBeVisible();

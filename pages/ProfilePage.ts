@@ -31,6 +31,8 @@ export class ProfilePage {
     readonly marketingPanel: Locator;
     /** Vue root that wraps the update-password form (anonymous password inputs). */
     readonly passwordFormRoot: Locator;
+    /** Close button of the login-streak reward popup — its full-screen backdrop intercepts clicks until dismissed. */
+    readonly streakModalCloseBtn: Locator;
 
     // ── Tab navigation ────────────────────────────────────────────────────────
     readonly tabRewards: Locator;
@@ -141,6 +143,7 @@ export class ProfilePage {
             has: page.getByRole('heading', { name: /marketing preferences/i }),
         });
         this.passwordFormRoot = page.locator('[data-v-app]').filter({ has: page.getByRole('button', { name: /update password/i }) });
+        this.streakModalCloseBtn = page.getByRole('button', { name: /close modal/i }).first();
 
         // ── Tabs (sidebar inside profile shell) ─────────────────────────────────
         this.tabRewards = this.profileShell.getByRole('link', { name: /gambling\.com rewards/i }).first();
@@ -302,6 +305,20 @@ export class ProfilePage {
         await this.page.goto(PROFILE_URLS[tab]);
         await this.page.waitForLoadState('domcontentloaded');
         await this.profileShell.getByRole('link', { name: /^profile details$/i }).waitFor({ state: 'visible', timeout: 30000 });
+        await this.dismissStreakModalIfPresent();
+    }
+
+    /**
+     * The login-streak reward popup ("N Day Log In Streak") can appear over any profile tab.
+     * Its full-screen backdrop (z-1050) intercepts pointer events and blocks form submits
+     * (e.g. the Update Password button), so dismiss it properly rather than force-clicking
+     * through the overlay. No-op when the popup isn't showing.
+     */
+    private async dismissStreakModalIfPresent(): Promise<void> {
+        if (await this.streakModalCloseBtn.isVisible().catch(() => false)) {
+            await this.streakModalCloseBtn.click();
+            await this.streakModalCloseBtn.waitFor({ state: 'hidden', timeout: 10000 });
+        }
     }
 
     /** Click a tab in the profile nav and wait for the page to settle (`email` = Marketing preferences URL). */
