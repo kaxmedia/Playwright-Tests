@@ -47,7 +47,14 @@ for (const geo of GEOS) {
     await page.addStyleTag({
       content: '*, *::before, *::after { animation-duration: 0s !important; animation-delay: 0s !important; transition-duration: 0s !important; transition-delay: 0s !important; }',
     });
-    await expect(page.locator('div.cf-primary-operator-list')).toHaveScreenshot(`oplist-${geo.name}.png`, {
+    // Capture only the top 3 operators as a fixed-height region. The full list's height drifts as
+    // operators rotate within the ~25 min capture→verify cycle, so the screenshot's dimensions
+    // change and exceed maxDiffPixelRatio — a size change, not pixel content, so masking can't fix
+    // it. Hiding the 4th+ rows keeps the captured region a fixed size.
+    await page.addStyleTag({
+      content: 'div.cf-primary-operator-list ol > li:nth-child(n+4) { display: none !important; }',
+    });
+    await expect(page.locator('div.cf-primary-operator-list ol')).toHaveScreenshot(`oplist-${geo.name}.png`, {
       threshold: 0,
       maxDiffPixelRatio: 0.13,
       timeout: 30000,
