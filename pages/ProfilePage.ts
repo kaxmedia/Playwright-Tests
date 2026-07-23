@@ -316,7 +316,6 @@ export class ProfilePage {
      */
     private async dismissStreakModalIfPresent(): Promise<void> {
         if (await this.streakModalCloseBtn.isVisible().catch(() => false)) {
-            console.log('[streak-modal] login-streak reward popup detected — dismissing before proceeding');
             await this.streakModalCloseBtn.click();
             await this.streakModalCloseBtn.waitFor({ state: 'hidden', timeout: 10000 });
         }
