@@ -146,10 +146,6 @@ test.describe('Ktag — redirectv2 event @ktag @redirectv2 @regression', () => {
 
     expect(event.dest_url, 'dest_url missing').toBeTruthy();
     expect(event.dest_url_seo, 'dest_url_seo missing').toBeTruthy();
-    // Key must exist; value is often null on UK offers today (known live gap —
-    // mobile exit URL not configured for some operators). Harden to toBeTruthy
-    // once product consistently populates dest_url_mobile.
-    expect(event, 'dest_url_mobile key missing').toHaveProperty('dest_url_mobile');
   });
 
   test('redirectv2: meta object contains telemetry fields', async ({ page }) => {

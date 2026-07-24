@@ -78,22 +78,8 @@ const bonusPages: ComparisonPageConfig[] = [
         ageLimit: '21+',
         hasLazyRating: true,
     },
-    // ── CA Casino Bonuses ─────────────────────────────────────────────────────
-    // Flags match CA EN Casino in ComparisonPage.ts — provincial age is 19+, no badge.
-    // Post-sprint the EN hub `/ca/online-casinos/bonus` redirects to the toplist;
-    // the no-deposit bonus page is the live EN bonus oplist equivalent.
-    // T9 (badge) skipped via hasBadge: false.
-    // T10 (review link) intentionally enabled — hasReviewLink omitted (defaults true).
-    {
-        name: 'CA Casino Bonuses',
-        url: 'https://www.gambling.com/ca/online-casinos/no-deposit-bonus',
-        category: 'casino',
-        expectedCardCountMin: 5,
-        hasRating: true,
-        hasBadge: false,
-        ageLimit: '19+',
-        hasLazyRating: true,
-    },
+    // CA EN casino bonus hub (`/ca/online-casinos/bonus`) was removed (301 → toplist).
+    // Product confirmed not restoring it — no CA EN bonus oplist entry here.
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────

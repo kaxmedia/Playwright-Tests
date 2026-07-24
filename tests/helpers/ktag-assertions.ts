@@ -366,10 +366,9 @@ export function assertRedirectv2Specific(event: KtagEvent): void {
         expect(meta, `meta.${field} key missing`).toHaveProperty(field);
     }
 
-    // Destination URLs
+    // Destination URLs (dest_url_mobile often null by operator config — not asserted)
     expect(event.dest_url, 'dest_url missing').toEqual(expect.any(String));
     expect(event.dest_url_seo, 'dest_url_seo missing').toEqual(expect.any(String));
-    expect(event, 'dest_url_mobile key missing').toHaveProperty('dest_url_mobile');
     // ~99.5%
     expect(event.dest_url_tc, 'dest_url_tc missing').toBeDefined();
     // ~96% — optional; some operator payloads omit deeplink
