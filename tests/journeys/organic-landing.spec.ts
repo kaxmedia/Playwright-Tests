@@ -63,7 +63,8 @@ test.describe('Organic Landing Journeys — IE', () => {
     });
 
     test('@regression lands on kingmaker review with rating widget visible', async ({ page }) => {
-      await expect(page).toHaveURL(/\/ie\/online-casinos\/kingmaker/);
+      // Site now inserts a /reviews/ segment into operator review URLs (…/online-casinos/reviews/<slug>).
+      await expect(page).toHaveURL(/\/ie\/online-casinos\/reviews\/kingmaker/);
       // Review score widget — `div[class*="bg-gdc-gray-200"]`, not broad `[class*="rating"]`
       await expect(reviewPage.ratingContainer).toBeVisible({ timeout: 15_000 });
       await expect(reviewPage.ratingScore).toBeVisible();
