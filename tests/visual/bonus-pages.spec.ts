@@ -2,10 +2,10 @@ import { test, expect } from '../../fixtures/test';
 
 const BONUS_PATH = '/online-casinos/bonus';
 
-// Scoped to 10 geos confirmed serving /online-casinos/bonus from CI runners. 14 geos excluded: 11 return 404 sitewide, 3 are geo/bot-blocked from CI IPs. See PR #42.
+// Scoped to geos confirmed serving /online-casinos/bonus from CI runners.
+// CA EN hub removed (301 → toplist) — dropped from this list. See PR #42 for earlier exclusions.
 const GEOS = [
   { path: '/at', name: 'at' },
-  { path: '/ca', name: 'ca' },
   { path: '/gr', name: 'gr' },
   { path: '/ie', name: 'ie' },
   { path: '/in', name: 'in' },

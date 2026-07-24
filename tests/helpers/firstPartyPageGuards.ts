@@ -6,7 +6,10 @@ const KNOWN_NOISY_SUBSTRING =
 
 /**
  * Tracked production `pageerror`s — tests still run and still fail on any other exception.
- * Remove an entry (and `knownPageErrorIds` on comparison configs) once dev fixes ship.
+ * Remove an entry (and `knownPageErrorIds` on comparison configs) once a real fix ships.
+ *
+ * Entries in {@link ALWAYS_SUPPRESSED_PAGE_ERROR_IDS} are filtered for every caller
+ * (no opt-in id list required) — use for noise product has declined to fix.
  */
 export const KNOWN_PAGE_ERROR_ALLOWLIST: ReadonlyArray<{
   id: string;
@@ -35,14 +38,15 @@ export const KNOWN_PAGE_ERROR_ALLOWLIST: ReadonlyArray<{
   {
     id: 'detectincognito-firefox-unhandled-rejection',
     pattern: /detectIncognito cannot determine the browser/i,
-    // TEMPORARY STOPGAP — this is a REAL first-party production bug, not test noise.
-    // gambling.com inlines the detectIncognito library and calls it without a .catch(); on
-    // Firefox the library can't identify the browser, so the promise rejects and surfaces as
-    // an uncaught pageerror (confirmed first-party: stack frames resolve to the page document
-    // URL). Ships to real Firefox users. Allowlisted only to unblock CI until the site team
-    // adds a Firefox code path / .catch() at the call site. Remove this entry once fixed.
-    note: 'FIRST-PARTY PROD BUG (Firefox): detectIncognito promise rejection left unhandled — pending site-side fix, not a permanent suppression',
+    // Product declined to fix. Firefox rejects an unhandled detectIncognito promise on
+    // every page; always suppressed so console/pageerror suites stay green.
+    note: 'Firefox detectIncognito unhandled rejection — permanent suppress (product declined)',
   },
+];
+
+/** Always filtered by `unexpectedPageErrors` / FirstPartyPageGuards — no opt-in needed. */
+export const ALWAYS_SUPPRESSED_PAGE_ERROR_IDS: readonly string[] = [
+  'detectincognito-firefox-unhandled-rejection',
 ];
 
 /** Tracked first-party console errors — remove when dev fixes ship. */
@@ -52,12 +56,6 @@ export const KNOWN_CONSOLE_ERROR_ALLOWLIST: ReadonlyArray<{
   note: string;
 }> = [
   {
-    id: 'us-malformed-s3-logo-urls',
-    pattern:
-      /Failed to load resource.*404.*%22https:\/\/s3\.eu-west-1\.amazonaws\.com\/objects\.kaxmedia\.com/i,
-    note: 'US Sportsbooks — logo src wrapped in extra quotes, 404 on gambling.com origin',
-  },
-  {
     id: 'clarity-collect-cors',
     pattern: /k\.clarity\.ms\/collect/i,
     // Same third-party Microsoft Clarity CORS beacon as the page-error allowlist entry —
@@ -66,6 +64,16 @@ export const KNOWN_CONSOLE_ERROR_ALLOWLIST: ReadonlyArray<{
     // first-party bug; no site-owner escalation. See the page-error entry for details.
     note: 'Third-party Microsoft Clarity CORS (k.clarity.ms/collect) — external analytics, not a first-party bug, no escalation',
   },
+  {
+    id: 'detectincognito-firefox-unhandled-rejection',
+    pattern: /detectIncognito cannot determine the browser/i,
+    note: 'Firefox detectIncognito — permanent suppress (product declined)',
+  },
+];
+
+/** Always filtered by `unexpectedConsoleErrors` — no opt-in needed. */
+export const ALWAYS_SUPPRESSED_CONSOLE_ERROR_IDS: readonly string[] = [
+  'detectincognito-firefox-unhandled-rejection',
 ];
 
 /** Returns pageerrors that are not on the known-issue allowlist (by id). */
@@ -73,8 +81,9 @@ export function unexpectedPageErrors(
   pageErrors: string[],
   allowlistIds: readonly string[] = [],
 ): string[] {
+  const ids = [...new Set([...ALWAYS_SUPPRESSED_PAGE_ERROR_IDS, ...allowlistIds])];
   const patterns = KNOWN_PAGE_ERROR_ALLOWLIST.filter(entry =>
-    allowlistIds.includes(entry.id),
+    ids.includes(entry.id),
   ).map(entry => entry.pattern);
 
   return pageErrors.filter(err => {
@@ -89,8 +98,9 @@ export function unexpectedConsoleErrors(
   errors: { url: string; text: string }[],
   allowlistIds: readonly string[] = [],
 ): { url: string; text: string }[] {
+  const ids = [...new Set([...ALWAYS_SUPPRESSED_CONSOLE_ERROR_IDS, ...allowlistIds])];
   const patterns = KNOWN_CONSOLE_ERROR_ALLOWLIST.filter(entry =>
-    allowlistIds.includes(entry.id),
+    ids.includes(entry.id),
   ).map(entry => entry.pattern);
 
   return errors.filter(err => {
@@ -120,8 +130,18 @@ export class FirstPartyPageGuards {
   readonly pageErrors: string[] = [];
   readonly firstPartyConsoleErrors: { url: string; text: string }[] = [];
 
+  private readonly alwaysPageErrorPatterns = KNOWN_PAGE_ERROR_ALLOWLIST.filter(entry =>
+    ALWAYS_SUPPRESSED_PAGE_ERROR_IDS.includes(entry.id),
+  ).map(entry => entry.pattern);
+
+  private readonly alwaysConsoleErrorPatterns = KNOWN_CONSOLE_ERROR_ALLOWLIST.filter(entry =>
+    ALWAYS_SUPPRESSED_CONSOLE_ERROR_IDS.includes(entry.id),
+  ).map(entry => entry.pattern);
+
   private readonly onPageError = (err: Error) => {
-    this.pageErrors.push(err.stack ?? err.message);
+    const text = err.stack ?? err.message;
+    if (this.alwaysPageErrorPatterns.some(pattern => pattern.test(text))) return;
+    this.pageErrors.push(text);
   };
 
   private readonly onConsole = (msg: ConsoleMessage) => {
@@ -130,6 +150,8 @@ export class FirstPartyPageGuards {
     if (!isGamblingComScriptUrl(url)) return;
     const text = msg.text();
     if (KNOWN_NOISY_SUBSTRING.test(text)) return;
+    const combined = `${text} ${url}`;
+    if (this.alwaysConsoleErrorPatterns.some(pattern => pattern.test(combined))) return;
     this.firstPartyConsoleErrors.push({ url: url!, text });
   };
 

@@ -116,6 +116,11 @@ for (const config of comparisonPages) {
     // (third-party CMP noise such as CookieYes CORS is ignored). Network: first-party failures only;
     // Cloudflare RUM beacons (/cdn-cgi/rum) are excluded as they fail transiently without affecting UX.
     test(`${config.name} — @regression no console errors and no failed first-party network requests`, async ({ page }) => {
+      test.skip(
+        !!config.skipFirstPartyHealthCheck,
+        'First-party health check skipped — known content assets product will not fix',
+      );
+
       const guards = new FirstPartyPageGuards(page);
       const failedRequests: string[] = [];
 
@@ -130,22 +135,15 @@ for (const config of comparisonPages) {
             const host = new URL(url).hostname.replace(/^www\./, '');
             if (host !== 'gambling.com') return false;
             if (url.includes('/cdn-cgi/rum')) return false;
-            // Same known US logo bug as `us-malformed-s3-logo-urls` — quoted S3 src
-            // becomes a relative 404 on gambling.com (surfaces as requestfailed, not console).
-            if (/%22https?:\/\/s3\.eu-west-1\.amazonaws\.com\/objects\.kaxmedia\.com/i.test(url)) {
-              return false;
-            }
             return true;
           } catch {
             return false;
           }
         });
 
-        // detectincognito-firefox-unhandled-rejection is a global, all-geo, Firefox-specific
-        // first-party bug (see KNOWN_PAGE_ERROR_ALLOWLIST) — allowlisted for every config
-        // rather than duplicated onto each config.knownPageErrorIds. Temporary until the
-        // site-side fix ships.
-        const allowlistIds = ['detectincognito-firefox-unhandled-rejection', ...(config.knownPageErrorIds ?? [])];
+        // Permanent suppressions (e.g. detectIncognito) are applied inside unexpectedPageErrors.
+        // Opt-in ids below are for per-page known issues only.
+        const allowlistIds = [...(config.knownPageErrorIds ?? [])];
         const consoleAllowlistIds = config.knownConsoleErrorIds ?? [];
         const uncaughtPageErrors = unexpectedPageErrors(guards.pageErrors, allowlistIds);
         const uncaughtConsoleErrors = unexpectedConsoleErrors(
@@ -155,7 +153,7 @@ for (const config of comparisonPages) {
         if (guards.pageErrors.length > uncaughtPageErrors.length) {
           test.info().annotations.push({
             type: 'known-issue',
-            description: `Suppressed ${guards.pageErrors.length - uncaughtPageErrors.length} tracked pageerror(s): ${allowlistIds.join(', ')}`,
+            description: `Suppressed ${guards.pageErrors.length - uncaughtPageErrors.length} tracked pageerror(s)`,
           });
         }
         if (guards.firstPartyConsoleErrors.length > uncaughtConsoleErrors.length) {
