@@ -128,7 +128,8 @@ test.describe('Journey 2.3 — Operator review → casino toplist', () => {
     });
 
     test('@regression review page loads and toplist breadcrumb link is present @journey', async ({ page }) => {
-        await expect(page).toHaveURL(/\/ie\/online-casinos\/kingmaker/);
+        // Site now inserts a /reviews/ segment into operator review URLs (…/online-casinos/reviews/<slug>).
+        await expect(page).toHaveURL(/\/ie\/online-casinos\/reviews\/kingmaker/);
         const toplistLink = page.locator('a[href*="/ie/online-casinos"]').first();
         await expect(toplistLink).toBeAttached();
     });

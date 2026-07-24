@@ -358,7 +358,8 @@ test.describe('Journey 5.10 — Bookmaker review page', () => {
     });
 
     test('@regression bookmaker review loads with H1 and rating score @journey', async ({ page }) => {
-        await expect(page).toHaveURL(/\/ie\/betting-sites\/bet365/);
+        // Site now inserts a /reviews/ segment into operator review URLs (…/betting-sites/reviews/<slug>).
+        await expect(page).toHaveURL(/\/ie\/betting-sites\/reviews\/bet365/);
         await expect(page.locator('main.body_content h1').first()).toBeVisible();
         await expect(reviewPage.ratingContainer).toBeVisible({ timeout: 15_000 });
         await expect(reviewPage.ratingScore).toBeVisible();

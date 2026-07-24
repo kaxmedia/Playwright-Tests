@@ -305,7 +305,8 @@ test.describe('Journey 3.10 — Operator review page', () => {
     });
 
     test('@regression review page loads with H1 and rating widget @journey', async ({ page }) => {
-        await expect(page).toHaveURL(/\/ie\/online-casinos\/kingmaker/);
+        // Site now inserts a /reviews/ segment into operator review URLs (…/online-casinos/reviews/<slug>).
+        await expect(page).toHaveURL(/\/ie\/online-casinos\/reviews\/kingmaker/);
         await expect(page.locator('h1').first()).toBeVisible();
         await expect(reviewPage.ratingContainer).toBeVisible({ timeout: 15_000 });
         await expect(reviewPage.ratingScore).toBeVisible();
