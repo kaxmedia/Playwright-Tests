@@ -38,24 +38,22 @@ for (const geo of GEOS) {
     await page.addStyleTag({
       content: '*, *::before, *::after { animation-duration: 0s !important; animation-delay: 0s !important; transition-duration: 0s !important; transition-delay: 0s !important; }',
     });
-    // Capture only the top 3 operators, clipped to a FIXED per-(geo,project) height so the
-    // captured dimensions are constant by construction. The 3-card region has a systemic ±1px
-    // sub-pixel height jitter across all browsers, and Playwright hard-fails on ANY dimension
-    // diff, so an element screenshot flakes. x/y/width come from the live boundingBox (they
-    // don't jitter); height is the pinned constant from clip-heights.generated.ts. Hiding the
-    // 4th+ rows keeps anything below the 3rd card out of the clip. maxDiffPixelRatio covers content.
-    await page.addStyleTag({
-      content: 'div.cf-primary-operator-list ol > li:nth-child(n+4) { display: none !important; }',
-    });
-    const bonusBox = await page.locator('div.cf-primary-operator-list ol').boundingBox();
-    if (!bonusBox) throw new Error(`Operator list not found for ${geo.name}`);
+    // Pin the operator list to a FIXED per-(geo,project) height (cropping overflow) so the
+    // captured ELEMENT has constant dimensions — the systemic ±1px sub-pixel height jitter can't
+    // change an explicitly-set box height, and Playwright hard-fails on any dimension diff.
+    // Screenshot the element (NOT page+clip): stabilization stays scoped to the list, which
+    // settles quickly; a page-level clip screenshot waits for the whole live page to stabilize,
+    // which it never does → 30s capture timeouts. The fixed height also crops the 4th+ cards,
+    // leaving exactly the top 3. maxDiffPixelRatio still covers legitimate content differences.
     const bonusHeight = CLIP_HEIGHTS.bonus[`${geo.name}|${testInfo.project.name}`];
     if (bonusHeight === undefined) throw new Error(`No clip height for bonus ${geo.name}|${testInfo.project.name} — re-run generate-clip-heights.mjs`);
-    await expect(page).toHaveScreenshot(`bonus-${geo.name}.png`, {
+    await page.addStyleTag({
+      content: `div.cf-primary-operator-list ol { height: ${bonusHeight}px !important; max-height: ${bonusHeight}px !important; overflow: hidden !important; }`,
+    });
+    await expect(page.locator('div.cf-primary-operator-list ol')).toHaveScreenshot(`bonus-${geo.name}.png`, {
       threshold: 0,
       maxDiffPixelRatio: 0.10,
       timeout: 30000,
-      clip: { x: Math.floor(bonusBox.x), y: Math.floor(bonusBox.y), width: Math.floor(bonusBox.width), height: bonusHeight },
       mask: BONUS_MASKS.map(s => page.locator(s)),
     });
   });
