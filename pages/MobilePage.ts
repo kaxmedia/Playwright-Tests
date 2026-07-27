@@ -14,6 +14,8 @@ export class MobilePage {
   readonly menuPopularLinks: Locator;
   /** In-panel nav links once `#level-one` is open (excludes external URLs). */
   readonly menuLinks: Locator;
+  /** Logged-out burger CTA — `onclick="handleSignIn()"` (“Already have an account? Sign In”). */
+  readonly menuSignInButton: Locator;
   readonly logoHomeLink: Locator;
   /** Mobile promo banner — desktop nav Sign Up / #login-button are hidden on small viewports. */
   readonly registerNowButton: Locator;
@@ -24,7 +26,8 @@ export class MobilePage {
     this.menuToggle = page.locator('#js-toggle-menu');
     this.menuPanel = page.locator('#level-one.show-level-one');
     this.menuPopularLinks = page.locator('#mobile-nav-popular-pages a');
-    this.menuLinks = page.locator('#level-one a[href^="/"]');
+    this.menuLinks = page.locator('#level-one.show-level-one a[href^="/"]');
+    this.menuSignInButton = this.menuPanel.getByRole('button', { name: /sign\s*in/i });
     this.logoHomeLink = globalNavLogoLink(page);
     this.registerNowButton = page.getByRole('button', { name: /register now/i }).first();
     this.visibleMainHeading = page.locator('h1:visible').first();
@@ -54,5 +57,11 @@ export class MobilePage {
   async closeMenu() {
     await this.menuToggle.click();
     await this.menuPanel.waitFor({ state: 'hidden', timeout: 8000 });
+  }
+
+  /** Opens the burger panel and taps the Sign In control. */
+  async openSignInFromMenu() {
+    await this.openMenu();
+    await this.menuSignInButton.tap();
   }
 }
