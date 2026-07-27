@@ -1,11 +1,13 @@
 import { test, expect } from '../../fixtures/test';
+import { dismissAgeGateForGeo } from '../../fixtures/ageGate';
+import { CLIP_HEIGHTS } from './clip-heights.generated';
 
 const BONUS_PATH = '/online-casinos/bonus';
 
-// Scoped to geos confirmed serving /online-casinos/bonus from CI runners.
-// CA EN hub removed (301 → toplist) — dropped from this list. See PR #42 for earlier exclusions.
+// Scoped to 10 geos confirmed serving /online-casinos/bonus from CI runners. 14 geos excluded: 11 return 404 sitewide, 3 are geo/bot-blocked from CI IPs. See PR #42.
 const GEOS = [
   { path: '/at', name: 'at' },
+  { path: '/ca', name: 'ca' },
   { path: '/gr', name: 'gr' },
   { path: '/ie', name: 'ie' },
   { path: '/in', name: 'in' },
@@ -34,15 +36,24 @@ for (const geo of GEOS) {
     const response = await page.goto(`${geo.path}${BONUS_PATH}`, { waitUntil: 'domcontentloaded' });
     expect(response?.ok()).toBeTruthy();
     await page.waitForLoadState('load');
+    // Deterministically dismiss the age gate on gated geos (nl here; es isn't in bonus's geo list)
+    // BEFORE capturing, so the "Hoe oud bent u?" modal can't overlay the operator list. Waits for
+    // the modal, accepts (webkit-hardened), waits for it gone. No-op on non-gated geos.
+    await dismissAgeGateForGeo(page, geo.name);
     await page.addStyleTag({
       content: '*, *::before, *::after { animation-duration: 0s !important; animation-delay: 0s !important; transition-duration: 0s !important; transition-delay: 0s !important; }',
     });
-    // Capture only the top 3 operators as a fixed-height region. The full list's height drifts as
-    // operators rotate within the ~25 min capture→verify cycle, so the screenshot's dimensions
-    // change and exceed maxDiffPixelRatio — a size change, not pixel content, so masking can't fix
-    // it. Hiding the 4th+ rows keeps the captured region a fixed size.
+    // Pin the operator list to a FIXED per-(geo,project) height (cropping overflow) so the
+    // captured ELEMENT has constant dimensions — the systemic ±1px sub-pixel height jitter can't
+    // change an explicitly-set box height, and Playwright hard-fails on any dimension diff.
+    // Screenshot the element (NOT page+clip): stabilization stays scoped to the list, which
+    // settles quickly; a page-level clip screenshot waits for the whole live page to stabilize,
+    // which it never does → 30s capture timeouts. The fixed height also crops the 4th+ cards,
+    // leaving exactly the top 3. maxDiffPixelRatio still covers legitimate content differences.
+    const bonusHeight = CLIP_HEIGHTS.bonus[`${geo.name}|${testInfo.project.name}`];
+    if (bonusHeight === undefined) throw new Error(`No clip height for bonus ${geo.name}|${testInfo.project.name} — re-run generate-clip-heights.mjs`);
     await page.addStyleTag({
-      content: 'div.cf-primary-operator-list ol > li:nth-child(n+4) { display: none !important; }',
+      content: `div.cf-primary-operator-list ol { height: ${bonusHeight}px !important; max-height: ${bonusHeight}px !important; overflow: hidden !important; }`,
     });
     await expect(page.locator('div.cf-primary-operator-list ol')).toHaveScreenshot(`bonus-${geo.name}.png`, {
       threshold: 0,
