@@ -1,23 +1,8 @@
 import { test, expect, type Locator } from '../fixtures/test';
 import { ProfilePage, PROFILE_URLS, PROFILE_TEST_DATA } from '../pages/ProfilePage';
-import { AuthPage, SIGN_IN_USER } from '../pages/AuthPage';
+import { AuthPage } from '../pages/AuthPage';
+import { signInAsTestUser, SIGN_IN_USER } from '../fixtures/auth';
 
-/** Sign in and confirm prod accepted credentials (then close `#signup-modal` if it stays open). */
-async function signInAsTestUser(authPage: AuthPage, password: string): Promise<void> {
-    await authPage.signIn(SIGN_IN_USER.email, password);
-    const authRejected = authPage.signupModal.getByText(
-        /incorrect password|wrong password|invalid credentials/i
-    );
-    await Promise.race([
-        authPage.profileAvatar.waitFor({ state: 'visible', timeout: 26000 }),
-        authRejected.waitFor({ state: 'visible', timeout: 26000 }).then(() => {
-            throw new Error(
-                'Sign-in failed (rejected password). Set E2E_TEST_PASSWORD to the current password for testpot209@gmail.com.'
-            );
-        }),
-    ]);
-    await authPage.dismissSignupModalIfOpen();
-}
 
 /**
  * Toggle an interest checkbox, save, and verify the value sticks for the current page view.

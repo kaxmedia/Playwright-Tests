@@ -30,7 +30,7 @@ test.describe('Homepage', () => {
   // Hotfixed by Carlos. This test catches future regressions of the same class.
   // Does NOT catch: brand names, new languages not in list, other pages.
   test('@smoke @regression No non-English content leaks on global homepage', async ({ page }) => {
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     const bodyText = await page.locator('body').innerText();
     const nonEnglishPhrases: string[] = [
       'Jetzt Spielen', 'Hier Spielen', 'Bonus holen', 'Mehr erfahren',

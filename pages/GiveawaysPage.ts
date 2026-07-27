@@ -15,6 +15,7 @@
 //   - When no competitions are live the page shows "Giveaways Coming Soon"
 
 import { type Page, type Locator, expect } from '@playwright/test';
+import { acceptCookiesIfShown } from '../fixtures/acceptCookies';
 
 const retryDelay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -86,7 +87,7 @@ export class GiveawaysPage {
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
         await this.page.goto(url, { waitUntil: 'domcontentloaded' });
-        await this.page.getByRole('button', { name: /accept all/i }).click({ timeout: 5000 }).catch(() => {});
+        await acceptCookiesIfShown(this.page);
 
         if (await this.firstCard.isVisible({ timeout: 20_000 }).catch(() => false)) {
           return true;
@@ -116,7 +117,7 @@ export class GiveawaysPage {
     await expect(this.entryCta).toBeVisible();
     await this.entryCta.click();
     await expect(this.page).toHaveURL(/\/giveaways\/.+/);
-    await this.page.getByRole('button', { name: /accept all/i }).click({ timeout: 5000 }).catch(() => {});
+    await acceptCookiesIfShown(this.page);
     await this.registrationSubmitBtn.scrollIntoViewIfNeeded();
   }
 

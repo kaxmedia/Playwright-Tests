@@ -1,4 +1,5 @@
 import { type Page, type Locator, type Response } from '@playwright/test';
+import { acceptCookiesIfShown } from '../fixtures/acceptCookies';
 
 /**
  * Verified IE organic entry URLs (live DOM, Jun 2026).
@@ -70,6 +71,6 @@ export class OrganicLandingPage {
   }
 
   async dismissCookies(): Promise<void> {
-    await this.page.getByRole('button', { name: /accept all/i }).click({ timeout: 5000 }).catch(() => {});
+    await acceptCookiesIfShown(this.page);
   }
 }

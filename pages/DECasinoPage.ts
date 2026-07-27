@@ -1,4 +1,5 @@
 import { Page, Locator } from '@playwright/test';
+import { acceptCookiesIfShown } from '../fixtures/acceptCookies';
 import { globalNavLogo } from './globalNavLogo';
 
 export const DE_CASINO = {
@@ -59,7 +60,7 @@ export class DECasinoPage {
     async goto(): Promise<void> {
         await this.page.goto(DE_CASINO.url);
         await this.page.waitForLoadState('domcontentloaded');
-        await this.page.getByRole('button', { name: /accept all/i }).click({ timeout: 5000 }).catch(() => {});
+        await acceptCookiesIfShown(this.page);
     }
 
     async getOperatorCount(): Promise<number> {
@@ -70,8 +71,8 @@ export class DECasinoPage {
         const link = this.anchorLinks.filter({ hasText: linkText }).first();
         await link.scrollIntoViewIfNeeded();
         await link.click();
-        await this.page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
-        await this.page.waitForTimeout(1000);
+        await this.operatorRows.first().waitFor({ state: 'visible', timeout: 15000 });
+        await this.page.waitForTimeout(500);
     }
 
     async openFaqItem(index: number): Promise<string> {

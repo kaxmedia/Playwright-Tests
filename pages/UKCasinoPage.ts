@@ -1,4 +1,5 @@
 import { Page, Locator, expect } from '@playwright/test';
+import { acceptCookiesIfShown } from '../fixtures/acceptCookies';
 import { globalNavLogo } from './globalNavLogo';
 
 export const UK_CASINO = {
@@ -106,7 +107,7 @@ export class UKCasinoPage {
     async goto(): Promise<void> {
         await this.page.goto(UK_CASINO.url);
         await this.page.waitForLoadState('domcontentloaded');
-        await this.page.getByRole('button', { name: /accept all/i }).click({ timeout: 5000 }).catch(() => {});
+        await acceptCookiesIfShown(this.page);
     }
 
     /** Returns the count of visible operator rows */
@@ -119,11 +120,8 @@ export class UKCasinoPage {
         const link = this.anchorLinks.filter({ hasText: linkText }).first();
         await link.scrollIntoViewIfNeeded();
         await link.click();
-        // Anchor clicks can be slow — wait for network to settle
-        await this.page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {
-            // networkidle can timeout on heavy pages — fall back to domcontentloaded
-        });
-        await this.page.waitForTimeout(1000);
+        await this.operatorRows.first().waitFor({ state: 'visible', timeout: 15000 });
+        await this.page.waitForTimeout(500);
     }
 
     /** Ticks the compare checkbox on the nth operator row (0-indexed) */

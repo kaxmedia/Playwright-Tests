@@ -1,5 +1,6 @@
 import { type Locator, type Page } from '@playwright/test';
 import { registerRegionPromptHandler } from '../fixtures/regionPrompt';
+import { acceptCookiesIfShown as dismissCookies } from '../fixtures/acceptCookies';
 import { globalNavLogoLink } from './globalNavLogo';
 
 /**
@@ -17,7 +18,7 @@ export class MobilePage {
   /** Logged-out burger CTA — `onclick="handleSignIn()"` (“Already have an account? Sign In”). */
   readonly menuSignInButton: Locator;
   readonly logoHomeLink: Locator;
-  /** Mobile promo banner — desktop nav Sign Up / #login-button are hidden on small viewports. */
+  /** Mobile promo banner — desktop header Sign Up is often hidden on small viewports. */
   readonly registerNowButton: Locator;
   readonly visibleMainHeading: Locator;
 
@@ -38,15 +39,8 @@ export class MobilePage {
     await this.page.goto(path, { waitUntil: 'domcontentloaded' });
   }
 
-  /** CookieYes banner — same selectors as fixtures/cookieBanner.ts */
   async acceptCookiesIfShown() {
-    const accept = this.page.getByRole('button', { name: /accept all/i });
-    try {
-      await accept.click({ timeout: 5000 });
-      await this.page.locator('.cky-consent-container').waitFor({ state: 'hidden', timeout: 8000 });
-    } catch {
-      // Banner absent or already dismissed
-    }
+    await dismissCookies(this.page);
   }
 
   async openMenu() {

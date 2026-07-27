@@ -12,6 +12,7 @@
 // reviews widget, and JSON-LD structured data helpers.
 
 import { type Page, type Locator, type Response } from '@playwright/test';
+import { acceptCookiesIfShown } from '../fixtures/acceptCookies';
 
 export class ReviewPage {
 
@@ -135,7 +136,7 @@ export class ReviewPage {
   // Used for non-IE geos or betting review pages (e.g. /uk/betting-sites/bet365).
   async gotoUrl(url: string): Promise<Response | null> {
     const response = await this.page.goto(url, { waitUntil: 'domcontentloaded' });
-    await this.page.getByRole('button', { name: /accept all/i }).click({ timeout: 5000 }).catch(() => {});
+    await acceptCookiesIfShown(this.page);
     return response;
   }
 

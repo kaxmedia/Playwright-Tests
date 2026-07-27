@@ -1,4 +1,5 @@
 import { type Locator, type Page } from '@playwright/test';
+import { acceptCookiesIfShown } from '../fixtures/acceptCookies';
 import { acceptRegionPromptIfVisible } from '../fixtures/regionPrompt';
 
 export const SIGN_IN_USER = {
@@ -90,11 +91,8 @@ export class AuthPage {
         this.page = page;
 
         this.headerSignUpBtn = page.locator('#gdc-signup-text');
-        // Top-nav Sign In. The old `#login-button` id was dropped in a nav redesign (confirmed
-        // live — fails outside CI too, genuine selector drift, not a personalization/geo issue).
-        // Scope to the top `nav` so we don't match the auth modal's "Already have an account?
-        // Sign In", and match by role + text so it survives future id/class churn (it's a
-        // <button> today; link kept as a resilient fallback).
+        // Top-nav Sign In (scoped to `nav` so we don't match in-modal “Sign In”).
+        // Role+text match — desktop may hide this; mobile uses the burger CTA instead.
         this.headerSignInBtn = page.locator('nav').first().getByRole('button', { name: /sign\s*in/i })
             .or(page.locator('nav').first().getByRole('link', { name: /sign\s*in/i }));
         /** Post–sign-in initials chip in the global nav (prod: `#logged-in-user-icon`). */
@@ -181,10 +179,10 @@ export class AuthPage {
 
     async goto(): Promise<void> {
         await this.page.goto('/');
-        await this.page.getByRole('button', { name: /accept all/i }).click({ timeout: 3000 }).catch(() => { });
+        await acceptCookiesIfShown(this.page, 3000);
     }
 
-    /** Opens Sign In — header `#login-button` is often hidden; fall back to Sign In inside the auth modal. */
+    /** Opens Sign In — prefer header CTA when visible, else Sign Up → in-modal Sign In. */
     async openSignInFromHeader(): Promise<void> {
         await acceptRegionPromptIfVisible(this.page);
 

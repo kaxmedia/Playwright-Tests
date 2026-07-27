@@ -29,19 +29,18 @@
 
 import { test, expect } from '../../fixtures/test';
 import { SearchPage } from '../../pages/SearchPage';
-
-const BASE = 'https://www.gambling.com';
+import { GDC_ORIGIN, IE_URLS, gotoOk, resolveGdcHref, assertMainGoCtaPresent } from '../helpers/journeys';
 
 const URLS = {
-    strategyHub: `${BASE}/ie/online-casinos/strategy`,
-    gameRules: `${BASE}/ie/online-casinos/blackjack`,
-    homepage: `${BASE}/ie`,
+    strategyHub: IE_URLS.strategyHub,
+    gameRules: `${GDC_ORIGIN}/ie/online-casinos/blackjack`,
+    homepage: IE_URLS.homepage,
     /** Global homepage — header search panel opens here (not on /ie nav). */
-    globalHomepage: `${BASE}/`,
+    globalHomepage: `${GDC_ORIGIN}/`,
     /** Global author hub — /ie/authors redirects here. */
-    authorsHub: `${BASE}/authors`,
+    authorsHub: `${GDC_ORIGIN}/authors`,
     /** Representative author page — confirmed 200 on live site. */
-    authorPage: `${BASE}/authors/larry-henry`,
+    authorPage: `${GDC_ORIGIN}/authors/larry-henry`,
 } as const;
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -51,8 +50,7 @@ const URLS = {
 
 test.describe('Journey 9.1 — How-to guide (strategy hub)', () => {
     test.beforeEach(async ({ page }) => {
-        const response = await page.goto(URLS.strategyHub);
-        expect(response?.status(), 'Strategy hub should return HTTP 200').toBeLessThan(400);
+        await gotoOk(page, URLS.strategyHub, 'Strategy hub');
     });
 
     test('@regression strategy hub loads with correct H1 @journey', async ({ page }) => {
@@ -81,11 +79,11 @@ test.describe('Journey 9.1 — How-to guide (strategy hub)', () => {
         const firstGuide = page.locator('a[href*="/ie/online-casinos/strategy/"]').first();
         await expect(firstGuide).toBeAttached();
         const href = await firstGuide.getAttribute('href');
-        const fullUrl = href?.startsWith('http') ? href : `${BASE}${href}`;
+        const fullUrl = resolveGdcHref(href ?? '');
         await page.goto(fullUrl);
         await expect(page).toHaveURL(/\/ie\/online-casinos\/strategy\//);
         await expect(page.locator('main h1').first()).toBeVisible();
-        await expect(page.locator('a[href*="/go/"]').first()).toBeAttached();
+        await assertMainGoCtaPresent(page);
     });
 });
 
@@ -96,8 +94,7 @@ test.describe('Journey 9.1 — How-to guide (strategy hub)', () => {
 
 test.describe('Journey 9.2 — Game rules (blackjack rules page)', () => {
     test.beforeEach(async ({ page }) => {
-        const response = await page.goto(URLS.gameRules);
-        expect(response?.status(), 'Game rules page should return HTTP 200').toBeLessThan(400);
+        await gotoOk(page, URLS.gameRules, 'Game rules page');
     });
 
     test('@regression game rules page loads with correct H1 @journey', async ({ page }) => {
@@ -107,7 +104,7 @@ test.describe('Journey 9.2 — Game rules (blackjack rules page)', () => {
     });
 
     test('@regression game rules page exposes operator CTAs @journey', async ({ page }) => {
-        await expect(page.locator('a[href*="/go/"]').first()).toBeAttached();
+        await assertMainGoCtaPresent(page);
     });
 
     test('@regression game rules page links to casino toplist or strategy guide @journey', async ({ page }) => {
@@ -134,8 +131,7 @@ test.describe('Journey 9.2 — Game rules (blackjack rules page)', () => {
 
 test.describe('Journey 9.3 — Site search', () => {
     test.beforeEach(async ({ page }) => {
-        const response = await page.goto(URLS.homepage);
-        expect(response?.status(), 'Homepage should return HTTP 200').toBeLessThan(400);
+        await gotoOk(page, URLS.homepage, 'Homepage');
     });
 
     test('@regression search input is present on the homepage @journey', async ({ page }) => {
@@ -155,7 +151,7 @@ test.describe('Journey 9.3 — Site search', () => {
 
     test('@regression search results page loads for a known query @journey', async ({ page }) => {
         // Direct /?s= navigation — leaves beforeEach IE URL intentionally.
-        await page.goto(`${BASE}/?s=blackjack`);
+        await gotoOk(page, `${GDC_ORIGIN}/?s=blackjack`, 'Search results page');
         await expect(page).toHaveURL(/[?&]s=blackjack/);
         await expect(page.locator('main.body_content h1').first()).toBeVisible();
     });
@@ -170,8 +166,7 @@ test.describe('Journey 9.3 — Site search', () => {
 
 test.describe('Journey 9.4 — Author / expert page', () => {
     test.beforeEach(async ({ page }) => {
-        const response = await page.goto(URLS.authorsHub);
-        expect(response?.status(), 'Authors hub should return HTTP 200').toBeLessThan(400);
+        await gotoOk(page, URLS.authorsHub, 'Authors hub');
     });
 
     test('@regression authors hub loads with H1 and author links @journey', async ({ page }) => {
@@ -184,26 +179,26 @@ test.describe('Journey 9.4 — Author / expert page', () => {
     });
 
     test('@regression individual author page loads with H1 @journey', async ({ page }) => {
-        await page.goto(URLS.authorPage);
+        await gotoOk(page, URLS.authorPage, 'Author page');
         await expect(page).toHaveURL(/\/authors\/larry-henry/);
         await expect(page.locator('h1').first()).toBeVisible();
         await expect(page.locator('h1').first()).toContainText(/larry/i);
     });
 
     test('@regression author page exposes their published articles or reviews @journey', async ({ page }) => {
-        await page.goto(URLS.authorPage);
+        await gotoOk(page, URLS.authorPage, 'Author page');
         const authorContent = page.locator('a[href*="/news/"], a[href*="/online-casinos/"]').first();
         await expect(authorContent).toBeAttached();
     });
 
     test('@regression author article exposes operator CTAs via linked content @journey', async ({ page }) => {
-        await page.goto(URLS.authorPage);
+        await gotoOk(page, URLS.authorPage, 'Author page');
         // Geo-agnostic — Larry Henry's articles are /us/news/…; any news article
         // in the author body has in-content affiliate links once opened.
         const articleLink = page.locator('main.body_content a[href*="/news/"]').first();
         await expect(articleLink).toBeAttached();
         const href = await articleLink.getAttribute('href');
-        const fullUrl = href?.startsWith('http') ? href : `${BASE}${href}`;
+        const fullUrl = resolveGdcHref(href ?? '');
         await page.goto(fullUrl);
         await expect(page.locator('main h1').first()).toBeVisible();
         await expect(page.locator('main a[href*="/go/"]').first()).toBeAttached();

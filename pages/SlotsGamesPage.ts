@@ -1,5 +1,6 @@
 import { Page, Locator, expect } from '@playwright/test';
 import { globalNavLogo } from './globalNavLogo';
+import { acceptCookiesIfShown } from '../fixtures/acceptCookies';
 
 export const SLOTS_PAGE = {
     url: 'https://www.gambling.com/uk/online-casinos/slots/games',
@@ -150,7 +151,7 @@ export class SlotsGamesPage {
     async goto(): Promise<void> {
         await this.page.goto(SLOTS_PAGE.url);
         await this.page.waitForLoadState('domcontentloaded');
-        await this.page.getByRole('button', { name: /accept all/i }).click({ timeout: 5000 }).catch(() => {});
+        await acceptCookiesIfShown(this.page);
         await this.page.getByRole('button', { name: /no,? thanks/i }).click({ timeout: 4000 }).catch(() => {});
     }
 

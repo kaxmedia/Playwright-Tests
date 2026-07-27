@@ -28,15 +28,14 @@
 
 import { test, expect } from '../../fixtures/test';
 import { ComparisonPage } from '../../pages/ComparisonPage';
-
-const BASE = 'https://www.gambling.com';
+import { GDC_ORIGIN, gotoOk } from '../helpers/journeys';
 
 const URLS = {
-    poker: `${BASE}/ie/poker-sites`,
-    bingo: `${BASE}/ie/bingo-sites`,
-    lottery: `${BASE}/ie/lottery`,
+    poker: `${GDC_ORIGIN}/ie/poker-sites`,
+    bingo: `${GDC_ORIGIN}/ie/bingo-sites`,
+    lottery: `${GDC_ORIGIN}/ie/lottery`,
     /** Legacy path — redirects to /ie/online-casinos/slots/games (slots hub). */
-    casinoGames: `${BASE}/ie/casino-games`,
+    casinoGames: `${GDC_ORIGIN}/ie/casino-games`,
 } as const;
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -49,8 +48,7 @@ test.describe('Journey 6.1 — Poker toplist', () => {
 
     test.beforeEach(async ({ page }) => {
         comparison = new ComparisonPage(page);
-        const response = await comparison.goto(URLS.poker);
-        expect(response?.status(), 'Poker sites page should return HTTP 200').toBeLessThan(400);
+        await gotoOk(page, URLS.poker, 'Poker sites page');
     });
 
     test('@regression poker toplist loads with correct H1 @journey', async ({ page }) => {
@@ -92,8 +90,7 @@ test.describe('Journey 6.2 — Bingo toplist', () => {
 
     test.beforeEach(async ({ page }) => {
         comparison = new ComparisonPage(page);
-        const response = await comparison.goto(URLS.bingo);
-        expect(response?.status(), 'Bingo sites page should return HTTP 200').toBeLessThan(400);
+        await gotoOk(page, URLS.bingo, 'Bingo sites page');
     });
 
     test('@regression bingo toplist loads with correct H1 @journey', async ({ page }) => {
@@ -128,8 +125,7 @@ test.describe('Journey 6.3 — Lottery toplist', () => {
 
     test.beforeEach(async ({ page }) => {
         comparison = new ComparisonPage(page);
-        const response = await comparison.goto(URLS.lottery);
-        expect(response?.status(), 'Lottery page should return HTTP 200').toBeLessThan(400);
+        await gotoOk(page, URLS.lottery, 'Lottery page');
     });
 
     test('@regression lottery page loads with correct H1 @journey', async ({ page }) => {
@@ -165,8 +161,7 @@ test.describe('Journey 6.3 — Lottery toplist', () => {
 
 test.describe('Journey 6.4 — Sweepstakes / social casino (slots/games hub)', () => {
     test.beforeEach(async ({ page }) => {
-        const response = await page.goto(URLS.casinoGames, { waitUntil: 'domcontentloaded' });
-        expect(response?.status(), 'Casino games entry should return HTTP 200').toBeLessThan(400);
+        await gotoOk(page, URLS.casinoGames, 'Casino games entry');
         // Explicit dismiss: 6.4 uses raw page.goto (not ComparisonPage.goto) and the
         // /casino-games → /slots/games redirect can surface the cookie banner here.
         await page.getByRole('button', { name: /accept all/i }).click({ timeout: 5000 }).catch(() => {});

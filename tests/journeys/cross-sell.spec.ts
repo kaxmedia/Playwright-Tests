@@ -24,24 +24,23 @@ import { test, expect, type Page } from '../../fixtures/test';
 import { ComparisonPage } from '../../pages/ComparisonPage';
 import { ReviewPage } from '../../pages/ReviewPage';
 import { TournamentsPage } from '../../pages/TournamentsPage';
-
-const BASE = 'https://www.gambling.com';
+import { GDC_ORIGIN, IE_URLS, gotoOk, assertMainGoCtaPresent } from '../helpers/journeys';
 
 // ─── Shared URL constants ────────────────────────────────────────────────────
 
 const URLS = {
-    casinoToplist: `${BASE}/ie/online-casinos`,
-    cosmoSpins: `${BASE}/ie/games/cosmo-spins`,
-    bettingToplist: `${BASE}/ie/betting-sites`,
-    casinoBonus: `${BASE}/ie/online-casinos/bonus`,
-    casinoReview: `${BASE}/ie/online-casinos/kingmaker`,
-    slotPage: `${BASE}/ie/online-casinos/slots/starburst`,
-    newsPage: `${BASE}/ie/news`,
+    casinoToplist: IE_URLS.casinoToplist,
+    cosmoSpins: `${GDC_ORIGIN}/ie/games/cosmo-spins`,
+    bettingToplist: IE_URLS.bettingToplist,
+    casinoBonus: IE_URLS.bonusHub,
+    casinoReview: IE_URLS.casinoReview,
+    slotPage: IE_URLS.slotPage,
+    newsPage: IE_URLS.news,
     /** Long-form article with in-content toplist links (short news briefs may lack them). */
     newsArticleSlug: 'why-3et-bookmaker-is-sharp-for-football-betting',
-    newsArticle: `${BASE}/ie/news/why-3et-bookmaker-is-sharp-for-football-betting`,
-    tournaments: `${BASE}/ie/games/tournaments`,
-    homepage: `${BASE}/ie`,
+    newsArticle: `${GDC_ORIGIN}/ie/news/why-3et-bookmaker-is-sharp-for-football-betting`,
+    tournaments: IE_URLS.tournaments,
+    homepage: IE_URLS.homepage,
 } as const;
 
 // ─── Homepage vertical widget locators ───────────────────────────────────────
@@ -63,8 +62,7 @@ function homepageBettingCta(page: Page) {
 
 test.describe('Journey 2.1 — Casino toplist → Cosmo Spins free games', () => {
     test.beforeEach(async ({ page }) => {
-        const response = await page.goto(URLS.casinoToplist);
-        expect(response?.status(), 'Casino toplist should return HTTP 200').toBeLessThan(400);
+        await gotoOk(page, URLS.casinoToplist, 'Casino toplist');
     });
 
     test('@regression Cosmo Spins cross-sell link is present on casino toplist @journey', async ({ page }) => {
@@ -74,7 +72,7 @@ test.describe('Journey 2.1 — Casino toplist → Cosmo Spins free games', () =>
     });
 
     test('@regression navigating to Cosmo Spins lands on the free game hub @journey', async ({ page }) => {
-        await page.goto(URLS.cosmoSpins);
+        await gotoOk(page, URLS.cosmoSpins);
         await expect(page).toHaveURL(/\/games\/cosmo-spins/);
         await expect(page.locator('h1').first()).toBeVisible();
         await expect(page.locator('h1').first()).toContainText(/cosmo spins/i);
@@ -88,8 +86,7 @@ test.describe('Journey 2.1 — Casino toplist → Cosmo Spins free games', () =>
 
 test.describe('Journey 2.2 — Cosmo Spins → casino toplist (real money path)', () => {
     test.beforeEach(async ({ page }) => {
-        const response = await page.goto(URLS.cosmoSpins);
-        expect(response?.status(), 'Cosmo Spins should return HTTP 200').toBeLessThan(400);
+        await gotoOk(page, URLS.cosmoSpins, 'Cosmo Spins');
     });
 
     test('@regression Cosmo Spins page loads with correct H1 @journey', async ({ page }) => {
@@ -106,10 +103,10 @@ test.describe('Journey 2.2 — Cosmo Spins → casino toplist (real money path)'
         const casinoLink = page.locator('a[href="/ie/online-casinos"]').first();
         await expect(casinoLink).toBeAttached();
         // Nav mega-menu link is CSS-hidden until hover — follow the verified href to complete the journey
-        await page.goto(URLS.casinoToplist);
+        await gotoOk(page, URLS.casinoToplist);
         await expect(page).toHaveURL(/\/ie\/online-casinos\/?$/);
         await expect(page.locator('h1').first()).toBeVisible();
-        await expect(page.locator('a[href*="/go/"]').first()).toBeAttached();
+        await assertMainGoCtaPresent(page);
     });
 });
 
@@ -136,7 +133,7 @@ test.describe('Journey 2.3 — Operator review → casino toplist', () => {
 
     test('@regression navigating back to toplist from review exposes operator cards @journey', async ({ page }) => {
         const comparison = new ComparisonPage(page);
-        await page.goto(URLS.casinoToplist);
+        await gotoOk(page, URLS.casinoToplist);
         await expect(page).toHaveURL(/\/ie\/online-casinos\/?$/);
         await expect(comparison.cards.first()).toBeVisible({ timeout: 20_000 });
         await expect(comparison.ctaLink(comparison.nthCard(0))).toHaveAttribute('href', /\/go\//);
@@ -150,8 +147,7 @@ test.describe('Journey 2.3 — Operator review → casino toplist', () => {
 
 test.describe('Journey 2.4 — Casino toplist → bonus page', () => {
     test.beforeEach(async ({ page }) => {
-        const response = await page.goto(URLS.casinoToplist);
-        expect(response?.status()).toBeLessThan(400);
+        await gotoOk(page, URLS.casinoToplist);
     });
 
     test('@regression bonus hub link is present on casino toplist @journey', async ({ page }) => {
@@ -160,10 +156,10 @@ test.describe('Journey 2.4 — Casino toplist → bonus page', () => {
     });
 
     test('@regression navigating to bonus hub exposes claim CTAs @journey', async ({ page }) => {
-        await page.goto(URLS.casinoBonus);
+        await gotoOk(page, URLS.casinoBonus);
         await expect(page).toHaveURL(/\/online-casinos\/bonus/);
         await expect(page.locator('h1').first()).toBeVisible();
-        await expect(page.locator('a[href*="/go/"]').first()).toBeAttached();
+        await assertMainGoCtaPresent(page);
     });
 });
 
@@ -174,8 +170,7 @@ test.describe('Journey 2.4 — Casino toplist → bonus page', () => {
 
 test.describe('Journey 2.5 — Casino toplist → betting toplist via top nav', () => {
     test.beforeEach(async ({ page }) => {
-        const response = await page.goto(URLS.casinoToplist);
-        expect(response?.status()).toBeLessThan(400);
+        await gotoOk(page, URLS.casinoToplist);
     });
 
     test('@regression betting sites nav link is present on casino toplist @journey', async ({ page }) => {
@@ -184,7 +179,7 @@ test.describe('Journey 2.5 — Casino toplist → betting toplist via top nav', 
     });
 
     test('@regression navigating to betting toplist loads bookmaker cards @journey', async ({ page }) => {
-        await page.goto(URLS.bettingToplist);
+        await gotoOk(page, URLS.bettingToplist);
         await expect(page).toHaveURL(/\/ie\/betting-sites\/?$/);
         await expect(page.locator('h1').first()).toBeVisible();
         const bettingCta = page.locator('main a[href*="/go/"][href*="/betting/"]').first();
@@ -218,7 +213,7 @@ test.describe('Journey 2.6 — Predictor / Tournaments → betting toplist', () 
     });
 
     test('@regression betting toplist reached from tournaments loads bookmaker CTAs @journey', async ({ page }) => {
-        await page.goto(URLS.bettingToplist);
+        await gotoOk(page, URLS.bettingToplist);
         await expect(page).toHaveURL(/\/ie\/betting-sites\/?$/);
         await expect(page.locator('h1').first()).toBeVisible();
         await expect(page.locator('main a[href*="/go/"][href*="/betting/"]').first()).toBeAttached();
@@ -235,8 +230,7 @@ test.describe('Journey 2.6 — Predictor / Tournaments → betting toplist', () 
 
 test.describe('Journey 2.7 — News hub', () => {
     test.beforeEach(async ({ page }) => {
-        const response = await page.goto(URLS.newsPage);
-        expect(response?.status()).toBeLessThan(400);
+        await gotoOk(page, URLS.newsPage);
     });
 
     test('@regression news hub loads with article links @journey', async ({ page }) => {
@@ -249,8 +243,7 @@ test.describe('Journey 2.7 — News hub', () => {
 
 test.describe('Journey 2.7 — News article → toplist via in-content link', () => {
     test('@regression a long-form article contains in-content toplist links @journey', async ({ page }) => {
-        const response = await page.goto(URLS.newsArticle);
-        expect(response?.status()).toBeLessThan(400);
+        await gotoOk(page, URLS.newsArticle);
         await expect(page).toHaveURL(new RegExp(URLS.newsArticleSlug));
         await expect(page.locator('main h1').first()).toBeVisible();
         const toplistLink = page.locator(
@@ -268,8 +261,7 @@ test.describe('Journey 2.7 — News article → toplist via in-content link', ()
 
 test.describe('Journey 2.8 — Slot page → casino toplist', () => {
     test.beforeEach(async ({ page }) => {
-        const response = await page.goto(URLS.slotPage);
-        expect(response?.status(), 'Slot page should return HTTP 200').toBeLessThan(400);
+        await gotoOk(page, URLS.slotPage, 'Slot page');
     });
 
     test('@regression slot page loads with H1 and casino toplist breadcrumb @journey', async ({ page }) => {
@@ -280,12 +272,12 @@ test.describe('Journey 2.8 — Slot page → casino toplist', () => {
     });
 
     test('@regression slot page exposes operator affiliate CTAs @journey', async ({ page }) => {
-        await expect(page.locator('a[href*="/go/"]').first()).toBeAttached();
+        await assertMainGoCtaPresent(page);
     });
 
     test('@regression navigating from slot breadcrumb reaches casino toplist @journey', async ({ page }) => {
         const comparison = new ComparisonPage(page);
-        await page.goto(URLS.casinoToplist);
+        await gotoOk(page, URLS.casinoToplist);
         await expect(page).toHaveURL(/\/ie\/online-casinos\/?$/);
         await expect(comparison.cards.first()).toBeVisible({ timeout: 20_000 });
         await expect(comparison.ctaLink(comparison.nthCard(0))).toHaveAttribute('href', /\/go\//);
@@ -328,8 +320,7 @@ test.describe('Journey 2.9 — Profile / rewards → predictor leaderboard', () 
 
 test.describe('Journey 2.10 — Homepage → vertical toplist via tab navigation', () => {
     test.beforeEach(async ({ page }) => {
-        const response = await page.goto(URLS.homepage);
-        expect(response?.status(), 'Homepage should return HTTP 200').toBeLessThan(400);
+        await gotoOk(page, URLS.homepage, 'Homepage');
     });
 
     test('@regression homepage loads with vertical selector tabs @journey', async ({ page }) => {
@@ -355,14 +346,14 @@ test.describe('Journey 2.10 — Homepage → vertical toplist via tab navigation
     });
 
     test('@regression casino toplist is reachable from homepage vertical nav @journey', async ({ page }) => {
-        await page.goto(URLS.casinoToplist);
+        await gotoOk(page, URLS.casinoToplist);
         await expect(page).toHaveURL(/\/ie\/online-casinos\/?$/);
         await expect(page.locator('h1').first()).toBeVisible();
-        await expect(page.locator('a[href*="/go/"]').first()).toBeAttached();
+        await assertMainGoCtaPresent(page);
     });
 
     test('@regression betting toplist is reachable from homepage vertical nav @journey', async ({ page }) => {
-        await page.goto(URLS.bettingToplist);
+        await gotoOk(page, URLS.bettingToplist);
         await expect(page).toHaveURL(/\/ie\/betting-sites\/?$/);
         await expect(page.locator('h1').first()).toBeVisible();
         await expect(page.locator('main a[href*="/go/"][href*="/betting/"]').first()).toBeAttached();
