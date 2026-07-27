@@ -61,6 +61,30 @@ test.describe('Mobile Navigation', () => {
     expect(await mobile.menuPopularLinks.count()).toBeGreaterThanOrEqual(2);
     expect(await mobile.menuLinks.count()).toBeGreaterThanOrEqual(3);
   });
+
+  test('@regression @mobile burger menu Sign In opens the sign-in flow', async ({ page }) => {
+    const mobile = new MobilePage(page);
+    const auth = new AuthPage(page);
+    await mobile.goto('/');
+    await mobile.acceptCookiesIfShown();
+
+    await mobile.openMenu();
+    await expect(mobile.menuSignInButton).toBeVisible();
+    await mobile.menuSignInButton.tap();
+
+    // handleSignIn() clicks #user-login-wrap — opens the shared Welcome Rewards shell
+    // (often still on “Create an account”). Switch to Sign In when that step is shown.
+    await expect(auth.signupModal).toBeVisible({ timeout: 10000 });
+    if (await auth.modal.getByText(/create an account/i).isVisible().catch(() => false)) {
+      await auth.signInLink.click();
+    }
+
+    await expect(auth.modal.getByText(/sign in to your account/i)).toBeVisible({ timeout: 10000 });
+    await expect(auth.continueWithEmailBtn).toBeVisible();
+    await auth.continueWithEmailBtn.click();
+    await expect(auth.signInEmailInput).toBeVisible({ timeout: 10000 });
+    await expect(auth.signInPasswordInput).toBeVisible();
+  });
 });
 
 // ── Responsive layout ──────────────────────────────────────────────────────────
