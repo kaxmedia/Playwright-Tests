@@ -65,12 +65,14 @@ for (const config of comparisonPages) {
       test.skip(config.name === 'US Casino', 'US Casino: iterates the first 5 operator cards, but the CI runner IP is geo-classified into a reduced operator-list region that server-renders only 2–3 cards (op_list_region_* cookies) — same CI/IP-geo root cause as the T3 card-count skip in this file and PR #109/#111, unrelated to VWO. BACKLOG (design-level, not just unblock-CI): make this geo-aware rather than a permanent skip. Re-enable once the test is made geo-aware or CI geo exclusion is sorted with the site team.');
       const cp = new ComparisonPage(page);
       await cp.goto(config.url);
-      for (let i = 0; i < 5; i++) {
-        const card = cp.nthCard(i);
-        await expect(cp.logoImg(card)).toBeVisible();
-        expect(await cp.ctaLink(card).getAttribute('href')).toMatch(/\/go\//);
-        expect(await cp.operatorName(card)).toBeTruthy();
-      }
+      await Promise.all(
+        Array.from({ length: 5 }, async (_, i) => {
+          const card = cp.nthCard(i);
+          await expect(cp.logoImg(card)).toBeVisible();
+          expect(await cp.ctaLink(card).getAttribute('href')).toMatch(/\/go\//);
+          expect(await cp.operatorName(card)).toBeTruthy();
+        }),
+      );
     });
 
     // T5 ─ @smoke ─────────────────────────────────────────────────────────────
@@ -78,8 +80,10 @@ for (const config of comparisonPages) {
       const cp = new ComparisonPage(page);
       await cp.goto(config.url);
       const count = await cp.cards.count();
-      for (let i = 0; i < count; i++) {
-        const href = await cp.ctaLink(cp.nthCard(i)).getAttribute('href');
+      const hrefs = await Promise.all(
+        Array.from({ length: count }, (_, i) => cp.ctaLink(cp.nthCard(i)).getAttribute('href')),
+      );
+      for (const href of hrefs) {
         expect(href).toMatch(/^\/go\//);
       }
     });
@@ -89,12 +93,14 @@ for (const config of comparisonPages) {
       const cp = new ComparisonPage(page);
       await cp.goto(config.url);
       const limit = Math.min(10, await cp.cards.count());
-      for (let i = 0; i < limit; i++) {
-        const card = cp.nthCard(i);
-        expect(await cp.productType(card)).toBeTruthy();
-        expect(await cp.position(card)).toBeTruthy();
-        expect(await cp.offerText(card)).toBeTruthy();
-      }
+      await Promise.all(
+        Array.from({ length: limit }, async (_, i) => {
+          const card = cp.nthCard(i);
+          expect(await cp.productType(card)).toBeTruthy();
+          expect(await cp.position(card)).toBeTruthy();
+          expect(await cp.offerText(card)).toBeTruthy();
+        }),
+      );
     });
 
     // T7 ─ @regression ────────────────────────────────────────────────────────

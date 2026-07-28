@@ -157,6 +157,8 @@ export const comparisonPages: ComparisonPageConfig[] = [
     hasBadge: false,
     ageLimit: '18+',
     hasLazyRating: true,
+    // IE sports oplist has no a.operator-review-link on cards (verified May 2026).
+    hasReviewLink: false,
   },
   // ── DE ──────────────────────────────────────────────────────────────────────
   {
@@ -307,6 +309,8 @@ export const comparisonPages: ComparisonPageConfig[] = [
     hasRating: false,
     hasBadge: false,
     ageLimit: '18+',
+    // NZ sports oplist has no a.operator-review-link on cards (verified May 2026).
+    hasReviewLink: false,
   },
   // ── MX ──────────────────────────────────────────────────────────────────────
   // No regulator badge. Casino details panel present but exposes RTP stats,

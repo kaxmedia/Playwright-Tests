@@ -24,27 +24,22 @@
 import { test, expect } from '../../fixtures/test';
 import { ComparisonPage } from '../../pages/ComparisonPage';
 import { ReviewPage } from '../../pages/ReviewPage';
-
-const BASE = 'https://www.gambling.com';
-
-function resolveHref(href: string): string {
-    return /^https?:\/\//i.test(href) ? href : `${BASE}${href}`;
-}
+import { IE_URLS, gotoOk, resolveGdcHref, assertMainGoCtaPresent } from '../helpers/journeys';
 
 // ─── URL constants ────────────────────────────────────────────────────────────
 
 const URLS = {
-    casinoToplist: `${BASE}/ie/online-casinos`,
-    newCasinos: `${BASE}/ie/online-casinos/new`,
-    slotsCasinos: `${BASE}/ie/online-casinos/slots`,
-    liveCasinos: `${BASE}/ie/online-casinos/live`, // redirects to main toplist
-    mobileCasinos: `${BASE}/ie/online-casinos/apps`, // /mobile redirects here
-    cryptoCasinos: `${BASE}/ie/online-casinos/bitcoin`, // redirects to main toplist
-    paymentCasinos: `${BASE}/ie/online-casinos/paypal`,
-    howWeReview: `${BASE}/ie/reviews/casino`,
-    casinoReview: `${BASE}/ie/online-casinos/kingmaker`,
-    slotPage: `${BASE}/ie/online-casinos/slots/starburst`,
-    strategyHub: `${BASE}/ie/online-casinos/strategy`,
+    casinoToplist: IE_URLS.casinoToplist,
+    newCasinos: IE_URLS.newCasinos,
+    slotsCasinos: IE_URLS.slotsCasinos,
+    liveCasinos: IE_URLS.liveCasinos, // redirects to main toplist
+    mobileCasinos: IE_URLS.mobileCasinos, // /mobile redirects here
+    cryptoCasinos: IE_URLS.cryptoCasinos, // redirects to main toplist
+    paymentCasinos: IE_URLS.paymentCasinos,
+    howWeReview: IE_URLS.howWeReview,
+    casinoReview: IE_URLS.casinoReview,
+    slotPage: IE_URLS.slotPage,
+    strategyHub: IE_URLS.strategyHub,
 } as const;
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -57,8 +52,7 @@ test.describe('Journey 3.1 — Casino research via toplist', () => {
 
     test.beforeEach(async ({ page }) => {
         comparison = new ComparisonPage(page);
-        const response = await comparison.goto(URLS.casinoToplist);
-        expect(response?.status(), 'Casino toplist should return HTTP 200').toBeLessThan(400);
+        await gotoOk(page, URLS.casinoToplist, 'Casino toplist');
     });
 
     test('@regression toplist loads with H1 and multiple operator cards @journey', async ({ page }) => {
@@ -85,8 +79,7 @@ test.describe('Journey 3.1 — Casino research via toplist', () => {
 
 test.describe('Journey 3.2 — New casinos page', () => {
     test.beforeEach(async ({ page }) => {
-        const response = await page.goto(URLS.newCasinos);
-        expect(response?.status(), 'New casinos page should return HTTP 200').toBeLessThan(400);
+        await gotoOk(page, URLS.newCasinos, 'New casinos page');
     });
 
     test('@regression new casinos page loads with correct H1 @journey', async ({ page }) => {
@@ -109,8 +102,7 @@ test.describe('Journey 3.2 — New casinos page', () => {
 
 test.describe('Journey 3.3 — Slots casinos page', () => {
     test.beforeEach(async ({ page }) => {
-        const response = await page.goto(URLS.slotsCasinos);
-        expect(response?.status(), 'Slots casino page should return HTTP 200').toBeLessThan(400);
+        await gotoOk(page, URLS.slotsCasinos, 'Slots casino page');
     });
 
     test('@regression slots casino page loads with correct H1 @journey', async ({ page }) => {
@@ -120,7 +112,7 @@ test.describe('Journey 3.3 — Slots casinos page', () => {
     });
 
     test('@regression slots casino page exposes operator CTAs @journey', async ({ page }) => {
-        await expect(page.locator('a[href*="/go/"]').first()).toBeAttached();
+        await assertMainGoCtaPresent(page);
     });
 
     test('@regression slots page links to individual slot game reviews @journey', async ({ page }) => {
@@ -138,8 +130,7 @@ test.describe('Journey 3.3 — Slots casinos page', () => {
 
 test.describe('Journey 3.4 — Live casinos (toplist section)', () => {
     test.beforeEach(async ({ page }) => {
-        const response = await page.goto(URLS.liveCasinos);
-        expect(response?.status(), 'Live casino entry URL should return HTTP 200').toBeLessThan(400);
+        await gotoOk(page, URLS.liveCasinos, 'Live casino entry URL');
     });
 
     test('@regression legacy live URL lands on the casino toplist @journey', async ({ page }) => {
@@ -152,7 +143,7 @@ test.describe('Journey 3.4 — Live casinos (toplist section)', () => {
     });
 
     test('@regression live casino operators expose affiliate CTAs @journey', async ({ page }) => {
-        await expect(page.locator('a[href*="/go/"]').first()).toBeAttached();
+        await assertMainGoCtaPresent(page);
     });
 });
 
@@ -163,8 +154,7 @@ test.describe('Journey 3.4 — Live casinos (toplist section)', () => {
 
 test.describe('Journey 3.5 — Mobile casinos / apps page', () => {
     test.beforeEach(async ({ page }) => {
-        const response = await page.goto(URLS.mobileCasinos);
-        expect(response?.status(), 'Mobile casino apps page should return HTTP 200').toBeLessThan(400);
+        await gotoOk(page, URLS.mobileCasinos, 'Mobile casino apps page');
     });
 
     test('@regression mobile casino apps page loads with correct H1 @journey', async ({ page }) => {
@@ -174,7 +164,7 @@ test.describe('Journey 3.5 — Mobile casinos / apps page', () => {
     });
 
     test('@regression mobile casino page exposes operator CTAs @journey', async ({ page }) => {
-        await expect(page.locator('a[href*="/go/"]').first()).toBeAttached();
+        await assertMainGoCtaPresent(page);
     });
 
     test('@regression apps page links back to main casino toplist @journey', async ({ page }) => {
@@ -193,8 +183,7 @@ test.describe('Journey 3.5 — Mobile casinos / apps page', () => {
 
 test.describe('Journey 3.6 — Fast payout casinos (toplist section)', () => {
     test.beforeEach(async ({ page }) => {
-        const response = await page.goto(URLS.casinoToplist);
-        expect(response?.status(), 'Casino toplist should return HTTP 200').toBeLessThan(400);
+        await gotoOk(page, URLS.casinoToplist, 'Casino toplist');
     });
 
     test('@regression fast payout section or content is present on the casino toplist @journey', async ({ page }) => {
@@ -207,7 +196,7 @@ test.describe('Journey 3.6 — Fast payout casinos (toplist section)', () => {
     });
 
     test('@regression fast payout operators expose affiliate CTAs @journey', async ({ page }) => {
-        await expect(page.locator('a[href*="/go/"]').first()).toBeAttached();
+        await assertMainGoCtaPresent(page);
     });
 });
 
@@ -219,8 +208,7 @@ test.describe('Journey 3.6 — Fast payout casinos (toplist section)', () => {
 
 test.describe('Journey 3.7 — Crypto / Bitcoin casinos (legacy URL → toplist)', () => {
     test.beforeEach(async ({ page }) => {
-        const response = await page.goto(URLS.cryptoCasinos);
-        expect(response?.status(), 'Bitcoin casino entry URL should return HTTP 200').toBeLessThan(400);
+        await gotoOk(page, URLS.cryptoCasinos, 'Bitcoin casino entry URL');
     });
 
     test('@regression legacy bitcoin URL lands on the casino toplist @journey', async ({ page }) => {
@@ -229,7 +217,7 @@ test.describe('Journey 3.7 — Crypto / Bitcoin casinos (legacy URL → toplist)
     });
 
     test('@regression redirected toplist exposes operator CTAs @journey', async ({ page }) => {
-        await expect(page.locator('a[href*="/go/"]').first()).toBeAttached();
+        await assertMainGoCtaPresent(page);
     });
 });
 
@@ -240,8 +228,7 @@ test.describe('Journey 3.7 — Crypto / Bitcoin casinos (legacy URL → toplist)
 
 test.describe('Journey 3.8 — Payment method casino page (PayPal)', () => {
     test.beforeEach(async ({ page }) => {
-        const response = await page.goto(URLS.paymentCasinos);
-        expect(response?.status(), 'PayPal casino page should return HTTP 200').toBeLessThan(400);
+        await gotoOk(page, URLS.paymentCasinos, 'PayPal casino page');
     });
 
     test('@regression PayPal casino page loads with correct H1 @journey', async ({ page }) => {
@@ -251,7 +238,7 @@ test.describe('Journey 3.8 — Payment method casino page (PayPal)', () => {
     });
 
     test('@regression PayPal casino page exposes operator CTAs @journey', async ({ page }) => {
-        await expect(page.locator('a[href*="/go/"]').first()).toBeAttached();
+        await assertMainGoCtaPresent(page);
     });
 
     test('@regression payment page links back to main casino toplist @journey', async ({ page }) => {
@@ -269,8 +256,7 @@ test.describe('Journey 3.8 — Payment method casino page (PayPal)', () => {
 
 test.describe('Journey 3.9 — Safe / licensed casinos (how-we-review guide)', () => {
     test.beforeEach(async ({ page }) => {
-        const response = await page.goto(URLS.howWeReview);
-        expect(response?.status(), 'How-we-review page should return HTTP 200').toBeLessThan(400);
+        await gotoOk(page, URLS.howWeReview, 'How-we-review page');
     });
 
     test('@regression how-we-review guide loads with H1 @journey', async ({ page }) => {
@@ -339,8 +325,7 @@ test.describe('Journey 3.10 — Operator review page', () => {
 
 test.describe('Journey 3.11 — Slot game review / play page', () => {
     test.beforeEach(async ({ page }) => {
-        const response = await page.goto(URLS.slotPage);
-        expect(response?.status(), 'Slot page should return HTTP 200').toBeLessThan(400);
+        await gotoOk(page, URLS.slotPage, 'Slot page');
     });
 
     test('@regression slot page loads with correct H1 @journey', async ({ page }) => {
@@ -350,8 +335,8 @@ test.describe('Journey 3.11 — Slot game review / play page', () => {
     });
 
     test('@regression slot page exposes "Play for real" operator CTA @journey', async ({ page }) => {
-        await expect(page.locator('a[href*="/go/"]').first()).toBeAttached();
-        await expect(page.locator('a[href*="/go/"]').first()).toBeVisible();
+        await assertMainGoCtaPresent(page);
+        await expect(page.locator('main a[href*="/go/"]').first()).toBeVisible();
     });
 
     test('@regression slot page links to parent slots toplist @journey', async ({ page }) => {
@@ -372,8 +357,7 @@ test.describe('Journey 3.11 — Slot game review / play page', () => {
 
 test.describe('Journey 3.12 — Casino strategy guide', () => {
     test.beforeEach(async ({ page }) => {
-        const response = await page.goto(URLS.strategyHub);
-        expect(response?.status(), 'Strategy hub should return HTTP 200').toBeLessThan(400);
+        await gotoOk(page, URLS.strategyHub, 'Strategy hub');
     });
 
     test('@regression strategy hub loads with correct H1 @journey', async ({ page }) => {
@@ -402,9 +386,9 @@ test.describe('Journey 3.12 — Casino strategy guide', () => {
         await expect(firstGuide).toBeAttached();
         const href = await firstGuide.getAttribute('href') ?? '';
         expect(href.trim().length).toBeGreaterThan(0);
-        await page.goto(resolveHref(href));
+        await page.goto(resolveGdcHref(href));
         await expect(page).toHaveURL(/\/ie\/online-casinos\/strategy\//);
         await expect(page.locator('main h1').first()).toBeVisible();
-        await expect(page.locator('a[href*="/go/"]').first()).toBeAttached();
+        await assertMainGoCtaPresent(page);
     });
 });

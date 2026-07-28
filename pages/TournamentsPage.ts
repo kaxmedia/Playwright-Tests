@@ -14,6 +14,7 @@
 // NOTE: Authenticated tests verify UI state only — they do not enter a tournament.
 
 import { type Page, type Locator, type Response } from '@playwright/test';
+import { acceptCookiesIfShown } from '../fixtures/acceptCookies';
 
 const retryDelay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -81,7 +82,7 @@ export class TournamentsPage {
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
         const response = await this.page.goto(targetUrl, { waitUntil: 'domcontentloaded' });
-        await this.page.getByRole('button', { name: /accept all/i }).click({ timeout: 5000 }).catch(() => {});
+        await acceptCookiesIfShown(this.page);
         // Wait for the page itself to render (H1), NOT the active-tournament widget.
         // The tournament panel / countdown only exist while a tournament is live, so
         // requiring them here breaks navigation during between-tournament windows.

@@ -15,18 +15,26 @@ import {
   assertPageviewIdChain,
   findEvent,
 } from '../helpers/ktag-assertions';
+import { oplistGoCta } from '../helpers/oplistCta';
 
 const OPLIST_PAGE = 'https://www.gambling.com/uk/online-casinos';
+
+/** Load oplist page and wait for a CTA — faster/more reliable than networkidle. */
+async function openOplist(page: import('@playwright/test').Page) {
+  await page.goto(OPLIST_PAGE, { waitUntil: 'domcontentloaded' });
+  await oplistGoCta(page).waitFor({ state: 'attached', timeout: 15000 });
+}
+
+async function scrollToTriggerSeenItems(page: import('@playwright/test').Page, deltaY = 600) {
+  await page.mouse.wheel(0, deltaY);
+  await page.waitForTimeout(600); // allow debounce (~250–500ms per spec doc)
+}
 
 test.describe('Ktag — seenopitems event @ktag @seenopitems @regression', () => {
 
   test('seenopitems fires after scrolling operator list items into view', async ({ page, ktagEvents, waitForKtagEvent }) => {
-    await page.goto(OPLIST_PAGE);
-    await page.waitForLoadState('networkidle');
-
-    // Scroll down to trigger visibility events
-    await page.mouse.wheel(0, 600);
-    await page.waitForTimeout(600); // allow debounce (~250–500ms per spec doc)
+    await openOplist(page);
+    await scrollToTriggerSeenItems(page);
 
     const event = await waitForKtagEvent('seenopitems');
     assertBaseline(event, 'seenopitems');
@@ -34,10 +42,8 @@ test.describe('Ktag — seenopitems event @ktag @seenopitems @regression', () =>
   });
 
   test('seenopitems: each item has seen_item_id and si_type', async ({ page, ktagEvents, waitForKtagEvent }) => {
-    await page.goto(OPLIST_PAGE);
-    await page.waitForLoadState('networkidle');
-    await page.mouse.wheel(0, 600);
-    await page.waitForTimeout(600);
+    await openOplist(page);
+    await scrollToTriggerSeenItems(page);
 
     const event = await waitForKtagEvent('seenopitems');
     const items = event.seenopitems as Record<string, unknown>[];
@@ -49,10 +55,8 @@ test.describe('Ktag — seenopitems event @ktag @seenopitems @regression', () =>
   });
 
   test('seenopitems: seen_item_id values are unique across items in the event', async ({ page, ktagEvents, waitForKtagEvent }) => {
-    await page.goto(OPLIST_PAGE);
-    await page.waitForLoadState('networkidle');
-    await page.mouse.wheel(0, 800);
-    await page.waitForTimeout(600);
+    await openOplist(page);
+    await scrollToTriggerSeenItems(page, 800);
 
     const event = await waitForKtagEvent('seenopitems');
     const items = event.seenopitems as Record<string, unknown>[];
@@ -63,10 +67,8 @@ test.describe('Ktag — seenopitems event @ktag @seenopitems @regression', () =>
   });
 
   test('seenopitems: items carry brand_id, operator and product fields', async ({ page, ktagEvents, waitForKtagEvent }) => {
-    await page.goto(OPLIST_PAGE);
-    await page.waitForLoadState('networkidle');
-    await page.mouse.wheel(0, 600);
-    await page.waitForTimeout(600);
+    await openOplist(page);
+    await scrollToTriggerSeenItems(page);
 
     const event = await waitForKtagEvent('seenopitems');
     const items = event.seenopitems as Record<string, unknown>[];
@@ -77,8 +79,7 @@ test.describe('Ktag — seenopitems event @ktag @seenopitems @regression', () =>
   });
 
   test('seenopitems: shares pageview_id with the originating pageview', async ({ page, ktagEvents }) => {
-    await page.goto(OPLIST_PAGE);
-    await page.waitForLoadState('networkidle');
+    await openOplist(page);
     await page.mouse.wheel(0, 600);
     await page.waitForTimeout(1500);
 
@@ -91,18 +92,15 @@ test.describe('Ktag — seenopitems event @ktag @seenopitems @regression', () =>
   });
 
   test('seenopitems: pageview_fired is set', async ({ page, ktagEvents, waitForKtagEvent }) => {
-    await page.goto(OPLIST_PAGE);
-    await page.waitForLoadState('networkidle');
-    await page.mouse.wheel(0, 600);
-    await page.waitForTimeout(600);
+    await openOplist(page);
+    await scrollToTriggerSeenItems(page);
 
     const event = await waitForKtagEvent('seenopitems');
     expect(event.pageview_fired).toBeTruthy();
   });
 
   test('seenopitems: scrolling further fires additional batched events', async ({ page, ktagEvents, waitForKtagEvents }) => {
-    await page.goto(OPLIST_PAGE);
-    await page.waitForLoadState('networkidle');
+    await openOplist(page);
 
     // Scroll in steps to trigger multiple batches
     await page.mouse.wheel(0, 400);
@@ -118,8 +116,8 @@ test.describe('Ktag — seenopitems event @ktag @seenopitems @regression', () =>
 
     // All should have valid payloads
     for (const event of events) {
-      assertBaseline(event, 'seenopitems (batch)');
-      expect(Array.isArray(event.seenopitems)).toBe(true);
+      assertBaseline(event, 'seenopitems');
+      assertSeenopitemsSpecific(event);
     }
   });
 });

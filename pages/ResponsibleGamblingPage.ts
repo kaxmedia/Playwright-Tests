@@ -5,6 +5,7 @@
 // live on geo homepages — use footerRegulatoryLink() after visiting entryPath.
 
 import { type Page, type Locator, type Response } from '@playwright/test';
+import { acceptCookiesIfShown } from '../fixtures/acceptCookies';
 
 export interface ResponsibleGamblingGeoConfig {
   name: string;
@@ -104,6 +105,6 @@ export class ResponsibleGamblingPage {
   }
 
   private async dismissCookieBanner(): Promise<void> {
-    await this.page.getByRole('button', { name: /accept all/i }).click({ timeout: 5000 }).catch(() => {});
+    await acceptCookiesIfShown(this.page);
   }
 }

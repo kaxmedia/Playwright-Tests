@@ -1,4 +1,5 @@
 import { Page, Locator } from '@playwright/test';
+import { acceptCookiesIfShown } from '../fixtures/acceptCookies';
 import { globalNavLogo } from './globalNavLogo';
 
 export const IE_CASINO = {
@@ -46,7 +47,7 @@ export class IECasinoPage {
     async goto(): Promise<void> {
         await this.page.goto(IE_CASINO.url);
         await this.page.waitForLoadState('domcontentloaded');
-        await this.page.getByRole('button', { name: /accept all/i }).click({ timeout: 5000 }).catch(() => {});
+        await acceptCookiesIfShown(this.page);
     }
 
     async getOperatorCount(): Promise<number> {

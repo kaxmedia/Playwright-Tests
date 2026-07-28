@@ -31,21 +31,20 @@
 import { test, expect } from '../../fixtures/test';
 import { AuthPage } from '../../pages/AuthPage';
 import { TournamentsPage } from '../../pages/TournamentsPage';
-
-const BASE = 'https://www.gambling.com';
+import { IE_URLS, gotoOk, resolveGdcHref, assertMainGoCtaPresent } from '../helpers/journeys';
 
 const URLS = {
-    homepage: `${BASE}/ie`,
-    profile: `${BASE}/profile`,
-    tournaments: `${BASE}/ie/games/tournaments`,
+    homepage: IE_URLS.homepage,
+    profile: IE_URLS.profile,
+    tournaments: IE_URLS.tournaments,
     /** Reviews hub is the main IE casino toplist; the old /ie/online-casinos/reviews path now 404s. */
-    reviewsHub: `${BASE}/ie/online-casinos`,
-    news: `${BASE}/ie/news`,
+    reviewsHub: IE_URLS.casinoToplist,
+    news: IE_URLS.news,
     /** Global RG hub — no /ie/responsible-gambling page exists. */
-    responsible: `${BASE}/responsible`,
+    responsible: IE_URLS.responsible,
     /** Geo homepage — /uk used as the representative alternate market. */
-    geoHomepage: `${BASE}/uk`,
-    authors: `${BASE}/ie/authors`,
+    geoHomepage: IE_URLS.geoHomepage,
+    authors: IE_URLS.authors,
 } as const;
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -59,8 +58,7 @@ test.describe('Journey 8.1 — Sign-up (register modal)', () => {
 
     test.beforeEach(async ({ page }) => {
         authPage = new AuthPage(page);
-        const response = await page.goto(URLS.homepage);
-        expect(response?.status(), 'Homepage should return HTTP 200').toBeLessThan(400);
+        await gotoOk(page, URLS.homepage, 'Homepage');
     });
 
     test('@regression homepage exposes a sign-up CTA for new users @journey', async ({ page }) => {
@@ -93,8 +91,7 @@ test.describe('Journey 8.2 — Returning user (sign-in flow)', () => {
 
     test.beforeEach(async ({ page }) => {
         authPage = new AuthPage(page);
-        const response = await page.goto(URLS.homepage);
-        expect(response?.status(), 'Homepage should return HTTP 200').toBeLessThan(400);
+        await gotoOk(page, URLS.homepage, 'Homepage');
     });
 
     test('@regression sign-in CTA is present in the top nav @journey', async () => {
@@ -129,8 +126,7 @@ test.describe('Journey 8.2 — Returning user (sign-in flow)', () => {
 
 test.describe('Journey 8.3 — Rewards check (profile page)', () => {
     test.beforeEach(async ({ page }) => {
-        const response = await page.goto(URLS.profile);
-        expect(response?.status(), 'Profile page should return HTTP 200').toBeLessThan(400);
+        await gotoOk(page, URLS.profile, 'Profile page');
     });
 
     test('@regression profile page loads and is reachable @journey', async ({ page }) => {
@@ -179,8 +175,7 @@ test.describe('Journey 8.4 — Predictor leaderboard', () => {
 
 test.describe('Journey 8.5 — Homepage browse', () => {
     test.beforeEach(async ({ page }) => {
-        const response = await page.goto(URLS.homepage);
-        expect(response?.status(), 'Homepage should return HTTP 200').toBeLessThan(400);
+        await gotoOk(page, URLS.homepage, 'Homepage');
     });
 
     test('@regression homepage loads with H1 and vertical tabs @journey', async ({ page }) => {
@@ -191,7 +186,7 @@ test.describe('Journey 8.5 — Homepage browse', () => {
     });
 
     test('@regression homepage exposes operator CTAs for direct browsing @journey', async ({ page }) => {
-        await expect(page.locator('a[href*="/go/"]').first()).toBeAttached();
+        await assertMainGoCtaPresent(page);
     });
 
     test('@regression homepage top nav exposes all primary vertical links @journey', async ({ page }) => {
@@ -207,8 +202,7 @@ test.describe('Journey 8.5 — Homepage browse', () => {
 
 test.describe('Journey 8.6 — Geo homepage (UK market)', () => {
     test.beforeEach(async ({ page }) => {
-        const response = await page.goto(URLS.geoHomepage);
-        expect(response?.status(), 'UK homepage should return HTTP 200').toBeLessThan(400);
+        await gotoOk(page, URLS.geoHomepage, 'UK homepage');
     });
 
     test('@regression UK geo homepage loads with H1 @journey', async ({ page }) => {
@@ -222,7 +216,7 @@ test.describe('Journey 8.6 — Geo homepage (UK market)', () => {
     });
 
     test('@regression UK geo homepage exposes operator CTAs @journey', async ({ page }) => {
-        await expect(page.locator('a[href*="/go/"]').first()).toBeAttached();
+        await assertMainGoCtaPresent(page);
     });
 
     test('@regression geo homepage has geo-specific content distinct from IE @journey', async ({ page }) => {
@@ -244,8 +238,7 @@ test.describe('Journey 8.6 — Geo homepage (UK market)', () => {
 
 test.describe('Journey 8.7 — Reviews hub', () => {
     test.beforeEach(async ({ page }) => {
-        const response = await page.goto(URLS.reviewsHub);
-        expect(response?.status(), 'Reviews hub should return HTTP 200').toBeLessThan(400);
+        await gotoOk(page, URLS.reviewsHub, 'Reviews hub');
     });
 
     test('@regression reviews hub loads and redirects to casino toplist @journey', async ({ page }) => {
@@ -262,11 +255,11 @@ test.describe('Journey 8.7 — Reviews hub', () => {
         const reviewLink = page.locator('main a.operator-review-link[href*="/ie/online-casinos/"]').first();
         await expect(reviewLink).toBeAttached();
         const href = await reviewLink.getAttribute('href');
-        const fullUrl = href?.startsWith('http') ? href : `${BASE}${href}`;
+        const fullUrl = resolveGdcHref(href ?? '');
         await page.goto(fullUrl);
         await expect(page).toHaveURL(/\/ie\/online-casinos\//);
         await expect(page.locator('main.body_content h1, main h1').first()).toBeVisible();
-        await expect(page.locator('a[href*="/go/"]').first()).toBeAttached();
+        await assertMainGoCtaPresent(page);
     });
 });
 
@@ -277,8 +270,7 @@ test.describe('Journey 8.7 — Reviews hub', () => {
 
 test.describe('Journey 8.8 — News reader', () => {
     test.beforeEach(async ({ page }) => {
-        const response = await page.goto(URLS.news);
-        expect(response?.status(), 'News hub should return HTTP 200').toBeLessThan(400);
+        await gotoOk(page, URLS.news, 'News hub');
     });
 
     test('@regression news hub loads with H1 and article links @journey', async ({ page }) => {
@@ -292,7 +284,7 @@ test.describe('Journey 8.8 — News reader', () => {
         const firstArticle = page.locator('a[href*="/ie/news/"]').first();
         await expect(firstArticle).toBeVisible();
         const href = await firstArticle.getAttribute('href');
-        const fullUrl = href?.startsWith('http') ? href : `${BASE}${href}`;
+        const fullUrl = resolveGdcHref(href ?? '');
         await page.goto(fullUrl);
         await expect(page).toHaveURL(/\/ie\/news\//);
         await expect(page.locator('main h1').first()).toBeVisible();
@@ -302,7 +294,7 @@ test.describe('Journey 8.8 — News reader', () => {
         const firstArticle = page.locator('a[href*="/ie/news/"]').first();
         await expect(firstArticle).toBeAttached();
         const href = await firstArticle.getAttribute('href');
-        const fullUrl = href?.startsWith('http') ? href : `${BASE}${href}`;
+        const fullUrl = resolveGdcHref(href ?? '');
         await page.goto(fullUrl);
         // In-content toplist or affiliate link present in article body
         const toplistLink = page.locator(
@@ -321,8 +313,7 @@ test.describe('Journey 8.8 — News reader', () => {
 
 test.describe('Journey 8.9 — Responsible gambling hub', () => {
     test.beforeEach(async ({ page }) => {
-        const response = await page.goto(URLS.responsible);
-        expect(response?.status(), 'Responsible gambling page should return HTTP 200').toBeLessThan(400);
+        await gotoOk(page, URLS.responsible, 'Responsible gambling page');
     });
 
     test('@regression responsible gambling page loads with correct H1 @journey', async ({ page }) => {

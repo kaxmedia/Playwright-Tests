@@ -32,14 +32,13 @@
 
 import { test, expect } from '../../fixtures/test';
 import { ComparisonPage } from '../../pages/ComparisonPage';
-
-const BASE = 'https://www.gambling.com';
+import { GDC_ORIGIN, IE_URLS, gotoOk } from '../helpers/journeys';
 
 const URLS = {
-    cosmoSpins: `${BASE}/ie/games/cosmo-spins`,
-    gamesHub: `${BASE}/ie/games`,
-    bonusHub: `${BASE}/ie/online-casinos/bonus`,
-    homepage: `${BASE}/ie`,
+    cosmoSpins: `${GDC_ORIGIN}/ie/games/cosmo-spins`,
+    gamesHub: IE_URLS.games,
+    bonusHub: IE_URLS.bonusHub,
+    homepage: IE_URLS.homepage,
 } as const;
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -49,8 +48,7 @@ const URLS = {
 
 test.describe('Journey 7.1 — Free game (Cosmo Spins)', () => {
     test.beforeEach(async ({ page }) => {
-        const response = await page.goto(URLS.cosmoSpins);
-        expect(response?.status(), 'Cosmo Spins should return HTTP 200').toBeLessThan(400);
+        await gotoOk(page, URLS.cosmoSpins, 'Cosmo Spins');
     });
 
     test('@regression Cosmo Spins page loads with correct H1 @journey', async ({ page }) => {
@@ -85,8 +83,7 @@ test.describe('Journey 7.1 — Free game (Cosmo Spins)', () => {
 
 test.describe('Journey 7.2 — Daily free game (Cosmo Spins daily spin)', () => {
     test.beforeEach(async ({ page }) => {
-        const response = await page.goto(URLS.cosmoSpins);
-        expect(response?.status(), 'Cosmo Spins should return HTTP 200').toBeLessThan(400);
+        await gotoOk(page, URLS.cosmoSpins, 'Cosmo Spins');
     });
 
     test('@regression daily spin page loads with H1 @journey', async ({ page }) => {
@@ -116,8 +113,7 @@ test.describe('Journey 7.2 — Daily free game (Cosmo Spins daily spin)', () => 
 
 test.describe('Journey 7.3 — Email lead funnel (Cosmo Spins email capture)', () => {
     test.beforeEach(async ({ page }) => {
-        const response = await page.goto(URLS.cosmoSpins);
-        expect(response?.status(), 'Cosmo Spins should return HTTP 200').toBeLessThan(400);
+        await gotoOk(page, URLS.cosmoSpins, 'Cosmo Spins');
     });
 
     test('@regression email capture input is present on the Cosmo Spins page @journey', async ({ page }) => {
@@ -147,8 +143,7 @@ test.describe('Journey 7.4 — Weekly offers (bonus hub)', () => {
 
     test.beforeEach(async ({ page }) => {
         comparison = new ComparisonPage(page);
-        const response = await comparison.goto(URLS.bonusHub);
-        expect(response?.status(), 'Bonus hub should return HTTP 200').toBeLessThan(400);
+        await gotoOk(page, URLS.bonusHub, 'Bonus hub');
     });
 
     test('@regression bonus hub loads with H1 for weekly offers entry @journey', async ({ page }) => {
@@ -183,8 +178,7 @@ test.describe('Journey 7.4 — Weekly offers (bonus hub)', () => {
 
 test.describe('Journey 7.5 — Newsletter signup (homepage email capture)', () => {
     test.beforeEach(async ({ page }) => {
-        const response = await page.goto(URLS.homepage);
-        expect(response?.status(), 'Homepage should return HTTP 200').toBeLessThan(400);
+        await gotoOk(page, URLS.homepage, 'Homepage');
     });
 
     test('@regression homepage loads and email signup element is present in DOM @journey', async ({ page }) => {

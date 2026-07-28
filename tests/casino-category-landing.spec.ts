@@ -1,28 +1,23 @@
 import { test, expect } from '../fixtures/test';
 import { DECasinoPage, DE_CASINO } from '../pages/DECasinoPage';
 import { UKCasinoPage, UK_CASINO } from '../pages/UKCasinoPage';
+import { registerCasinoLandingSmoke, type CasinoLandingPageLike } from './helpers/casinoLandingSmoke';
 
 // ─── Category Landing Page Tests — UK & DE ────────────────────────────────────
 //
-// Tests are deliberately structural and behavioural — NOT content-specific.
-// Content editors regularly update operator lists, bonus text, and anchor labels
-// so we avoid asserting on specific text values wherever possible.
-//
-// What we DO assert:
-//   - Page loads, title exists, URL is correct
-//   - Operator list renders with a meaningful number of rows
-//   - Each operator row has a logo, rating, and working CTA
-//   - Anchor/filter menu is present and interaction updates the operator list
-//   - Compare functionality ticks and reveals the compare bar
-//   - FAQ section is present and items expand on click
-//   - Geo-specific content — UK shows £, DE shows €
-//   - Footer is visible
+// Shared fundamentals, oplist, anchor, FAQ, and footer smoke live in
+// registerCasinoLandingSmoke. Geo-specific behaviour (currency, compare, DE quirks)
+// stays in the "geo specifics" describe blocks below.
 // ─────────────────────────────────────────────────────────────────────────────
 
-// ════════════════════════════════════════════════════════════════════════════
-// UK — /uk/online-casinos
-// ════════════════════════════════════════════════════════════════════════════
-test.describe('Category Landing — UK Online Casinos', () => {
+registerCasinoLandingSmoke({
+    describeTitle: 'Category Landing — UK Online Casinos',
+    expectedUrl: UK_CASINO.url,
+    goHrefContains: '/go/',
+    createPage: (page) => new UKCasinoPage(page),
+});
+
+test.describe('Category Landing — UK Online Casinos — geo specifics', () => {
     let ukPage: UKCasinoPage;
 
     test.beforeEach(async ({ page }) => {
@@ -30,74 +25,7 @@ test.describe('Category Landing — UK Online Casinos', () => {
         await ukPage.goto();
     });
 
-    // ── 1. Page fundamentals ─────────────────────────────────────────────────
-
-    test('@regression page loads with a non-empty title', async ({ page }) => {
-        await expect(page).toHaveURL(UK_CASINO.url);
-        const title = await page.title();
-        expect(title).not.toBe('');
-        expect(title.toLowerCase()).not.toContain('404');
-        expect(title.toLowerCase()).not.toContain('error');
-    });
-
-    test('@regression H1 is visible and non-empty', async () => {
-        await expect(ukPage.pageTitle).toBeVisible();
-        const h1Text = await ukPage.pageTitle.innerText();
-        expect(h1Text.trim()).not.toBe('');
-    });
-
-    test('@regression logo is visible', async () => {
-        await expect(ukPage.logo).toBeVisible();
-    });
-
-    test('@regression main navigation is visible', async () => {
-        await expect(ukPage.mainNav).toBeVisible();
-    });
-
-    test('@regression geo switcher is visible', async () => {
-        await expect(ukPage.geoSwitcher).toBeVisible();
-    });
-
-    // ── 2. Operator list ─────────────────────────────────────────────────────
-
-    test('@regression operator list renders at least 5 rows', async () => {
-        const count = await ukPage.getOperatorCount();
-        expect(count).toBeGreaterThanOrEqual(5);
-    });
-
-    test('@regression each operator row has a visible logo', async () => {
-        const logos = ukPage.operatorLogos;
-        const count = await logos.count();
-        expect(count).toBeGreaterThanOrEqual(5);
-
-        const limit = Math.min(count, 10);
-        for (let i = 0; i < limit; i++) {
-            await expect(logos.nth(i)).toBeVisible();
-            const src = await logos.nth(i).getAttribute('src');
-            expect(src).toBeTruthy();
-        }
-    });
-
-    test('@regression each operator row has a visible rating', async () => {
-        const ratings = ukPage.operatorRatings;
-        const count = await ratings.count();
-        expect(count).toBeGreaterThanOrEqual(5);
-    });
-
-    test('@regression operator CTAs are visible and have valid /go/ hrefs', async () => {
-        const ctas = ukPage.operatorCTAs;
-        const count = await ctas.count();
-        expect(count).toBeGreaterThanOrEqual(5);
-
-        const limit = Math.min(count, 10);
-        for (let i = 0; i < limit; i++) {
-            const cta = ctas.nth(i);
-            const href = await cta.evaluate((el: HTMLAnchorElement) => el.href);
-            expect(href).toContain('/go/');
-            expect(href).not.toBe('');
-        }
-
-        // One primary CTA per operator row — flat `operatorCTAs` includes duplicate tab-panel links (nth(1) can be hidden).
+    test('@regression primary row CTAs are visible (one per operator row)', async () => {
         const rowLimit = Math.min(await ukPage.operatorRows.count(), 3);
         for (let r = 0; r < rowLimit; r++) {
             const rowCta = ukPage.operatorRows
@@ -111,52 +39,22 @@ test.describe('Category Landing — UK Online Casinos', () => {
         }
     });
 
-    test('@regression operator CTAs do not use dead # hrefs', async () => {
-        const ctas = ukPage.operatorCTAs;
-        const count = await ctas.count();
-        const limit = Math.min(count, 10);
-        for (let i = 0; i < limit; i++) {
-            const href = await ctas.nth(i).getAttribute('href');
-            expect(href).not.toBe('#');
-        }
-    });
-
-    // ── 3. Anchor / filter menu ──────────────────────────────────────────────
-
-    test('@regression anchor menu is visible', async () => {
-        await expect(ukPage.anchorMenu).toBeVisible();
-    });
-
-    test('@regression anchor menu has at least 3 links', async () => {
-        const count = await ukPage.anchorLinks.count();
-        expect(count).toBeGreaterThanOrEqual(3);
-    });
-
     test('@regression clicking an anchor link updates the operator list', async () => {
-        // Warm / snapshot list before click (count not asserted — first anchor may already be active)
         await ukPage.getOperatorCount();
 
-        // Click the first anchor link — we don't hardcode the text so it's content-editor safe
         const firstLink = ukPage.anchorLinks.first();
         await firstLink.scrollIntoViewIfNeeded();
         await firstLink.click();
-
-        // Wait for the list to potentially update (anchor filters can be slow)
         await ukPage.page.waitForTimeout(2000);
 
-        // The operator list should still be present and populated after the filter
         const afterCount = await ukPage.getOperatorCount();
         expect(afterCount).toBeGreaterThanOrEqual(1);
-
-        // Note: we don't assert beforeCount !== afterCount because the first anchor
-        // may already be selected by default — we just confirm the list didn't break
     });
 
     test('@regression clicking a second anchor link also renders a list', async () => {
         const links = ukPage.anchorLinks;
         const linkCount = await links.count();
 
-        // Only run if there are at least 2 anchor links
         if (linkCount >= 2) {
             const secondLink = links.nth(1);
             await secondLink.scrollIntoViewIfNeeded();
@@ -167,8 +65,6 @@ test.describe('Category Landing — UK Online Casinos', () => {
             expect(afterCount).toBeGreaterThanOrEqual(1);
         }
     });
-
-    // ── 4. Compare functionality ─────────────────────────────────────────────
 
     test('@regression compare checkboxes are present on operator rows', async () => {
         const count = await ukPage.compareCheckboxes.count();
@@ -196,8 +92,6 @@ test.describe('Category Landing — UK Online Casinos', () => {
         }
     });
 
-    // ── 5. Compare modal ─────────────────────────────────────────────────────
-
     test('@regression clicking Compare opens a modal', async () => {
         await ukPage.goto();
         const cbCount = await ukPage.compareCheckboxes.count();
@@ -221,9 +115,8 @@ test.describe('Category Landing — UK Online Casinos', () => {
         await ukPage.openCompareModal();
 
         const logoCount = await ukPage.compareModalLogos.count();
-        expect(logoCount).toBeGreaterThanOrEqual(2); // one per selected operator
+        expect(logoCount).toBeGreaterThanOrEqual(2);
 
-        // Each logo should be visible and have a valid src
         for (let i = 0; i < logoCount; i++) {
             await expect(ukPage.compareModalLogos.nth(i)).toBeVisible();
             const src = await ukPage.compareModalLogos.nth(i).getAttribute('src');
@@ -242,7 +135,7 @@ test.describe('Category Landing — UK Online Casinos', () => {
         await ukPage.openCompareModal();
 
         const ctaCount = await ukPage.compareModalCTAs.count();
-        expect(ctaCount).toBeGreaterThanOrEqual(2); // one CTA per operator
+        expect(ctaCount).toBeGreaterThanOrEqual(2);
 
         for (let i = 0; i < ctaCount; i++) {
             await expect(ukPage.compareModalCTAs.nth(i)).toBeVisible();
@@ -253,8 +146,6 @@ test.describe('Category Landing — UK Online Casinos', () => {
     });
 
     test('@regression expanding an attribute section in the compare modal reveals content', async () => {
-        // Known product regression: accordion expand/collapse in the UK compare modal can fail in prod.
-        // Keep this assertion strict so CI continues to flag the bug rather than masking it.
         await ukPage.goto();
         const cbCount = await ukPage.compareCheckboxes.count();
         expect(
@@ -267,7 +158,6 @@ test.describe('Category Landing — UK Online Casinos', () => {
         const sectionCount = await ukPage.compareModalSections.count();
         expect(sectionCount, 'Compare modal must include at least one expandable attribute section').toBeGreaterThan(0);
 
-        // Modal opens with comparison rows visible; first header click collapses that section, second expands it again.
         const bonusGridLabel = ukPage.compareModal.getByText(/Minimum Deposit to Qualify/i);
         await expect(bonusGridLabel).toBeVisible();
 
@@ -291,16 +181,8 @@ test.describe('Category Landing — UK Online Casinos', () => {
         await expect(ukPage.compareModalCloseBtn).toBeVisible();
 
         await ukPage.closeCompareModal();
-        // Micromodal keeps the container in the DOM; closing sets aria-hidden and hides the overlay.
         await expect(ukPage.compareModal).toHaveAttribute('aria-hidden', 'true', { timeout: 15000 });
         await expect(ukPage.compareModal).toBeHidden();
-    });
-
-    // ── 6. FAQ ───────────────────────────────────────────────────────────────
-
-    test('@regression FAQ section is visible', async () => {
-        await ukPage.faqSection.scrollIntoViewIfNeeded();
-        await expect(ukPage.faqSection).toBeVisible();
     });
 
     test('@regression explainer block has substantive body copy', async () => {
@@ -317,8 +199,6 @@ test.describe('Category Landing — UK Online Casinos', () => {
         expect(answerText.trim().length).toBeGreaterThan(10);
     });
 
-    // ── 7. Geo-specific content ──────────────────────────────────────────────
-
     test('@regression page contains £ currency symbol (UK-specific content)', async ({ page }) => {
         const bodyText = await page.locator('body').innerText();
         expect(bodyText).toContain(UK_CASINO.currency);
@@ -328,26 +208,28 @@ test.describe('Category Landing — UK Online Casinos', () => {
         await expect(page.locator('html')).toHaveAttribute('lang', /^(en|en-)/);
     });
 
-    // ── 8. Footer ────────────────────────────────────────────────────────────
-
-    test('@regression footer is visible', async () => {
-        await ukPage.page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-        await expect(ukPage.footer).toBeVisible();
-    });
-
     test('@regression footer contains links', async () => {
         const links = ukPage.footer.locator('a');
         const count = await links.count();
         expect(count).toBeGreaterThan(5);
     });
-
 });
 
+registerCasinoLandingSmoke({
+    describeTitle: 'Category Landing — DE Online Casinos',
+    expectedUrl: DE_CASINO.url,
+    goHrefContains: '/go/de/',
+    hasRatings: false,
+    hasGeoSwitcher: false,
+    createPage: (page): CasinoLandingPageLike =>
+        Object.assign(new DECasinoPage(page), {
+            geoSwitcher: page
+                .locator('[class*="geo"], [class*="country"], [class*="region"], [data-testid*="geo"]')
+                .first(),
+        }),
+});
 
-// ════════════════════════════════════════════════════════════════════════════
-// DE — /de/online-casinos
-// ════════════════════════════════════════════════════════════════════════════
-test.describe('Category Landing — DE Online Casinos', () => {
+test.describe('Category Landing — DE Online Casinos — geo specifics', () => {
     let dePage: DECasinoPage;
 
     test.beforeEach(async ({ page }) => {
@@ -355,31 +237,6 @@ test.describe('Category Landing — DE Online Casinos', () => {
         await dePage.goto();
     });
 
-    // ── 1. Page fundamentals ─────────────────────────────────────────────────
-
-    test('@regression page loads with a non-empty title', async ({ page }) => {
-        await expect(page).toHaveURL(DE_CASINO.url);
-        const title = await page.title();
-        expect(title).not.toBe('');
-        expect(title.toLowerCase()).not.toContain('404');
-        expect(title.toLowerCase()).not.toContain('error');
-    });
-
-    test('@regression H1 is visible and non-empty', async () => {
-        await expect(dePage.pageTitle).toBeVisible();
-        const h1Text = await dePage.pageTitle.innerText();
-        expect(h1Text.trim()).not.toBe('');
-    });
-
-    test('@regression logo is visible', async () => {
-        await expect(dePage.logo).toBeVisible();
-    });
-
-    test('@regression main navigation is visible', async () => {
-        await expect(dePage.mainNav).toBeVisible();
-    });
-
-    // DE category pages do not surface the UK-style header geo flag / modal trigger (see footer.spec DE notes).
     test('@regression header geo switcher is not present in nav (DE has no UK-style geo control)', async ({
         page,
     }) => {
@@ -387,75 +244,6 @@ test.describe('Category Landing — DE Online Casinos', () => {
             .locator('nav')
             .locator('[class*="geo"], [class*="country"], [class*="region"], [data-testid*="geo"]');
         await expect(headerGeo).toHaveCount(0);
-    });
-
-    test('@regression URL stays on German casino category path', async ({ page }) => {
-        await expect(page).toHaveURL(/\/de\/online-casinos/);
-    });
-
-    // ── 2. Operator list ─────────────────────────────────────────────────────
-
-    test('@regression operator list renders at least 5 rows', async () => {
-        const count = await dePage.getOperatorCount();
-        expect(count).toBeGreaterThanOrEqual(5);
-    });
-
-    test('@regression each operator row has a visible logo', async () => {
-        const logos = dePage.operatorLogos;
-        const count = await logos.count();
-        expect(count).toBeGreaterThanOrEqual(5);
-
-        const limit = Math.min(count, 10);
-        for (let i = 0; i < limit; i++) {
-            await expect(logos.nth(i)).toBeVisible();
-            const src = await logos.nth(i).getAttribute('src');
-            expect(src).toBeTruthy();
-        }
-    });
-
-    test('@regression each operator row has a visible rating', async () => {
-        const ratings = dePage.operatorRatings;
-        const count = await ratings.count();
-        expect(count).toBeGreaterThanOrEqual(5);
-    });
-
-    test('@regression operator CTAs are visible and have valid /go/ hrefs', async () => {
-        const ctas = dePage.operatorCTAs;
-        const count = await ctas.count();
-        expect(count).toBeGreaterThanOrEqual(5);
-
-        const limit = Math.min(count, 10);
-        for (let i = 0; i < limit; i++) {
-            const cta = ctas.nth(i);
-            const href = await cta.evaluate((el: HTMLAnchorElement) => el.href);
-            expect(href).toContain('/go/');
-            expect(href).not.toBe('');
-            if (i < 3) {
-                await cta.evaluate((el: HTMLElement) => el.scrollIntoView({ block: 'center' }));
-                await expect(cta).toBeVisible({ timeout: 8000 });
-            }
-        }
-    });
-
-    test('@regression operator CTAs do not use dead # hrefs', async () => {
-        const ctas = dePage.operatorCTAs;
-        const count = await ctas.count();
-        const limit = Math.min(count, 10);
-        for (let i = 0; i < limit; i++) {
-            const href = await ctas.nth(i).getAttribute('href');
-            expect(href).not.toBe('#');
-        }
-    });
-
-    // ── 3. Anchor / filter menu ──────────────────────────────────────────────
-
-    test('@regression anchor menu is visible', async () => {
-        await expect(dePage.anchorMenu).toBeVisible();
-    });
-
-    test('@regression anchor menu has at least 3 links', async () => {
-        const count = await dePage.anchorLinks.count();
-        expect(count).toBeGreaterThanOrEqual(3);
     });
 
     test('@regression clicking an anchor link does not break the operator list', async () => {
@@ -466,15 +254,6 @@ test.describe('Category Landing — DE Online Casinos', () => {
 
         const afterCount = await dePage.getOperatorCount();
         expect(afterCount).toBeGreaterThanOrEqual(1);
-    });
-
-    // Compare functionality is not available on the DE geo — no compare tests here.
-
-    // ── 5. FAQ ───────────────────────────────────────────────────────────────
-
-    test('@regression FAQ section is visible', async () => {
-        await dePage.faqSection.scrollIntoViewIfNeeded();
-        await expect(dePage.faqSection).toBeVisible();
     });
 
     test('@regression FAQ has at least 3 items', async () => {
@@ -490,15 +269,12 @@ test.describe('Category Landing — DE Online Casinos', () => {
         }
     });
 
-    // ── 6. Geo-specific content (DE has no UK compare block) ─────────────────
-
     test('@regression page contains € currency symbol (DE-specific content)', async ({ page }) => {
         const bodyText = await page.locator('body').innerText();
         expect(bodyText).toContain(DE_CASINO.currency);
     });
 
     test('@regression page does not contain £ symbol (wrong geo content)', async ({ page }) => {
-        // Catches a scenario where UK content is accidentally served on the DE page
         const bodyText = await page.locator('body').innerText();
         expect(bodyText).not.toContain(UK_CASINO.currency);
     });
@@ -508,17 +284,9 @@ test.describe('Category Landing — DE Online Casinos', () => {
         expect(lang).toMatch(/^de/);
     });
 
-    // ── 7. Footer ────────────────────────────────────────────────────────────
-
-    test('@regression footer is visible', async () => {
-        await dePage.page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-        await expect(dePage.footer).toBeVisible();
-    });
-
     test('@regression footer contains links', async () => {
         const links = dePage.footer.locator('a');
         const count = await links.count();
         expect(count).toBeGreaterThan(5);
     });
-
 });

@@ -24,13 +24,12 @@
 
 import { test, expect } from '../../fixtures/test';
 import { ComparisonPage } from '../../pages/ComparisonPage';
-
-const BASE = 'https://www.gambling.com';
+import { IE_URLS, gotoOk, assertMainGoCtaPresent } from '../helpers/journeys';
 
 const URLS = {
-    bonusHub: `${BASE}/ie/online-casinos/bonus`,
-    noDeposit: `${BASE}/ie/online-casinos/no-deposit-bonus`,
-    freeSpins: `${BASE}/ie/online-casinos/bonus/free-spins-no-deposit`,
+    bonusHub: IE_URLS.bonusHub,
+    noDeposit: IE_URLS.noDeposit,
+    freeSpins: IE_URLS.freeSpins,
 } as const;
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -43,8 +42,7 @@ test.describe('Journey 4.1 — Welcome bonus hub', () => {
 
     test.beforeEach(async ({ page }) => {
         comparison = new ComparisonPage(page);
-        const response = await comparison.goto(URLS.bonusHub);
-        expect(response?.status(), 'Bonus hub should return HTTP 200').toBeLessThan(400);
+        await gotoOk(page, URLS.bonusHub, 'Bonus hub');
     });
 
     test('@regression bonus hub loads with correct H1 @journey', async ({ page }) => {
@@ -86,8 +84,7 @@ test.describe('Journey 4.2 — No-deposit bonus page', () => {
 
     test.beforeEach(async ({ page }) => {
         comparison = new ComparisonPage(page);
-        const response = await comparison.goto(URLS.noDeposit);
-        expect(response?.status(), 'No-deposit page should return HTTP 200').toBeLessThan(400);
+        await gotoOk(page, URLS.noDeposit, 'No-deposit page');
     });
 
     test('@regression no-deposit page loads with correct H1 @journey', async ({ page }) => {
@@ -126,8 +123,7 @@ test.describe('Journey 4.3 — Free spins no-deposit page', () => {
 
     test.beforeEach(async ({ page }) => {
         comparison = new ComparisonPage(page);
-        const response = await comparison.goto(URLS.freeSpins);
-        expect(response?.status(), 'Free spins page should return HTTP 200').toBeLessThan(400);
+        await gotoOk(page, URLS.freeSpins, 'Free spins page');
     });
 
     test('@regression free spins page loads with correct H1 @journey', async ({ page }) => {
@@ -152,10 +148,10 @@ test.describe('Journey 4.3 — Free spins no-deposit page', () => {
         const bonusHubLink = page.locator('a[href="/ie/online-casinos/bonus"]').first();
         await expect(bonusHubLink).toBeAttached();
         // Nav mega-menu link is CSS-hidden until hover — follow the verified href to complete the journey
-        await page.goto(URLS.bonusHub);
+        await gotoOk(page, URLS.bonusHub, 'Bonus hub');
         await expect(page).toHaveURL(/\/ie\/online-casinos\/bonus/);
         await expect(page.locator('h1').first()).toBeVisible();
-        await expect(page.locator('a[href*="/go/"]').first()).toBeAttached();
+        await assertMainGoCtaPresent(page);
     });
 });
 
@@ -172,8 +168,7 @@ test.describe('Journey 4.4 — Promo code (bonus hub inline content)', () => {
 
     test.beforeEach(async ({ page }) => {
         comparison = new ComparisonPage(page);
-        const response = await comparison.goto(URLS.bonusHub);
-        expect(response?.status(), 'Bonus hub should return HTTP 200').toBeLessThan(400);
+        await gotoOk(page, URLS.bonusHub, 'Bonus hub');
     });
 
     test('@regression promo code content is present on the bonus hub @journey', async ({ page }) => {

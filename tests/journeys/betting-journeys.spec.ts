@@ -34,25 +34,24 @@ import { test, expect, type Page } from '../../fixtures/test';
 import { ComparisonPage } from '../../pages/ComparisonPage';
 import { ReviewPage } from '../../pages/ReviewPage';
 import { TournamentsPage } from '../../pages/TournamentsPage';
-
-const BASE = 'https://www.gambling.com';
+import { GDC_ORIGIN, IE_URLS, gotoOk, resolveGdcHref } from '../helpers/journeys';
 
 const URLS = {
-    bettingToplist: `${BASE}/ie/betting-sites`,
-    bettingApps: `${BASE}/ie/betting-sites/apps`,
-    freeBets: `${BASE}/ie/betting-sites/free-bets`,
+    bettingToplist: IE_URLS.bettingToplist,
+    bettingApps: `${GDC_ORIGIN}/ie/betting-sites/apps`,
+    freeBets: `${GDC_ORIGIN}/ie/betting-sites/free-bets`,
     /** Legacy path — redirects to the betting toplist. */
-    inPlay: `${BASE}/ie/betting-sites/in-play`,
+    inPlay: `${GDC_ORIGIN}/ie/betting-sites/in-play`,
     /** Legacy path — redirects to the homepage; sport content is on the toplist. */
-    football: `${BASE}/ie/betting-sites/football`,
-    horseRacing: `${BASE}/ie/betting-sites/horse-racing`,
+    football: `${GDC_ORIGIN}/ie/betting-sites/football`,
+    horseRacing: `${GDC_ORIGIN}/ie/betting-sites/horse-racing`,
     /** Legacy path — redirects to the betting toplist. */
-    bestOdds: `${BASE}/ie/betting-sites/best-odds-guaranteed`,
+    bestOdds: `${GDC_ORIGIN}/ie/betting-sites/best-odds-guaranteed`,
     /** Legacy path — redirects to the betting toplist. */
-    betBuilder: `${BASE}/ie/betting-sites/bet-builder`,
-    bookmakerReview: `${BASE}/ie/betting-sites/bet365`,
-    news: `${BASE}/ie/news`,
-    tournaments: `${BASE}/ie/games/tournaments`,
+    betBuilder: `${GDC_ORIGIN}/ie/betting-sites/bet-builder`,
+    bookmakerReview: `${GDC_ORIGIN}/ie/betting-sites/bet365`,
+    news: IE_URLS.news,
+    tournaments: IE_URLS.tournaments,
 } as const;
 
 /** Betting reviews use operator-item-v2 hero CTAs, not casino `btn-cta-play-now`. */
@@ -72,8 +71,7 @@ test.describe('Journey 5.1 — Betting research via toplist', () => {
 
     test.beforeEach(async ({ page }) => {
         comparison = new ComparisonPage(page);
-        const response = await comparison.goto(URLS.bettingToplist);
-        expect(response?.status(), 'Betting toplist should return HTTP 200').toBeLessThan(400);
+        await gotoOk(page, URLS.bettingToplist, 'Betting toplist');
     });
 
     test('@regression toplist loads with H1 and operator cards @journey', async ({ page }) => {
@@ -103,8 +101,7 @@ test.describe('Journey 5.2 — Betting apps page', () => {
 
     test.beforeEach(async ({ page }) => {
         comparison = new ComparisonPage(page);
-        const response = await comparison.goto(URLS.bettingApps);
-        expect(response?.status(), 'Betting apps page should return HTTP 200').toBeLessThan(400);
+        await gotoOk(page, URLS.bettingApps, 'Betting apps page');
     });
 
     test('@regression betting apps page loads with correct H1 @journey', async ({ page }) => {
@@ -130,8 +127,7 @@ test.describe('Journey 5.3 — Free bets page', () => {
 
     test.beforeEach(async ({ page }) => {
         comparison = new ComparisonPage(page);
-        const response = await comparison.goto(URLS.freeBets);
-        expect(response?.status(), 'Free bets page should return HTTP 200').toBeLessThan(400);
+        await gotoOk(page, URLS.freeBets, 'Free bets page');
     });
 
     test('@regression free bets page loads with correct H1 @journey', async ({ page }) => {
@@ -170,8 +166,7 @@ test.describe('Journey 5.4 — In-play betting (betting toplist)', () => {
 
     test.beforeEach(async ({ page }) => {
         comparison = new ComparisonPage(page);
-        const response = await comparison.goto(URLS.inPlay);
-        expect(response?.status(), 'In-play entry should return HTTP 200').toBeLessThan(400);
+        await gotoOk(page, URLS.inPlay, 'In-play entry');
     });
 
     test('@regression in-play entry lands on betting toplist with H1 @journey', async ({ page }) => {
@@ -201,8 +196,7 @@ test.describe('Journey 5.5 — Event offers (free-bets page)', () => {
 
     test.beforeEach(async ({ page }) => {
         comparison = new ComparisonPage(page);
-        const response = await comparison.goto(URLS.freeBets);
-        expect(response?.status(), 'Free bets / event offers page should return HTTP 200').toBeLessThan(400);
+        await gotoOk(page, URLS.freeBets, 'Free bets / event offers page');
     });
 
     test('@regression event offers page loads with sign-up offers @journey', async ({ page }) => {
@@ -225,8 +219,7 @@ test.describe('Journey 5.5 — Event offers (free-bets page)', () => {
 
 test.describe('Journey 5.6 — Sport-specific pages (football & horse racing)', () => {
     test.beforeEach(async ({ page }) => {
-        const response = await page.goto(URLS.bettingToplist);
-        expect(response?.status(), 'Betting toplist should return HTTP 200').toBeLessThan(400);
+        await gotoOk(page, URLS.bettingToplist, 'Betting toplist');
     });
 
     test('@regression football betting section is present on the toplist with bookmaker CTAs @journey', async ({ page }) => {
@@ -263,8 +256,7 @@ test.describe('Journey 5.7 — Odds comparison (best-odds-guaranteed page)', () 
 
     test.beforeEach(async ({ page }) => {
         comparison = new ComparisonPage(page);
-        const response = await comparison.goto(URLS.bestOdds);
-        expect(response?.status(), 'Best odds page should return HTTP 200').toBeLessThan(400);
+        await gotoOk(page, URLS.bestOdds, 'Best odds page');
     });
 
     test('@regression best odds entry lands on betting toplist with H1 @journey', async ({ page }) => {
@@ -291,8 +283,7 @@ test.describe('Journey 5.8 — Acca / bet builder page', () => {
 
     test.beforeEach(async ({ page }) => {
         comparison = new ComparisonPage(page);
-        const response = await comparison.goto(URLS.betBuilder);
-        expect(response?.status(), 'Bet builder page should return HTTP 200').toBeLessThan(400);
+        await gotoOk(page, URLS.betBuilder, 'Bet builder page');
     });
 
     test('@regression bet builder entry lands on betting toplist with H1 @journey', async ({ page }) => {
@@ -325,8 +316,7 @@ test.describe('Journey 5.9 — Live scores (betting toplist)', () => {
 
     test.beforeEach(async ({ page }) => {
         comparison = new ComparisonPage(page);
-        const response = await comparison.goto(URLS.bettingToplist);
-        expect(response?.status(), 'Betting toplist should return HTTP 200').toBeLessThan(400);
+        await gotoOk(page, URLS.bettingToplist, 'Betting toplist');
     });
 
     test('@regression betting toplist references live scores / livescore bookmaker @journey', async ({ page }) => {
@@ -395,8 +385,7 @@ test.describe('Journey 5.10 — Bookmaker review page', () => {
 
 test.describe('Journey 5.11 — Betting tips (news article)', () => {
     test.beforeEach(async ({ page }) => {
-        const response = await page.goto(URLS.news);
-        expect(response?.status(), 'News hub should return HTTP 200').toBeLessThan(400);
+        await gotoOk(page, URLS.news, 'News hub');
     });
 
     test('@regression news hub loads with article links for tips content @journey', async ({ page }) => {
@@ -418,8 +407,7 @@ test.describe('Journey 5.11 — Betting tips (news article)', () => {
         for (let i = 0; i < checkUpTo; i++) {
             const href = await articles.nth(i).getAttribute('href');
             if (!href || href.replace(/\/$/, '').endsWith('/ie/news')) continue;
-            const fullUrl = href.startsWith('http') ? href : `${BASE}${href}`;
-            await page.goto(fullUrl, { waitUntil: 'domcontentloaded' });
+            await page.goto(resolveGdcHref(href), { waitUntil: 'domcontentloaded' });
             if (!/\/ie\/news\//.test(page.url())) continue;
             await expect(page.locator('main h1').first()).toBeVisible();
             const bettingLink = page.locator(
@@ -465,7 +453,7 @@ test.describe('Journey 5.12 — World Cup / tournament predictor', () => {
     });
 
     test('@regression homepage exposes a link to the predictor @journey', async ({ page }) => {
-        await page.goto(`${BASE}/ie`);
+        await gotoOk(page, IE_URLS.homepage, 'Homepage');
         const predictorLink = page.locator('a[href*="/ie/games/tournaments"]').first();
         await expect(predictorLink).toBeAttached();
     });
