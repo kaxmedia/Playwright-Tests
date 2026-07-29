@@ -30,6 +30,15 @@ jobs:
     container:
       image: mcr.microsoft.com/playwright:v1.59.1-noble
 
+    # Normalize update_baselines to a single boolean-string, computed ONCE.
+    # workflow_dispatch inputs arrive as STRINGS over the REST API (how the dashboard
+    # dispatches), and in GitHub Actions expressions ANY non-empty string is truthy — so the
+    # literal string "false" evaluated as truthy and a naive `${{ inputs.update_baselines }}`
+    # ALWAYS captured baselines instead of comparing. Compare explicitly against both the
+    # string and boolean forms (and empty, on push/PR) so only a real "true" triggers capture.
+    env:
+      CAPTURE_BASELINES: ${{ inputs.update_baselines == 'true' || inputs.update_baselines == true }}
+
     steps:
       - name: Install git-lfs
         run: apt-get update && apt-get install -y git-lfs
@@ -48,13 +57,13 @@ jobs:
           # ingest per-page/project pass/fail + diff-image attachment paths. The diff PNGs
           # themselves live under test-results/ (uploaded by the failure step below).
           PLAYWRIGHT_JSON_OUTPUT_NAME: visual-results.json
-        run: npx playwright test --project=visual-chromium-desktop --project=visual-chromium-android --project=visual-webkit-desktop --project=visual-webkit-ios --reporter=html,json ${{ inputs.update_baselines && '--update-snapshots' || '' }}
+        run: npx playwright test --project=visual-chromium-desktop --project=visual-chromium-android --project=visual-webkit-desktop --project=visual-webkit-ios --reporter=html,json ${{ env.CAPTURE_BASELINES == 'true' && '--update-snapshots' || '' }}
 
       # Publish the JSON report on every comparison run (pass or fail) so the dashboard has
       # per-page status each time — not only on failure. Skipped for baseline-capture runs
       # (update_baselines), which don't compare. `always()` so a failing run still uploads it.
       - name: Upload visual results JSON
-        if: ${{ always() && !inputs.update_baselines }}
+        if: ${{ always() && env.CAPTURE_BASELINES != 'true' }}
         uses: actions/upload-artifact@v4
         with:
           name: visual-results-json
@@ -63,7 +72,7 @@ jobs:
           if-no-files-found: warn
 
       - name: Upload baselines
-        if: ${{ always() && inputs.update_baselines }}
+        if: ${{ always() && env.CAPTURE_BASELINES == 'true' }}
         uses: actions/upload-artifact@v4
         with:
           name: visual-baselines
