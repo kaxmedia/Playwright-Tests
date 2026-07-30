@@ -11,10 +11,10 @@
 // byline, review images, related reviews widget, and JSON-LD structured data.
 //
 // APPROACH
-// All tests run against the IE bet365 review page (/ie/online-casinos/bet365)
-// as the primary test subject — it is a stable, fully-populated review that has
-// been live for years. A second slug (paddy-power) is used for the multi-slug
-// smoke check to confirm the template is consistent across operators.
+// All tests run against the IE bet365 review page (/ie/online-casinos/reviews/bet365;
+// bare /ie/online-casinos/bet365 redirects there) as the primary test subject — it is a
+// stable, fully-populated review that has been live for years. A second slug (paddy-power)
+// is used for the multi-slug smoke check to confirm the template is consistent across operators.
 //
 // Run with:
 //   npx playwright test tests/review-page.spec.ts --project=chrome

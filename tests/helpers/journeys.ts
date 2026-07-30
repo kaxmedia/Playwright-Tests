@@ -13,6 +13,7 @@ export const IE_URLS = {
   mobileCasinos: `${GDC_ORIGIN}/ie/online-casinos/apps`,
   cryptoCasinos: `${GDC_ORIGIN}/ie/online-casinos/bitcoin`,
   paymentCasinos: `${GDC_ORIGIN}/ie/online-casinos/paypal`,
+  /** Legacy `/ie/reviews/casino` redirects here. */
   howWeReview: `${GDC_ORIGIN}/ie/online-casinos/reviews`,
   casinoReview: `${GDC_ORIGIN}/ie/online-casinos/kingmaker`,
   slotPage: `${GDC_ORIGIN}/ie/online-casinos/slots/starburst`,

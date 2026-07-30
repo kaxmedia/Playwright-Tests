@@ -260,7 +260,7 @@ test.describe('Journey 3.9 — Safe / licensed casinos (how-we-review guide)', (
     });
 
     test('@regression how-we-review guide loads with H1 @journey', async ({ page }) => {
-        await expect(page).toHaveURL(/\/ie\/online-casinos\/reviews/);
+        await expect(page).toHaveURL(/\/ie\/online-casinos\/reviews\/?$/);
         await expect(page.locator('h1').first()).toBeVisible();
     });
 

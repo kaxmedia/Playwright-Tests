@@ -1,7 +1,11 @@
 import { test, expect, type Locator } from '../fixtures/test';
 import { ProfilePage, PROFILE_URLS, PROFILE_TEST_DATA } from '../pages/ProfilePage';
 import { AuthPage } from '../pages/AuthPage';
-import { signInAsTestUser, SIGN_IN_USER } from '../fixtures/auth';
+import {
+    acquireSharedAuthLock,
+    signInAsTestUserUnlocked,
+    type AuthLockHandle,
+} from '../fixtures/auth';
 
 
 /**
@@ -54,15 +58,26 @@ async function saveAdditionalDetailsAndRoundTrip(
 // ─────────────────────────────────────────────────────────────────────────────
 
 test.describe('Profile Section', () => {
+    // Password mutations + shared E2E account — keep serial within this file.
+    test.describe.configure({ mode: 'serial' });
+
     let profilePage: ProfilePage;
+    let authLock: AuthLockHandle | undefined;
 
     test.beforeEach(async ({ page }) => {
+        // Hold the shared-account lock for the whole test so chrome/firefox/webkit
+        // sign-ins don't invalidate each other's Supabase sessions mid-run.
+        authLock = await acquireSharedAuthLock();
         const authPage = new AuthPage(page);
-        const password = process.env.E2E_TEST_PASSWORD ?? SIGN_IN_USER.password;
         await authPage.goto();
-        await signInAsTestUser(authPage, password);
+        await signInAsTestUserUnlocked(authPage);
 
         profilePage = new ProfilePage(page);
+    });
+
+    test.afterEach(() => {
+        authLock?.release();
+        authLock = undefined;
     });
 
     // ══════════════════════════════════════════════════════════════════════════
@@ -189,8 +204,9 @@ test.describe('Profile Section', () => {
         const nickname = `${PROFILE_TEST_DATA.nickname}-${Date.now().toString(36).slice(-6)}`;
         await profilePage.updateProfileDetails({ nickname });
 
-        await profilePage.clickTab('additional');
-        await profilePage.clickTab('details');
+        // Prefer direct navigation — reward overlays can intercept sidebar tab clicks after save.
+        await profilePage.gotoTab('additional');
+        await profilePage.gotoTab('details');
 
         await expect(profilePage.displayNickname).toContainText(nickname, { timeout: 20000 });
     });
@@ -209,8 +225,9 @@ test.describe('Profile Section', () => {
         const phoneNumber = `${PROFILE_TEST_DATA.phonePrefix}${last3.toString().padStart(3, '0')}`;
         await profilePage.updateProfileDetails({ phoneNumber });
 
-        await profilePage.clickTab('additional');
-        await profilePage.clickTab('details');
+        // Prefer direct navigation over sidebar clicks — reward overlays can intercept tab clicks after save.
+        await profilePage.gotoTab('additional');
+        await profilePage.gotoTab('details');
 
         await expect(profilePage.displayPhone).toContainText(phoneNumber.slice(-4), { timeout: 20000 });
     });
@@ -415,7 +432,9 @@ test.describe('Profile Section', () => {
             .toBeTruthy();
     });
 
-    test('@regression change password then restore original (same session)', async ({ page }) => {
+    test('@regression change password then restore original (same session)', async ({ page, browserName }) => {
+        // Shared E2E account — mutating password across browsers in parallel kicks other sessions offline.
+        test.skip(browserName !== 'chromium', 'Password mutation covered on chrome only (shared account)');
         test.setTimeout(120_000);
         let restored = false;
         try {
@@ -436,7 +455,7 @@ test.describe('Profile Section', () => {
                 try {
                     const auth = new AuthPage(page);
                     await auth.goto();
-                    await signInAsTestUser(auth, PROFILE_TEST_DATA.newPassword);
+                    await signInAsTestUserUnlocked(auth, PROFILE_TEST_DATA.newPassword);
                     const recover = new ProfilePage(page);
                     await recover.gotoTab('password');
                     await recover.changePassword(

@@ -133,6 +133,8 @@ export class ProfilePage {
     // ── Shared — success / error feedback ─────────────────────────────────────
     readonly successToast: Locator;
     readonly errorToast: Locator;
+    readonly levelUpOverlay: Locator;
+    readonly levelUpCloseBtn: Locator;
 
     constructor(page: Page) {
         this.page = page;
@@ -144,6 +146,12 @@ export class ProfilePage {
         });
         this.passwordFormRoot = page.locator('[data-v-app]').filter({ has: page.getByRole('button', { name: /update password/i }) });
         this.streakModalCloseBtn = page.getByRole('button', { name: /close modal/i }).first();
+        /** Level-up / claim-reward overlay (`#level-up-notification-wrapper`) — blocks tab clicks. */
+        this.levelUpOverlay = page.locator('#level-up-notification-wrapper');
+        this.levelUpCloseBtn = this.levelUpOverlay
+            .locator('img[alt*="close" i], [aria-label*="close" i], button')
+            .or(this.levelUpOverlay.getByRole('img', { name: /close/i }))
+            .first();
 
         // ── Tabs (sidebar inside profile shell) ─────────────────────────────────
         this.tabRewards = this.profileShell.getByRole('link', { name: /gambling\.com rewards/i }).first();
@@ -304,8 +312,29 @@ export class ProfilePage {
     async gotoTab(tab: keyof typeof PROFILE_URLS): Promise<void> {
         await this.page.goto(PROFILE_URLS[tab]);
         await this.page.waitForLoadState('domcontentloaded');
-        await this.profileShell.getByRole('link', { name: /^profile details$/i }).waitFor({ state: 'visible', timeout: 30000 });
+        await this.dismissRewardOverlaysIfPresent();
+
+        const detailsTab = this.profileShell.getByRole('link', { name: /^profile details$/i });
+        // Unauthenticated visits land on the “Get Unrestricted Access” marketing shell.
+        if (!(await detailsTab.isVisible().catch(() => false))) {
+            const signedOut = await this.page.getByText(/get unrestricted access|join now|sign up/i).first().isVisible().catch(() => false);
+            if (signedOut) {
+                throw new Error(
+                    `Profile tab ${tab} requires auth but session was lost (marketing gate shown). Re-run after ensuring the shared E2E account is signed in.`,
+                );
+            }
+        }
+        await detailsTab.waitFor({ state: 'visible', timeout: 30000 });
+        await this.dismissRewardOverlaysIfPresent();
+    }
+
+    /**
+     * Reward overlays (login-streak + level-up claim) sit at z-1050 and intercept
+     * pointer events on the profile nav. Dismiss before tab clicks / form submits.
+     */
+    private async dismissRewardOverlaysIfPresent(): Promise<void> {
         await this.dismissStreakModalIfPresent();
+        await this.dismissLevelUpOverlayIfPresent();
     }
 
     /**
@@ -321,6 +350,19 @@ export class ProfilePage {
         }
     }
 
+    /** Level-up “You've levelled up!” / claim-reward full-screen overlay. */
+    private async dismissLevelUpOverlayIfPresent(): Promise<void> {
+        if (!(await this.levelUpOverlay.isVisible().catch(() => false))) return;
+
+        // Prefer the close icon; fall back to Escape if the close control isn't actionable.
+        if (await this.levelUpCloseBtn.isVisible().catch(() => false)) {
+            await this.levelUpCloseBtn.click({ force: true }).catch(() => {});
+        } else {
+            await this.page.keyboard.press('Escape');
+        }
+        await this.levelUpOverlay.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {});
+    }
+
     /** Click a tab in the profile nav and wait for the page to settle (`email` = Marketing preferences URL). */
     async clickTab(tab: keyof typeof PROFILE_URLS): Promise<void> {
         const tabLocators: Record<keyof typeof PROFILE_URLS, Locator> = {
@@ -331,8 +373,10 @@ export class ProfilePage {
             password: this.tabPassword,
             refer: this.tabRefer,
         };
+        await this.dismissRewardOverlaysIfPresent();
         await tabLocators[tab].click();
         await this.page.waitForLoadState('domcontentloaded');
+        await this.dismissRewardOverlaysIfPresent();
         await this.profileShell.getByRole('link', { name: /^profile details$/i }).waitFor({ state: 'visible', timeout: 30000 });
     }
 
@@ -383,6 +427,8 @@ export class ProfilePage {
             )
             .toBeTruthy();
         await this.page.waitForLoadState('domcontentloaded');
+        // Saving profile details can trigger the level-up claim overlay.
+        await this.dismissRewardOverlaysIfPresent();
     }
 
     /**

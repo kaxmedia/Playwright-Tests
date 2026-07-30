@@ -99,6 +99,7 @@ test.describe('Tournaments Page — Unauthenticated', () => {
     });
 
     test('@regression first tournament card has a non-empty title', async () => {
+      test.skip(!(await tournamentsPage.hasActiveTournament()), 'No tournament card rendered (no live tournament for this region — includes the CI "GX"-region personalization gating; see #109/#111/#112/#114/#117)');
       await expect(tournamentsPage.tournamentCard).toBeVisible({ timeout: 20_000 });
       await expect(tournamentsPage.tournamentTitle).toBeVisible();
       const text = await tournamentsPage.tournamentTitle.innerText();
@@ -106,6 +107,7 @@ test.describe('Tournaments Page — Unauthenticated', () => {
     });
 
     test('@regression first tournament card has a prize displayed', async () => {
+      test.skip(!(await tournamentsPage.hasActiveTournament()), 'No tournament card rendered (no live tournament for this region — includes the CI "GX"-region personalization gating; see #109/#111/#112/#114/#117)');
       await expect(tournamentsPage.tournamentCard).toBeVisible({ timeout: 20_000 });
       await expect(tournamentsPage.tournamentPrize).toBeVisible();
       const text = await tournamentsPage.tournamentPrize.innerText();

@@ -311,8 +311,9 @@ export class AuthPage {
 
     /** Opens the profile dropdown by clicking the avatar in the nav bar. */
     async openProfileDropdown(): Promise<void> {
+        await this.profileAvatar.waitFor({ state: 'visible', timeout: 20_000 });
         await this.profileAvatar.click();
-        await this.profileDropdown.waitFor({ state: 'visible', timeout: 8000 });
+        await this.profileDropdown.waitFor({ state: 'visible', timeout: 12_000 });
     }
 
     /** Ends session via UI (prefer when cookie-clear would drop returning-user hints you need to keep). */
