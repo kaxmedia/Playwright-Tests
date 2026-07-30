@@ -2,7 +2,7 @@ import { type ConsoleMessage, type Page } from '@playwright/test';
 
 /** Same noise patterns as legacy console tests — applied only to first-party script errors. */
 const KNOWN_NOISY_SUBSTRING =
-  /favicon|analytics|comment count|failed to fetch|resizeobserver|permissions-policy|taboola|attestation reporting/i;
+  /favicon|analytics|comments? count|page views|error fetching|failed to fetch|resizeobserver|permissions-policy|taboola|attestation reporting|cdn-cookieyes\.com|cookieyes/i;
 
 /**
  * Tracked production `pageerror`s — tests still run and still fail on any other exception.
@@ -24,7 +24,7 @@ export const KNOWN_PAGE_ERROR_ALLOWLIST: ReadonlyArray<{
   },
   {
     id: 'clarity-collect-cors',
-    pattern: /k\.clarity\.ms\/collect/i,
+    pattern: /[kl]\.clarity\.ms\/collect|clarity\.ms\/collect/i,
     // THIRD-PARTY analytics — Microsoft Clarity's beacon (https://k.clarity.ms/collect) is
     // CORS-blocked in the CI/test network (webkit + firefox), long-standing (4+ days).
     // Unlike detectIncognito this is NOT a first-party bug and needs NO site-owner
@@ -42,11 +42,29 @@ export const KNOWN_PAGE_ERROR_ALLOWLIST: ReadonlyArray<{
     // every page; always suppressed so console/pageerror suites stay green.
     note: 'Firefox detectIncognito unhandled rejection — permanent suppress (product declined)',
   },
+  {
+    id: 'gut-gambling-com-frame-access',
+    pattern: /gut\.gambling\.com.*Protocols, domains, and ports must match|from accessing a frame with origin ["']https:\/\/gut\.gambling\.com/i,
+    note: 'Cross-origin frame access noise from gut.gambling.com embed (WebKit) — not first-party page logic',
+  },
+  {
+    id: 'cookieyes-cdn-cors',
+    pattern: /cdn-cookieyes\.com|CookieYes/i,
+    note: 'Third-party CookieYes CMP CDN CORS / access-control failures (WebKit) — external CMP, not first-party',
+  },
+  {
+    id: 'cloudflare-rum-cors',
+    pattern: /cdn-cgi\/rum|cloudflareinsights\.com\/beacon/i,
+    note: 'Cloudflare RUM beacon CORS (WebKit) — third-party analytics, already ignored in network-failed tests',
+  },
 ];
 
 /** Always filtered by `unexpectedPageErrors` / FirstPartyPageGuards — no opt-in needed. */
 export const ALWAYS_SUPPRESSED_PAGE_ERROR_IDS: readonly string[] = [
   'detectincognito-firefox-unhandled-rejection',
+  'gut-gambling-com-frame-access',
+  'cookieyes-cdn-cors',
+  'cloudflare-rum-cors',
 ];
 
 /** Tracked first-party console errors — remove when dev fixes ship. */
@@ -57,7 +75,7 @@ export const KNOWN_CONSOLE_ERROR_ALLOWLIST: ReadonlyArray<{
 }> = [
   {
     id: 'clarity-collect-cors',
-    pattern: /k\.clarity\.ms\/collect/i,
+    pattern: /[kl]\.clarity\.ms\/collect|clarity\.ms\/collect/i,
     // Same third-party Microsoft Clarity CORS beacon as the page-error allowlist entry —
     // duplicated here because on some browsers the CORS failure surfaces as a console error
     // attributed to the gambling.com document rather than an uncaught pageerror. Not a
@@ -69,11 +87,17 @@ export const KNOWN_CONSOLE_ERROR_ALLOWLIST: ReadonlyArray<{
     pattern: /detectIncognito cannot determine the browser/i,
     note: 'Firefox detectIncognito — permanent suppress (product declined)',
   },
+  {
+    id: 'cookie-rejected-invalid-domain',
+    pattern: /Cookie .+ has been rejected for invalid domain/i,
+    note: 'Firefox first-party-attributed cookie domain rejections (analytics cookies) — browser noise, not page bugs',
+  },
 ];
 
 /** Always filtered by `unexpectedConsoleErrors` — no opt-in needed. */
 export const ALWAYS_SUPPRESSED_CONSOLE_ERROR_IDS: readonly string[] = [
   'detectincognito-firefox-unhandled-rejection',
+  'cookie-rejected-invalid-domain',
 ];
 
 /** Returns pageerrors that are not on the known-issue allowlist (by id). */

@@ -196,9 +196,9 @@ const seoPages = [
   },
   {
     name: 'IE review — bet365',
-    url: `${BASE_URL}/ie/online-casinos/bet365`,
-    // Review page has no trailing slash — the canonical matches the URL exactly
-    expectedCanonical: `${BASE_URL}/ie/online-casinos/bet365`,
+    // Canonical path includes `/reviews/` (bare `/ie/online-casinos/bet365` redirects here).
+    url: `${BASE_URL}/ie/online-casinos/reviews/bet365`,
+    expectedCanonical: `${BASE_URL}/ie/online-casinos/reviews/bet365`,
     expectedLang: 'en-IE',
   },
 ];

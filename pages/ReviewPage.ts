@@ -1,7 +1,8 @@
 // Page Object for individual bookmaker/casino review pages on gambling.com.
 // These pages follow a consistent slug-based URL pattern:
-// e.g. https://www.gambling.com/ie/online-casinos/bet365
-//      https://www.gambling.com/ie/online-casinos/paddy-power
+// e.g. https://www.gambling.com/ie/online-casinos/reviews/bet365
+//      https://www.gambling.com/ie/online-casinos/reviews/paddy-power
+// Legacy paths without `/reviews/` still redirect.
 //
 // The site renders two copies of the rating card and CTA button — one for
 // mobile (hidden on desktop) and one for desktop (visible on desktop).
@@ -19,7 +20,8 @@ export class ReviewPage {
   readonly page: Page;
 
   // The base URL for all casino review pages (IE geo used as primary test target)
-  readonly baseUrl = 'https://www.gambling.com/ie/online-casinos';
+  // Casino review pages live under /reviews/ (legacy /ie/online-casinos/{slug} redirects here).
+  readonly baseUrl = 'https://www.gambling.com/ie/online-casinos/reviews';
 
   // ── Existing locators ─────────────────────────────────────────────────────
 

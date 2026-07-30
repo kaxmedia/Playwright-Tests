@@ -53,6 +53,7 @@ export class SubCategoryPage {
     const url = `${config.geoPath}/online-casinos/${config.slug}`;
     const response = await this.page.goto(url, { waitUntil: 'domcontentloaded' });
     if (response && response.status() >= 400) throw new Error(`HTTP ${response.status()} for ${url}`);
-    await this.cards.first().waitFor({ state: 'attached' });
+    // Wait until at least one card is visible — `attached` alone races client-side oplist hydrate.
+    await this.cards.first().waitFor({ state: 'visible', timeout: 30_000 });
   }
 }
