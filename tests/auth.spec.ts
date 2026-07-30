@@ -6,6 +6,11 @@ import {
     WEAK_PASSWORDS,
     generateTestEmail,
 } from '../pages/AuthPage';
+import {
+    acquireSharedAuthLock,
+    signInAsTestUserUnlocked,
+    type AuthLockHandle,
+} from '../fixtures/auth';
 
 /** App often uses `opacity-50` / `pointer-events` instead of the `disabled` attribute for I’m In. */
 async function expectImInBlocked(imIn: Locator): Promise<void> {
@@ -411,92 +416,84 @@ test.describe('Authentication — Sign Up & Sign In', () => {
 
     // ══════════════════════════════════════════════════════════════════════════
     // 6c. Profile Dropdown (logged-in user clicks avatar)
+    // Shared E2E account — exclusive lock so parallel browsers don't kick the session.
     // ══════════════════════════════════════════════════════════════════════════
 
-    test('@smoke @regression profile dropdown opens when avatar is clicked after sign in', async () => {
-        await authPage.signIn(SIGN_IN_USER.email, SIGN_IN_USER.password);
-        await expect(authPage.modal).toBeHidden({ timeout: 15000 });
-        await expect(authPage.profileAvatar).toBeVisible({ timeout: 8000 });
+    test.describe('Profile dropdown (shared account)', () => {
+        let authLock: AuthLockHandle | undefined;
 
-        await authPage.openProfileDropdown();
-        await expect(authPage.profileDropdown).toBeVisible();
-    });
-
-    test('@smoke @regression profile dropdown shows Hello greeting', async () => {
-        await authPage.signIn(SIGN_IN_USER.email, SIGN_IN_USER.password);
-        await expect(authPage.modal).toBeHidden({ timeout: 15000 });
-
-        await authPage.openProfileDropdown();
-        await expect(authPage.profileDropdownHeading).toBeVisible();
-        const text = await authPage.profileDropdownHeading.innerText();
-        expect(text.toLowerCase()).toContain('hello');
-    });
-
-    test('@smoke @regression profile dropdown shows Manage your account link', async () => {
-        await authPage.signIn(SIGN_IN_USER.email, SIGN_IN_USER.password);
-        await expect(authPage.modal).toBeHidden({ timeout: 15000 });
-
-        await authPage.openProfileDropdown();
-        await expect(authPage.manageAccountLink).toBeVisible();
-    });
-
-    test('@smoke @regression profile dropdown shows Go to Rewards link', async () => {
-        await authPage.signIn(SIGN_IN_USER.email, SIGN_IN_USER.password);
-        await expect(authPage.modal).toBeHidden({ timeout: 15000 });
-
-        await authPage.openProfileDropdown();
-        await expect(authPage.goToRewardsLink).toBeVisible();
-    });
-
-    test('@smoke @regression profile dropdown shows Sign Out button', async () => {
-        await authPage.signIn(SIGN_IN_USER.email, SIGN_IN_USER.password);
-        await expect(authPage.modal).toBeHidden({ timeout: 15000 });
-
-        await authPage.openProfileDropdown();
-        await expect(authPage.signOutBtn).toBeVisible();
-    });
-
-    test('@regression Manage your account link has valid href', async ({}, testInfo) => {
-        await authPage.signIn(SIGN_IN_USER.email, SIGN_IN_USER.password);
-        await expect(authPage.modal).toBeHidden({ timeout: 15000 });
-
-        await authPage.openProfileDropdown();
-        const href = await authPage.manageAccountLink.evaluate((el) => {
-            const n = el as HTMLElement;
-            return n.closest('a')?.href ?? '';
+        test.beforeEach(async () => {
+            authLock = await acquireSharedAuthLock();
+            await signInAsTestUserUnlocked(authPage);
+            await expect(authPage.modal).toBeHidden({ timeout: 15000 });
+            await expect(authPage.profileAvatar).toBeVisible({ timeout: 8000 });
         });
-        if (!href) {
-            testInfo.skip(true, 'Manage account row has no enclosing anchor href in this layout.');
-            return;
-        }
-        expect(href).toMatch(/profile|account/i);
-        expect(href).not.toBe('#');
-    });
 
-    test('@regression Go to Rewards link has valid href', async ({}, testInfo) => {
-        await authPage.signIn(SIGN_IN_USER.email, SIGN_IN_USER.password);
-        await expect(authPage.modal).toBeHidden({ timeout: 15000 });
-
-        await authPage.openProfileDropdown();
-        const href = await authPage.goToRewardsLink.evaluate((el) => {
-            const n = el as HTMLElement;
-            return n.closest('a')?.href ?? '';
+        test.afterEach(() => {
+            authLock?.release();
+            authLock = undefined;
         });
-        if (!href) {
-            testInfo.skip(true, 'Go to Rewards row has no enclosing anchor href in this layout.');
-            return;
-        }
-        expect(href).toMatch(/reward|chip/i);
-        expect(href).not.toBe('#');
-    });
 
-    test('@regression Go to Rewards shows chip count', async () => {
-        await authPage.signIn(SIGN_IN_USER.email, SIGN_IN_USER.password);
-        await expect(authPage.modal).toBeHidden({ timeout: 15000 });
+        test('@smoke @regression profile dropdown opens when avatar is clicked after sign in', async () => {
+            await authPage.openProfileDropdown();
+            await expect(authPage.profileDropdown).toBeVisible();
+        });
 
-        await authPage.openProfileDropdown();
-        const text = await authPage.goToRewardsLink.innerText();
-        expect(text).toMatch(/\d+\s*chips?/i);
+        test('@smoke @regression profile dropdown shows Hello greeting', async () => {
+            await authPage.openProfileDropdown();
+            await expect(authPage.profileDropdownHeading).toBeVisible();
+            const text = await authPage.profileDropdownHeading.innerText();
+            expect(text.toLowerCase()).toContain('hello');
+        });
+
+        test('@smoke @regression profile dropdown shows Manage your account link', async () => {
+            await authPage.openProfileDropdown();
+            await expect(authPage.manageAccountLink).toBeVisible();
+        });
+
+        test('@smoke @regression profile dropdown shows Go to Rewards link', async () => {
+            await authPage.openProfileDropdown();
+            await expect(authPage.goToRewardsLink).toBeVisible();
+        });
+
+        test('@smoke @regression profile dropdown shows Sign Out button', async () => {
+            await authPage.openProfileDropdown();
+            await expect(authPage.signOutBtn).toBeVisible();
+        });
+
+        test('@regression Manage your account link has valid href', async ({}, testInfo) => {
+            await authPage.openProfileDropdown();
+            const href = await authPage.manageAccountLink.evaluate((el) => {
+                const n = el as HTMLElement;
+                return n.closest('a')?.href ?? '';
+            });
+            if (!href) {
+                testInfo.skip(true, 'Manage account row has no enclosing anchor href in this layout.');
+                return;
+            }
+            expect(href).toMatch(/profile|account/i);
+            expect(href).not.toBe('#');
+        });
+
+        test('@regression Go to Rewards link has valid href', async ({}, testInfo) => {
+            await authPage.openProfileDropdown();
+            const href = await authPage.goToRewardsLink.evaluate((el) => {
+                const n = el as HTMLElement;
+                return n.closest('a')?.href ?? '';
+            });
+            if (!href) {
+                testInfo.skip(true, 'Go to Rewards row has no enclosing anchor href in this layout.');
+                return;
+            }
+            expect(href).toMatch(/reward|chip/i);
+            expect(href).not.toBe('#');
+        });
+
+        test('@regression Go to Rewards shows chip count', async () => {
+            await authPage.openProfileDropdown();
+            const text = await authPage.goToRewardsLink.innerText();
+            expect(text).toMatch(/\d+\s*chips?/i);
+        });
     });
 
     test('@regression clicking Sign Out logs the user out', async () => {
@@ -593,47 +590,51 @@ test.describe('Authentication — Sign Up & Sign In', () => {
 
     test('@smoke @regression returning user sees Welcome back and Google last sign-in hint', async ({ page }, testInfo) => {
         test.setTimeout(120000);
+        const lock = await acquireSharedAuthLock();
+        try {
+            await signInAsTestUserUnlocked(authPage);
+            await expect(authPage.modal).toBeHidden({ timeout: 20000 });
+            await expect(page.locator('#supabase-logout-button')).toBeAttached({ timeout: 20000 });
 
-        await authPage.signIn(SIGN_IN_USER.email, SIGN_IN_USER.password);
-        await expect(authPage.modal).toBeHidden({ timeout: 20000 });
-        await expect(page.locator('#supabase-logout-button')).toBeAttached({ timeout: 20000 });
+            // clearCookies alone does not end the Supabase session (localStorage). Sign out via the
+            // profile menu so origin storage can still keep any “last sign-in method” hints.
+            await page.keyboard.press('Escape');
+            await authPage.openProfileDropdown();
+            await page.getByText(/^sign out$/i).click();
+            await expect(authPage.headerSignUpBtn).toBeVisible({ timeout: 15000 });
+            await page.goto('/');
+            await page.getByRole('button', { name: /accept all/i }).click({ timeout: 3000 }).catch(() => { });
 
-        // clearCookies alone does not end the Supabase session (localStorage). Sign out via the
-        // profile menu so origin storage can still keep any “last sign-in method” hints.
-        await page.keyboard.press('Escape');
-        await authPage.openProfileDropdown();
-        await page.getByText(/^sign out$/i).click();
-        await expect(authPage.headerSignUpBtn).toBeVisible({ timeout: 15000 });
-        await page.goto('/');
-        await page.getByRole('button', { name: /accept all/i }).click({ timeout: 3000 }).catch(() => { });
+            await authPage.openSignInFromHeader();
+            await authPage.modal.waitFor({ state: 'visible', timeout: 10000 });
 
-        await authPage.openSignInFromHeader();
-        await authPage.modal.waitFor({ state: 'visible', timeout: 10000 });
+            const welcome = authPage.welcomeBackHeading;
+            if (!(await welcome.isVisible().catch(() => false))) {
+                testInfo.skip(
+                    true,
+                    'Returning-user welcome not shown — session may not be remembered for this account/browser.'
+                );
+                return;
+            }
 
-        const welcome = authPage.welcomeBackHeading;
-        if (!(await welcome.isVisible().catch(() => false))) {
-            testInfo.skip(
-                true,
-                'Returning-user welcome not shown — session may not be remembered for this account/browser.'
-            );
-            return;
+            const greeting = (await welcome.textContent())?.trim() ?? '';
+            expect(greeting.length).toBeGreaterThan(8);
+
+            if (!(await authPage.lastSignedInWithGoogleHint.isVisible().catch(() => false))) {
+                testInfo.skip(
+                    true,
+                    '“You last signed in with Google” not shown — appears only when this browser/account last used Google sign-in (email/password-only flows show the generic intro instead).'
+                );
+                return;
+            }
+
+            await expect(authPage.continueWithGoogleBtn).toBeVisible();
+            await expect(authPage.continueWithDifferentAccountBtn).toBeVisible();
+            await expect(authPage.signUpLink).toBeVisible();
+            await expect(authPage.modal.getByText(/Don.?t have an account/i)).toBeVisible();
+        } finally {
+            lock.release();
         }
-
-        const greeting = (await welcome.textContent())?.trim() ?? '';
-        expect(greeting.length).toBeGreaterThan(8);
-
-        if (!(await authPage.lastSignedInWithGoogleHint.isVisible().catch(() => false))) {
-            testInfo.skip(
-                true,
-                '“You last signed in with Google” not shown — appears only when this browser/account last used Google sign-in (email/password-only flows show the generic intro instead).'
-            );
-            return;
-        }
-
-        await expect(authPage.continueWithGoogleBtn).toBeVisible();
-        await expect(authPage.continueWithDifferentAccountBtn).toBeVisible();
-        await expect(authPage.signUpLink).toBeVisible();
-        await expect(authPage.modal.getByText(/Don.?t have an account/i)).toBeVisible();
     });
 
     // ══════════════════════════════════════════════════════════════════════════

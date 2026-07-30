@@ -21,8 +21,10 @@ for (const config of subCategoryUrls) {
     });
 
     test('@regression T3 Operator count >= 3', async () => {
-      const count = await page.cards.count();
-      expect(count).toBeGreaterThanOrEqual(3);
+      // Poll until the oplist finishes hydrating — geo/VPN pages can attach the first card early.
+      await expect
+        .poll(async () => page.cards.count(), { timeout: 20_000 })
+        .toBeGreaterThanOrEqual(3);
     });
 
     test('@regression T4 Operator cards have outbound CTA links', async () => {
