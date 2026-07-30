@@ -291,16 +291,29 @@ test.describe('Journey 8.8 — News reader', () => {
     });
 
     test('@regression news article contains a related toplist link @journey', async ({ page }) => {
-        const firstArticle = page.locator('a[href*="/ie/news/"]').first();
-        await expect(firstArticle).toBeAttached();
-        const href = await firstArticle.getAttribute('href');
-        const fullUrl = resolveGdcHref(href ?? '');
-        await page.goto(fullUrl);
-        // In-content toplist or affiliate link present in article body
-        const toplistLink = page.locator(
-            'main a[href*="/ie/online-casinos"], main a[href*="/ie/betting-sites"], main a[href*="/go/"]'
-        ).first();
-        await expect(toplistLink).toBeAttached();
+        // Collect several recent article URLs from the hub. The newest article isn't guaranteed to
+        // carry a toplist CTA — responsible-gambling pieces legitimately have none (verified live
+        // 2026-07-30) — so assert that AT LEAST ONE recent article links out to a toplist/affiliate
+        // in its content, rather than blindly trusting the first article.
+        const hrefs = await page.locator('a[href*="/ie/news/"]').evaluateAll((els) =>
+            [...new Set(els.map((e) => e.getAttribute('href')))]
+                .filter((h): h is string => !!h && /\/ie\/news\/[^/?#]+/.test(h))
+                .slice(0, 6)
+        );
+        expect(hrefs.length, 'Expected recent news article links on the hub').toBeGreaterThan(0);
+
+        let found = false;
+        for (const href of hrefs) {
+            await page.goto(resolveGdcHref(href));
+            const toplistLink = page.locator(
+                'main a[href*="/ie/online-casinos"], main a[href*="/ie/betting-sites"], main a[href*="/go/"]'
+            ).first();
+            if ((await toplistLink.count()) > 0) {
+                found = true;
+                break;
+            }
+        }
+        expect(found, 'Expected at least one recent news article to link to a toplist/affiliate').toBe(true);
     });
 });
 

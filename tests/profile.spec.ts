@@ -141,9 +141,15 @@ test.describe('Profile Section', () => {
 
     test('@regression Rewards tab shows Spin the Wheel banner', async () => {
         await profilePage.gotoTab('rewards');
-        await profilePage.page
-            .getByRole('heading', { name: /what you could win/i })
-            .scrollIntoViewIfNeeded();
+        // The Rewards tab content hydrates after the tab switch, so the "What You Could Win"
+        // heading can be detached/replaced mid-render. Wait for it to be visible, then retry the
+        // scroll (re-resolving the locator) so we never scroll a stale node — the previous direct
+        // scrollIntoViewIfNeeded() raced the re-render and threw "Element is not attached".
+        const winHeading = profilePage.page.getByRole('heading', { name: /what you could win/i });
+        await winHeading.waitFor({ state: 'visible', timeout: 20000 });
+        await expect(async () => {
+            await winHeading.scrollIntoViewIfNeeded({ timeout: 5000 });
+        }).toPass({ timeout: 20000 });
         await expect(profilePage.spinTheWheelBanner).toBeVisible({ timeout: 20000 });
     });
 

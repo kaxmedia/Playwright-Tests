@@ -196,6 +196,10 @@ const seoPages = [
   },
   {
     name: 'IE review — bet365',
+    url: `${BASE_URL}/ie/online-casinos/reviews/bet365`,
+    // Review pages live under /reviews/ (same restructure as PR #141). Canonical + og:url are
+    // self-referencing to the /reviews/ URL; the old /ie/online-casinos/bet365 still 200s but
+    // canonicalises here. Verified live 2026-07-30.
     // Canonical path includes `/reviews/` (bare `/ie/online-casinos/bet365` redirects here).
     url: `${BASE_URL}/ie/online-casinos/reviews/bet365`,
     expectedCanonical: `${BASE_URL}/ie/online-casinos/reviews/bet365`,

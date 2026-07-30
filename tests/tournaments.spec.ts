@@ -99,6 +99,10 @@ test.describe('Tournaments Page — Unauthenticated', () => {
     });
 
     test('@regression first tournament card has a non-empty title', async () => {
+      // Same guard as "at least one tournament card": the .tournament-info-panel only renders
+      // when a tournament is live for the region. Verified live (real IP) that the panel + title
+      // render; the failure is the CI "GX"-region personalization gating (no tournament served to
+      // the datacenter IP), not a stale selector. See #109/#111/#112/#114/#117.
       test.skip(!(await tournamentsPage.hasActiveTournament()), 'No tournament card rendered (no live tournament for this region — includes the CI "GX"-region personalization gating; see #109/#111/#112/#114/#117)');
       await expect(tournamentsPage.tournamentCard).toBeVisible({ timeout: 20_000 });
       await expect(tournamentsPage.tournamentTitle).toBeVisible();
@@ -107,6 +111,8 @@ test.describe('Tournaments Page — Unauthenticated', () => {
     });
 
     test('@regression first tournament card has a prize displayed', async () => {
+      // Guarded like the sibling tests — the panel only renders for a live tournament (CI "GX"
+      // geo-gating serves none). Verified live from a real IP. See #109/#111/#112/#114/#117.
       test.skip(!(await tournamentsPage.hasActiveTournament()), 'No tournament card rendered (no live tournament for this region — includes the CI "GX"-region personalization gating; see #109/#111/#112/#114/#117)');
       await expect(tournamentsPage.tournamentCard).toBeVisible({ timeout: 20_000 });
       await expect(tournamentsPage.tournamentPrize).toBeVisible();
