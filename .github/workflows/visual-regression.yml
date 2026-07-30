@@ -88,3 +88,20 @@ jobs:
             playwright-report/
             test-results/
           retention-days: 30
+
+      # Small, dedicated artifact of ONLY the per-test comparison PNGs Playwright writes under
+      # test-results/ on a failed toHaveScreenshot — verified against a real failing run:
+      # test-results/<test-dir>/<snapshot>-actual.png (and <snapshot>-diff.png on a same-size
+      # pixel diff). Scoped to those two so it stays small/fast (excludes the generic
+      # test-failed-N.png page screenshots and the ~600MB visual-regression-report bundle above),
+      # for the dashboard's visual-diff viewer to ingest.
+      - name: Upload visual failure screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-failure-screenshots
+          path: |
+            test-results/**/*-diff.png
+            test-results/**/*-actual.png
+          retention-days: 30
+          if-no-files-found: warn
