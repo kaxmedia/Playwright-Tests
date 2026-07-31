@@ -56,24 +56,23 @@ export class SubCategoryPage {
   }
 
   /**
-   * True when the page is showing the known CI-IP reduced/fallback operator list (fewer than the
-   * required 3) rather than the full toplist. Certain US sub-category pages (/apps, /slots) are
-   * served a stub list (~2 operators) from datacenter/CI IPs, while a real user IP sees the full
-   * list (18, verified live 2026-07-30). Mirrors TournamentsPage::hasActiveTournament() — used to
-   * skip the count/CTA assertions ONLY on the combos flagged ciIpReducedList when the fallback is
-   * actually present (so a real IP, which shows 18, still runs the assertions).
+   * Poll until the operator list reaches `min` (client-side hydration settles), returning the
+   * observed count. This is the SINGLE source of truth for both the CI-reduced-fallback skip
+   * decision and the count assertion in T3/T4 — so a transient mid-hydration dip can't slip
+   * between two independent polls and surface as a false failure. If `min` is never reached
+   * within `timeout`, returns the last count seen, which distinguishes the genuine CI-reduced
+   * stub (~2 operators, served to datacenter/CI IPs on US /apps & /slots; a real IP shows 18,
+   * verified live 2026-07-30) from a transient dip on a full list.
    */
-  async isReducedOperatorFallback(): Promise<boolean> {
-    // Give the client-side oplist time to hydrate before deciding — a geo page can attach the
-    // first card early, so a single immediate count could read transiently low even on a full
-    // list. Poll (multiple samples) until it reaches the full-list threshold; if it never does,
-    // this is the known reduced fallback state.
-    const deadline = Date.now() + 8_000;
-    while (Date.now() < deadline) {
-      if ((await this.cards.count()) >= 3) return false;
+  async operatorCount(min = 3, timeout = 20_000): Promise<number> {
+    const deadline = Date.now() + timeout;
+    let count = await this.cards.count();
+    while (count < min && Date.now() < deadline) {
       await this.page.waitForTimeout(500);
+      count = await this.cards.count();
     }
-    return true;
+
+    return count;
   }
 
   async goto(config: SubCategoryConfig) {

@@ -122,34 +122,12 @@ test.describe('Tournaments Page — Unauthenticated', () => {
 
   });
 
-  // ─── 3. Countdown timer ───────────────────────────────────────────────────
-
-  test.describe('Countdown timer', () => {
-
-    test('@regression countdown timer element is present', async () => {
-      // Countdown units are rendered for mobile breakpoints — often hidden on desktop
-      const units = tournamentsPage.page.locator('div.countdown-unit');
-      expect(await units.count(), 'Countdown units should be present in the DOM').toBeGreaterThan(0);
-      await expect(units.first()).toBeAttached();
-    });
-
-    test('@regression countdown timer contains time-like content', async () => {
-      const units = tournamentsPage.page.locator('div.countdown-unit');
-      const count = await units.count();
-      expect(count).toBeGreaterThan(0);
-
-      let timerText = '';
-      for (let i = 0; i < count; i++) {
-        const text = (await units.nth(i).textContent())?.trim() ?? '';
-        if (/\d/.test(text)) {
-          timerText = text;
-          break;
-        }
-      }
-      expect(timerText, 'Countdown should contain digit values').toMatch(/\d/);
-    });
-
-  });
+  // ─── 3. Countdown timer ── REMOVED 2026-07-31 ──────────────────────────────
+  // The countdown-timer tests were removed: the countdown element (div.countdown-unit, and any
+  // [class*="countdown"]) no longer exists on the live tournaments page — verified on desktop AND
+  // mobile with active tournaments present. They were testing a feature the site has removed, so a
+  // skip-guard would only have masked a test of a non-existent element. (The div.countdown-unit
+  // references in tests/visual/*.spec.ts are unrelated mask selectors and left as-is.)
 
   // ─── 4. Leaderboard ───────────────────────────────────────────────────────
 

@@ -62,16 +62,23 @@ for (const config of geoHomepages) {
   });
 }
 
-// Geo-restricted markets — assert non-local visitors cannot stay on the geo path.
+// Geo-restricted markets — assert the non-local-visitor experience on the geo path.
 const geoRestrictedHomepages = geoHomepages.filter((g) => g.geoRestricted);
 
 for (const config of geoRestrictedHomepages) {
   test.describe(`${config.name} — geo restriction`, () => {
-    test(`${config.name} — @smoke @regression ${config.path} redirects away for non-local visitors`, async ({ page }) => {
+    test(`${config.name} — @smoke @regression ${config.path} shows "offer not available" for non-local visitors`, async ({ page }) => {
       const response = await page.goto(config.path, { waitUntil: 'domcontentloaded' });
       expect(response?.status(), `${config.path} should respond`).toBeLessThan(400);
-      // Outside the geo (e.g. IE VPN), /no lands on the global homepage — not the NO site.
-      await expect(page).not.toHaveURL(new RegExp(`${config.path.replace('/', '\\/')}(\\/|$|\\?)`));
+      // The site does NOT redirect non-local visitors away from the geo path (verified live
+      // 2026-07-31 from a non-NO IP, and confirmed against a Norway VPN): /no stays on /no and
+      // swaps only the primary offer CTA by geo — a non-local visitor sees "Offer not available
+      // for your location" where a Norway visitor gets a working "Spill Nå" (Play Now) button.
+      // Simulating a Norway-geo visitor via VPN in CI is out of scope, so this asserts the
+      // non-local behaviour: stays on the geo path and shows the offer-unavailable message.
+      await expect(page).toHaveURL(new RegExp(`${config.path.replace('/', '\\/')}(\\/|$|\\?)`));
+      await expect(page.getByText(/offer not available for your location/i).first())
+        .toBeVisible({ timeout: 15_000 });
     });
   });
 }
