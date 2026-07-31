@@ -21,25 +21,25 @@ for (const config of subCategoryUrls) {
     });
 
     test('@regression T3 Operator count >= 3', async () => {
-      // CI-IP restriction: US /apps and /slots are served a reduced fallback operator list (~2)
-      // from the CI datacenter IP, while a real user IP shows the full 18 (verified live
-      // 2026-07-30). Skip ONLY the flagged combos, and ONLY when that fallback is actually present
-      // — a real IP shows 18 so this still runs and asserts. Same CI-IP geo-gate as Tournaments
-      // (TournamentsPage::hasActiveTournament); see #109/#111/#112/#114/#117.
+      // ONE poll drives BOTH the CI-reduced skip decision and the assertion — no second,
+      // independent poll that a transient mid-hydration dip could slip through as a false failure.
+      // operatorCount() settles hydration (real IP → 18) or times out at the CI-reduced stub (~2).
+      // CI-IP restriction: US /apps & /slots are served a reduced fallback list (~2) from the
+      // datacenter IP; a real user IP shows 18 (verified live 2026-07-30). Same CI-IP geo-gate as
+      // Tournaments (TournamentsPage::hasActiveTournament); see #109/#111/#112/#114/#117.
+      const count = await page.operatorCount(3);
       test.skip(
-        config.ciIpReducedList === true && (await page.isReducedOperatorFallback()),
+        config.ciIpReducedList === true && count < 3,
         `CI-IP reduced operator list for ${config.geo} /${config.slug} (datacenter IP served ~2; real IP shows the full list). Not a content gap.`,
       );
-      // Poll until the oplist finishes hydrating — geo/VPN pages can attach the first card early.
-      await expect
-        .poll(async () => page.cards.count(), { timeout: 20_000 })
-        .toBeGreaterThanOrEqual(3);
+      expect(count).toBeGreaterThanOrEqual(3);
     });
 
     test('@regression T4 Operator cards have outbound CTA links', async () => {
-      // Same CI-IP reduced-list guard as T3 — see the note there.
+      // Same single-poll CI-reduced guard as T3 — settle hydration once, then assert CTA links.
+      const count = await page.operatorCount(3);
       test.skip(
-        config.ciIpReducedList === true && (await page.isReducedOperatorFallback()),
+        config.ciIpReducedList === true && count < 3,
         `CI-IP reduced operator list for ${config.geo} /${config.slug} (datacenter IP served ~2; real IP shows the full list). Not a content gap.`,
       );
       const ctaCount = await page.cardLinks.count();

@@ -8,7 +8,6 @@
 // Confirmed from live page (June 2026):
 //   - Active tournament widget: .tournament-info-panel
 //   - Recent tournaments table: .gdc-v-tournament-results-table
-//   - Countdown units: div.countdown-unit
 //   - Logged-out CTA: "Login to Play" button
 //
 // NOTE: Authenticated tests verify UI state only — they do not enter a tournament.
@@ -36,7 +35,6 @@ export class TournamentsPage {
   readonly tournamentCards: Locator;
   readonly tournamentTitle: Locator;
   readonly tournamentPrize: Locator;
-  readonly countdownTimer: Locator;
   readonly leaderboard: Locator;
   readonly leaderboardEntries: Locator;
   readonly unauthCta: Locator;
@@ -57,7 +55,6 @@ export class TournamentsPage {
     // Active tournament section title — distinct from page H1 ("It's time to play")
     this.tournamentTitle = this.main.getByRole('heading', { name: /free slot tournaments/i });
     this.tournamentPrize = this.tournamentCard.getByText(/total prize pool|total free spins/i).first();
-    this.countdownTimer = page.locator('div.countdown-unit').first();
     this.leaderboard = page.locator('.gdc-v-tournament-results-table').first();
     this.leaderboardEntries = this.leaderboard.locator('tbody tr, button');
 
@@ -108,12 +105,6 @@ export class TournamentsPage {
   /** True only when a tournament is currently live (the active-tournament widget renders). */
   async hasActiveTournament(): Promise<boolean> {
     return this.tournamentCard.isVisible().catch(() => false);
-  }
-
-  // Available for single-unit countdown text — spec iterates all units directly.
-  async getCountdownText(): Promise<string> {
-    const text = await this.countdownTimer.textContent();
-    return text?.trim() ?? '';
   }
 
   async getCardCount(): Promise<number> {
