@@ -172,8 +172,13 @@ test.describe('Organic Landing Journeys — IE', () => {
       expect(href?.trim().length).toBeGreaterThan(0);
 
       await firstGuide.click();
-      await page.waitForLoadState('domcontentloaded');
-      await expect(page).toHaveURL(/\/strategy\//);
+      // Wait for the navigation itself to settle on the article URL. The old
+      // waitForLoadState('domcontentloaded') + default-timeout toHaveURL raced the hard
+      // navigation: on a slow (CI) hop the URL is briefly "" mid-navigation, so toHaveURL
+      // timed out on that empty value. Article URLs are /ie/online-casinos/strategy/<slug>
+      // (live-verified 2026-08 — the hub is /ie/strategy, articles keep the /strategy/ segment),
+      // so the pattern is unchanged; only the wait is made navigation-aware.
+      await page.waitForURL(/\/strategy\//, { timeout: 15_000 });
       await expect(page.locator('main h1').first()).toBeVisible();
       await expect(page.locator('main a[href*="/go/"]').first()).toBeAttached();
     });

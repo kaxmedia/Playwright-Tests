@@ -345,6 +345,7 @@ test.describe('Profile Section', () => {
     // ══════════════════════════════════════════════════════════════════════════
 
     test('@regression Marketing Preferences tab loads with notification and interest sections', async () => {
+        test.skip(!!process.env.CI, 'CI only: the CI datacenter IP is classified to an unmapped/global region ("GX"), which gates the personalized Profile content — the Marketing Preferences panel never renders in CI and this times out. Same CI-IP personalization-gating family as the Rewards-tab skips (#109/#111/#112/#114); live-verified 2026-08 that the "Marketing Preferences" / "Notifications from us" / interest sections all render and this passes from a real/local IP. BACKLOG (design-level): make geo-aware or sort CI geo exclusion with the site team.');
         await profilePage.gotoTab('email');
         await expect(profilePage.marketingHeading).toBeVisible({ timeout: 15000 });
         const panel = profilePage.marketingPanel;
@@ -481,6 +482,7 @@ test.describe('Profile Section', () => {
     // ══════════════════════════════════════════════════════════════════════════
 
     test('@regression Refer & Earn tab loads correctly', async () => {
+        test.skip(!!process.env.CI, 'CI only: the CI datacenter IP is classified to an unmapped/global region ("GX"), which gates the personalized Profile content — the Refer & Earn panel never renders in CI and this times out. Same CI-IP personalization-gating family as the Rewards-tab skips (#109/#111/#112/#114); live-verified 2026-08 that the "Refer & Earn" heading renders and this passes from a real/local IP. BACKLOG (design-level): make geo-aware or sort CI geo exclusion with the site team.');
         await profilePage.gotoTab('refer');
         await expect(profilePage.referHeading).toBeVisible();
     });

@@ -88,7 +88,13 @@ export class UKCasinoPage {
         this.compareModalLogos = this.compareModal
             .locator('img')
             .filter({ hasNot: page.locator('[class*="arrow"], [alt*="Arrow" i]') });
-        this.compareModalCTAs = this.compareModal.locator('a[href*="/go/"]');
+        // Operator CTA links only. The modal also renders a "Full Terms Apply" /go/ link inside
+        // each operator's collapsed Terms & Conditions block (id="t-and-c-text-…"), which is
+        // legitimately hidden until that block is expanded — including it made the "all CTAs
+        // visible" assertion fail on a link that is never meant to be visible up front. Exclude
+        // any /go/ link that lives inside a t-and-c-text container. (Live-verified 2026-08: this
+        // leaves the 6 real CTAs — logos, bonus links, Visit Casino buttons — all visible.)
+        this.compareModalCTAs = this.compareModal.locator('a[href*="/go/"]:not([id^="t-and-c-text"] a)');
         // Accordion section toggles in the comparison modal (IDs/list IDs vary by deployment)
         this.compareModalSections = this.compareModal.locator('button[id^="category-header-"]');
         this.compareModalCloseBtn = this.compareModal.getByRole('button', { name: /close modal/i });
