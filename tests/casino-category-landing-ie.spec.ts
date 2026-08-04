@@ -47,7 +47,14 @@ test.describe('Category Landing — IE Online Casinos — geo specifics', () => 
 
     test('@regression page does not contain £ symbol (wrong geo content)', async ({ page }) => {
         const bodyText = await page.locator('body').innerText();
-        expect(bodyText).not.toContain('£');
+        // A shared UK/ROI operator bonus disclaimer legitimately writes amounts in combined
+        // "£/€" notation (e.g. "Min. cash wagering £/€10 … New UK/ROI gaming players") — one
+        // operator's terms serve both markets. That is NOT wrong-geo content: every actual price
+        // on the IE page uses € exclusively (live-verified 2026-08 on /ie/online-casinos). So flag
+        // only a STANDALONE £ (a genuine GBP price/label) — strip the combined £/€ (and €/£) tokens
+        // first, then assert no £ remains.
+        const standalonePounds = (bodyText.replace(/£\s*\/\s*€|€\s*\/\s*£/g, '').match(/£/g) ?? []).length;
+        expect(standalonePounds, 'IE page should show € only (no standalone £ outside a combined £/€ UK/ROI disclaimer)').toBe(0);
     });
 
     test('@regression document locale matches en-IE for IE category page', async ({ page }) => {

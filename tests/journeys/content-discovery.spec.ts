@@ -193,14 +193,28 @@ test.describe('Journey 9.4 — Author / expert page', () => {
 
     test('@regression author article exposes operator CTAs via linked content @journey', async ({ page }) => {
         await gotoOk(page, URLS.authorPage, 'Author page');
-        // Geo-agnostic — Larry Henry's articles are /us/news/…; any news article
-        // in the author body has in-content affiliate links once opened.
-        const articleLink = page.locator('main.body_content a[href*="/news/"]').first();
-        await expect(articleLink).toBeAttached();
-        const href = await articleLink.getAttribute('href');
-        const fullUrl = resolveGdcHref(href ?? '');
-        await page.goto(fullUrl);
-        await expect(page.locator('main h1').first()).toBeVisible();
-        await expect(page.locator('main a[href*="/go/"]').first()).toBeAttached();
+        // Geo-agnostic — Larry Henry's articles are /us/news/…. The NEWEST linked article isn't
+        // guaranteed to carry an in-content /go/ CTA: legislative, "WATCH" video, and responsible-
+        // gambling pieces legitimately have none, and the newest slot rotates between runs (so the
+        // old blind .first() failed intermittently on a different article each time — verified live
+        // 2026-08). Sample several recent linked articles and assert AT LEAST ONE exposes an
+        // operator CTA, mirroring the Journey 8.8 news-reader fix.
+        const hrefs = await page.locator('main.body_content a[href*="/news/"]').evaluateAll((els) =>
+            [...new Set(els.map((e) => e.getAttribute('href')))]
+                .filter((h): h is string => !!h && /\/news\/[^/?#]+/.test(h))
+                .slice(0, 6)
+        );
+        expect(hrefs.length, 'Expected linked news articles in the author body').toBeGreaterThan(0);
+
+        let found = false;
+        for (const href of hrefs) {
+            await page.goto(resolveGdcHref(href));
+            await expect(page.locator('main h1').first()).toBeVisible();
+            if ((await page.locator('main a[href*="/go/"]').count()) > 0) {
+                found = true;
+                break;
+            }
+        }
+        expect(found, 'Expected at least one recent author-linked article to expose an operator /go/ CTA').toBe(true);
     });
 });
