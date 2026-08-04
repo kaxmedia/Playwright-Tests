@@ -15,6 +15,10 @@ on:
         description: 'Client-generated id to correlate this dispatch to its run (blank for manual dispatch)'
         required: false
         default: ''
+      grep:
+        description: 'Only run tests whose title matches this string/regex (blank = run all). Passed to Playwright --grep.'
+        required: false
+        default: ''
 
 run-name: "Visual Regression${{ inputs.correlation_id != '' && format(' #{0}', inputs.correlation_id) || '' }}"
 
@@ -57,7 +61,11 @@ jobs:
           # ingest per-page/project pass/fail + diff-image attachment paths. The diff PNGs
           # themselves live under test-results/ (uploaded by the failure step below).
           PLAYWRIGHT_JSON_OUTPUT_NAME: visual-results.json
-        run: npx playwright test --project=visual-chromium-desktop --project=visual-chromium-android --project=visual-webkit-desktop --project=visual-webkit-ios --reporter=html,json ${{ env.CAPTURE_BASELINES == 'true' && '--update-snapshots' || '' }}
+          # Optional title filter (workflow_dispatch `grep` input). Empty on push/PR and on
+          # dispatches that omit it, so ${GREP:+…} expands to nothing → full suite as before.
+          # Passed via env (not inlined) so the value is shell-quoted, not command-injected.
+          GREP: ${{ inputs.grep }}
+        run: npx playwright test --project=visual-chromium-desktop --project=visual-chromium-android --project=visual-webkit-desktop --project=visual-webkit-ios --reporter=html,json ${{ env.CAPTURE_BASELINES == 'true' && '--update-snapshots' || '' }} ${GREP:+--grep "$GREP"}
 
       # Publish the JSON report on every comparison run (pass or fail) so the dashboard has
       # per-page status each time — not only on failure. Skipped for baseline-capture runs
