@@ -34,6 +34,19 @@ async function dismissRegionPromptModal(modal: ReturnType<Page['locator']>): Pro
 
   // 3) Backdrop click at the top-left corner, outside the centred dialog.
   await page.mouse.click(5, 5).catch(() => {});
+  if (await waitGone(modal, 1_500)) return;
+
+  // 4) Direct DOM click on the decline / close control. On some builds the "No Thanks" button is
+  // pointer-intercepted, so the actionable click in (1) times out and Escape/backdrop don't close
+  // it (observed on the /games/tournaments visual capture). Calling the element's own click handler
+  // bypasses the interception — the same technique closeCompareModal() uses. Declines ("No Thanks"),
+  // falling back to the ✕ Close control.
+  await modal
+    .evaluate((root) => {
+      const decline = [...root.querySelectorAll('button')].find((b) => /no thanks/i.test(b.textContent || ''));
+      (decline ?? root.querySelector<HTMLElement>('button[aria-label="Close"]'))?.click();
+    })
+    .catch(() => {});
   await waitGone(modal, 1_500);
   // Give up silently — a lingering modal must never hang the whole test.
 }
