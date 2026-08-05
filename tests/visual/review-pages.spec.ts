@@ -2,20 +2,25 @@ import { test, expect } from '../../fixtures/test';
 import type { Page } from '@playwright/test';
 import { ReviewPage } from '../../pages/ReviewPage';
 import { dismissAgeGateForGeo } from '../../fixtures/ageGate';
-import { acceptCookiesIfShown } from '../../fixtures/acceptCookies';
 
 const PROS_CONS_GEOS = ['ie', 'nz', 'nl'];
 const RATING_GEOS = ['uk', 'ie', 'us', 'nz', 'gr', 'nl'];
 
-// Clear the geo overlays that otherwise get baked into a capture. Order matters: dismiss the age
-// gate FIRST (on gated geos like NL it sits on top and blocks everything else), THEN accept the
-// CookieYes banner — the age gate blocks the cookie-accept that gotoUrl() attempts on load, so the
-// banner only becomes dismissible once the gate is gone. Both are safe no-ops when their overlay
-// is absent (ie/nz aren't age-gated; the cookie banner may already be gone or suppressed).
+// Clear the geo overlays that otherwise bake into a capture. Order matters: dismiss the age gate
+// FIRST (on gated geos like NL it sits on top of everything else), THEN clear the CookieYes banner.
 async function clearOverlays(page: Page, geo: string): Promise<void> {
   await page.waitForLoadState('load');
+  // Hard age gate (NL 24+): accept + wait for it to vanish. Locale-aware (AGE_VERIFICATION_GEOS).
   await dismissAgeGateForGeo(page, geo);
-  await acceptCookiesIfShown(page);
+  // Remove the CookieYes consent banner outright. Dismissing it by button text is locale-fragile —
+  // the shared acceptCookiesIfShown matches the English "Accept All" only and no-oped on the Dutch
+  // "Alles accepteren", baking the banner into the NL baselines. The banner is a fixed overlay (not
+  // in flow), so removing it doesn't reflow the content under test; it's simply gone in the baseline
+  // and every future run — deterministic and locale-proof.
+  await page
+    .locator('.cky-consent-container, .cky-banner-bottom')
+    .evaluateAll((els) => els.forEach((el) => el.remove()))
+    .catch(() => {});
 }
 
 test.describe('Review Pages Visual Regression', () => {
