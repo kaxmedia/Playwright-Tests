@@ -152,7 +152,11 @@ export const comparisonPages: ComparisonPageConfig[] = [
     name: 'IE Sports',
     url: 'https://www.gambling.com/ie/betting-sites',
     category: 'sports',
-    expectedCardCountMin: 20,
+    // Live-verified 2026-08-05: /ie/betting-sites renders exactly 18 operator cards, with NO
+    // "Show More" pagination (18 is the full list), and CI sees the same 18 — a real/local IP
+    // agrees with CI, so this is NOT the GX-region operator rotation seen in sub-category (PR #151).
+    // The previous minimum of 20 was simply stale; the page genuinely lists 18 betting sites now.
+    expectedCardCountMin: 18,
     hasRating: true,
     hasBadge: false,
     ageLimit: '18+',
