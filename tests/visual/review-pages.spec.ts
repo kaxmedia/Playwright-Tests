@@ -1,9 +1,22 @@
 import { test, expect } from '../../fixtures/test';
+import type { Page } from '@playwright/test';
 import { ReviewPage } from '../../pages/ReviewPage';
 import { dismissAgeGateForGeo } from '../../fixtures/ageGate';
+import { acceptCookiesIfShown } from '../../fixtures/acceptCookies';
 
 const PROS_CONS_GEOS = ['ie', 'nz', 'nl'];
 const RATING_GEOS = ['uk', 'ie', 'us', 'nz', 'gr', 'nl'];
+
+// Clear the geo overlays that otherwise get baked into a capture. Order matters: dismiss the age
+// gate FIRST (on gated geos like NL it sits on top and blocks everything else), THEN accept the
+// CookieYes banner — the age gate blocks the cookie-accept that gotoUrl() attempts on load, so the
+// banner only becomes dismissible once the gate is gone. Both are safe no-ops when their overlay
+// is absent (ie/nz aren't age-gated; the cookie banner may already be gone or suppressed).
+async function clearOverlays(page: Page, geo: string): Promise<void> {
+  await page.waitForLoadState('load');
+  await dismissAgeGateForGeo(page, geo);
+  await acceptCookiesIfShown(page);
+}
 
 test.describe('Review Pages Visual Regression', () => {
   for (const geo of PROS_CONS_GEOS) {
@@ -11,10 +24,7 @@ test.describe('Review Pages Visual Regression', () => {
       const reviewPage = new ReviewPage(page);
       const response = await reviewPage.gotoUrl(`https://www.gambling.com/${geo}/online-casinos/bet365`);
       expect(response?.ok()).toBeTruthy();
-      await page.waitForLoadState('load');
-      // NL is age-gated (24+): dismiss the "Hoe oud bent u?" gate before capturing so it can neither
-      // overlay the pros-cons element nor get baked into the regenerated baseline. No-op on ie/nz.
-      await dismissAgeGateForGeo(page, geo);
+      await clearOverlays(page, geo);
       await expect(page.locator('.pros-and-cons-table-component').first()).toHaveScreenshot(`review-${geo}-pros-cons.png`, {
         maxDiffPixelRatio: 0.04,
       });
@@ -27,7 +37,7 @@ test.describe('Review Pages Visual Regression', () => {
       const reviewPage = new ReviewPage(page);
       const response = await reviewPage.gotoUrl(`https://www.gambling.com/${geo}/online-casinos/bet365`);
       expect(response?.ok()).toBeTruthy();
-      await page.waitForLoadState('load');
+      await clearOverlays(page, geo);
       // The rating card's last row, "Casino Payout Percentage", is only intermittently present — its
       // absence is the 325x334 → 325x260 (-74px) dimension mismatch that hard-fails before pixels are
       // ever compared — and the "Our Rating" score drifts (e.g. 8.5 → 8.6). Pin the card to its stable
