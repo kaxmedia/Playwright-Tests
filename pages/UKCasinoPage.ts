@@ -66,9 +66,11 @@ export class UKCasinoPage {
         this.operatorRows = page.locator('main .operator-list:not([data-disabled]) .operator-item');
         this.operatorLogos = this.operatorRows.locator('a[href*="/go/uk/"] > img, a[href*="/go/ie/"] > img');
         this.operatorRatings = this.operatorRows.locator('.operator-column-ranking-v2');
-        // Primary product bonus line per row (avoids duplicate hidden tab-panel CTAs)
+        // Primary Visit CTA per row. Bare `gtm-operator-content` also matches a second
+        // offer-text clone that stays hidden (parent `.hidden`) — that made nth(1)+
+        // visibility checks flake under personalization.
         this.operatorCTAs = this.operatorRows.locator(
-            'a[data-gtm*="gtm-operator-content"][href*="/go/uk/"], a[data-gtm*="gtm-operator-content"][href*="/go/ie/"]'
+            '.operator-main a.operator-item__cta_link[href*="/go/uk/"], .operator-main a.operator-item__cta_link[href*="/go/ie/"]'
         );
 
         // Sticky operator-list anchor strip (desktop #oplistNav, mobile #oplistNavMobile)

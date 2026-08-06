@@ -36,7 +36,10 @@ export class IECasinoPage {
         this.operatorRows = page.locator('main .operator-list:not([data-disabled]) .operator-item');
         this.operatorLogos = this.operatorRows.locator('a[href*="/go/ie/"] > img');
         this.operatorRatings = this.operatorRows.locator('.operator-column-ranking-v2');
-        this.operatorCTAs = this.operatorRows.locator('a[data-gtm*="gtm-operator-content"][href*="/go/ie/"]');
+        // Primary Visit CTA only — excludes hidden duplicate offer-text /go/ clones.
+        this.operatorCTAs = this.operatorRows.locator(
+            '.operator-main a.operator-item__cta_link[href*="/go/ie/"]'
+        );
         this.anchorMenu = page.locator('#oplistNav');
         this.anchorLinks = page.locator('#oplistNav a[href^="#anchor_"]');
         this.faqSection = page.locator('.automation-faq-container').first();
