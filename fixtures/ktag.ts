@@ -14,9 +14,13 @@
  * Important: many ktag events fire *after* page load (seenopitems, gacid,
  * late oplistimp). Use `waitForKtagEvent` rather than reading ktagEvents
  * immediately after page.goto().
+ *
+ * Capture note: Chromium often reports ktag collect POSTs with a blob body,
+ * so `request.postData()` on a plain `page.on('request')` listener is null.
+ * Routing the collect URL makes the body available to Playwright.
  */
 
-import { test as base, expect, type Request } from './test';
+import { test as base, expect } from './test';
 
 export interface KtagFixtures {
     ktagEvents: KtagEvent[];
@@ -63,27 +67,56 @@ function parseCollectPayload(payload: string): KtagEvent | null {
     }
 }
 
-function isKtagCollectRequest(req: Request): boolean {
+function isKtagCollectUrl(url: string): boolean {
     try {
-        const url = new URL(req.url());
-        return url.hostname === 'ktag.kaxcdn.com'
-            && (url.pathname.endsWith('/collect') || url.pathname.includes('/collect/'));
+        const parsed = new URL(url);
+        return parsed.hostname === 'ktag.kaxcdn.com'
+            && (parsed.pathname.endsWith('/collect') || parsed.pathname.includes('/collect/'));
     } catch {
         return false;
     }
+}
+
+async function waitForMatchingEvents(
+    events: KtagEvent[],
+    ct: string,
+    count: number,
+    timeoutMs: number,
+): Promise<KtagEvent[]> {
+    const deadline = Date.now() + timeoutMs;
+    while (Date.now() <= deadline) {
+        const matched = events.filter(event => event.ct === ct);
+        if (matched.length >= count) {
+            return matched.slice(0, count);
+        }
+        await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    const matched = events.filter(event => event.ct === ct);
+    throw new Error(
+        count === 1
+            ? `waitForKtagEvent: timed out waiting for ct="${ct}" after ${timeoutMs}ms`
+            : `waitForKtagEvents: timed out — got ${matched.length}/${count} ct="${ct}" events after ${timeoutMs}ms`,
+    );
 }
 
 export const test = base.extend<KtagFixtures>({
     ktagEvents: async ({ page }, use) => {
         const events: KtagEvent[] = [];
 
-        page.on('request', (req) => {
-            if (!isKtagCollectRequest(req)) return;
-            const parsed = parseCollectRequest(req.url(), req.postData());
-            if (parsed) events.push(parsed);
+        // Intercept collect so Chromium exposes blob-backed POST bodies via postData().
+        // Do not also listen on `request` — after route.continue() that path can re-emit
+        // the same payload and double-count events (breaks "only one oplistimp" checks).
+        await page.route('https://ktag.kaxcdn.com/**/collect*', async (route, request) => {
+            if (isKtagCollectUrl(request.url())) {
+                const parsed = parseCollectRequest(request.url(), request.postData());
+                if (parsed) events.push(parsed);
+            }
+            await route.continue();
         });
 
         await use(events);
+
+        await page.unroute('https://ktag.kaxcdn.com/**/collect*').catch(() => {});
     },
 
     waitForOptionalKtagEvent: async ({ ktagEvents }, use) => {
@@ -104,36 +137,10 @@ export const test = base.extend<KtagFixtures>({
      * Waits until at least one event with the given `ct` value appears in
      * ktagEvents, then returns it. Throws if the timeout elapses first.
      */
-    waitForKtagEvent: async ({ page, ktagEvents }, use) => {
+    waitForKtagEvent: async ({ ktagEvents }, use) => {
         const helper = async (ct: string, timeoutMs = 10_000): Promise<KtagEvent> => {
-            return new Promise((resolve, reject) => {
-                const existing = ktagEvents.find(event => event.ct === ct);
-                if (existing) {
-                    resolve(existing);
-                    return;
-                }
-
-                const cleanup = () => {
-                    clearTimeout(timeout);
-                    page.off('request', handler);
-                };
-
-                const handler = (req: Request) => {
-                    if (!isKtagCollectRequest(req)) return;
-                    const parsed = parseCollectRequest(req.url(), req.postData());
-                    if (parsed && parsed.ct === ct) {
-                        cleanup();
-                        resolve(parsed);
-                    }
-                };
-
-                const timeout = setTimeout(() => {
-                    cleanup();
-                    reject(new Error(`waitForKtagEvent: timed out waiting for ct="${ct}" after ${timeoutMs}ms`));
-                }, timeoutMs);
-
-                page.on('request', handler);
-            });
+            const [event] = await waitForMatchingEvents(ktagEvents, ct, 1, timeoutMs);
+            return event;
         };
 
         await use(helper);
@@ -142,40 +149,9 @@ export const test = base.extend<KtagFixtures>({
     /**
      * Waits until `count` events with the given `ct` value have been captured.
      */
-    waitForKtagEvents: async ({ page, ktagEvents }, use) => {
+    waitForKtagEvents: async ({ ktagEvents }, use) => {
         const helper = async (ct: string, count: number, timeoutMs = 15_000): Promise<KtagEvent[]> => {
-            const collected: KtagEvent[] = ktagEvents.filter(event => event.ct === ct);
-            if (collected.length >= count) {
-                return collected.slice(0, count);
-            }
-
-            return new Promise((resolve, reject) => {
-                const cleanup = () => {
-                    clearTimeout(timeout);
-                    page.off('request', handler);
-                };
-
-                const handler = (req: Request) => {
-                    if (!isKtagCollectRequest(req)) return;
-                    const parsed = parseCollectRequest(req.url(), req.postData());
-                    if (parsed && parsed.ct === ct) {
-                        collected.push(parsed);
-                        if (collected.length >= count) {
-                            cleanup();
-                            resolve(collected.slice(0, count));
-                        }
-                    }
-                };
-
-                const timeout = setTimeout(() => {
-                    cleanup();
-                    reject(new Error(
-                        `waitForKtagEvents: timed out — got ${collected.length}/${count} ct="${ct}" events after ${timeoutMs}ms`
-                    ));
-                }, timeoutMs);
-
-                page.on('request', handler);
-            });
+            return waitForMatchingEvents(ktagEvents, ct, count, timeoutMs);
         };
 
         await use(helper);
