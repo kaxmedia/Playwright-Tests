@@ -47,6 +47,9 @@ jobs:
       - name: Run Playwright spec (shard ${{ matrix.shard }}/${{ strategy.job-total }})
         env:
           HOME: /root
+          # Exclude the shared-E2E-account specs from the sharded matrix — they run in the dedicated
+          # unsharded `run-shared-auth` job below (parallel shards clobber the shared login session).
+          SKIP_SHARED_AUTH_SPECS: '1'
         run: npx playwright test "${{ inputs.spec_file }}"${{ inputs.grep != '' && format(' --grep "{0}"', inputs.grep) || '' }}${{ inputs.grep == '@regression' && ' --retries=2' || '' }} --shard=${{ matrix.shard }}/${{ strategy.job-total }} --reporter=blob,line
 
       - name: Upload blob report
@@ -57,9 +60,58 @@ jobs:
           path: blob-report/
           retention-days: 1
 
+  # Shared-E2E-account specs (profile, tournaments, auth, ktag-udc) run here — ONE unsharded
+  # container, workers=1 — so only one process ever signs into the shared account at a time. Running
+  # them split across the parallel shard matrix invalidated each other's session ("session was lost —
+  # marketing gate shown"). Scoped to whatever shared-account specs fall under the dispatched
+  # spec_file; a dispatch with none in scope (e.g. betting-sites) runs nothing here.
+  run-shared-auth:
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.59.1-noble
+
+    steps:
+      - name: Install git-lfs
+        run: apt-get update && apt-get install -y git-lfs
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run shared-account specs (unsharded, single worker)
+        env:
+          HOME: /root
+        run: |
+          SPEC='${{ inputs.spec_file }}'
+          AUTH_SPECS="tests/profile.spec.ts tests/tournaments.spec.ts tests/auth.spec.ts tests/ktag/ktag-udc.spec.ts"
+          TARGETS=""
+          for a in $AUTH_SPECS; do
+            case "$a" in "$SPEC"*) TARGETS="$TARGETS $a" ;; esac
+          done
+          mkdir -p blob-report
+          if [ -z "$TARGETS" ]; then
+            echo "No shared-account specs in scope for '$SPEC' — nothing to run here."
+            exit 0
+          fi
+          echo "Running shared-account specs unsharded (workers=1):$TARGETS"
+          npx playwright test$TARGETS${{ inputs.grep != '' && format(' --grep "{0}"', inputs.grep) || '' }}${{ inputs.grep == '@regression' && ' --retries=2' || '' }} --workers=1 --reporter=blob,line
+
+      - name: Upload blob report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: blob-report-auth
+          path: blob-report/
+          retention-days: 1
+          if-no-files-found: ignore
+
   merge-report:
-    needs: run-spec
-    if: always()                # merge even when some shards failed
+    needs: [run-spec, run-shared-auth]
+    if: always()                # merge even when some shards/jobs failed
     runs-on: ubuntu-latest
     container:
       image: mcr.microsoft.com/playwright:v1.59.1-noble
