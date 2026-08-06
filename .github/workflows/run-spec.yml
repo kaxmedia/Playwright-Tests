@@ -66,6 +66,15 @@ jobs:
   # marketing gate shown"). Scoped to whatever shared-account specs fall under the dispatched
   # spec_file; a dispatch with none in scope (e.g. betting-sites) runs nothing here.
   run-shared-auth:
+    # Only start when a shared-E2E-account spec is actually in scope — otherwise a non-auth dispatch
+    # (e.g. comparison-page) needlessly spins up a container + npm ci for a job that does nothing but
+    # early-exit. startsWith(<authSpec>, spec_file) is true when spec_file is the whole suite
+    # ('tests/'), one of these specs, or a directory prefix of one.
+    if: >-
+      startsWith('tests/profile.spec.ts', inputs.spec_file) ||
+      startsWith('tests/tournaments.spec.ts', inputs.spec_file) ||
+      startsWith('tests/auth.spec.ts', inputs.spec_file) ||
+      startsWith('tests/ktag/ktag-udc.spec.ts', inputs.spec_file)
     runs-on: ubuntu-latest
     container:
       image: mcr.microsoft.com/playwright:v1.59.1-noble
