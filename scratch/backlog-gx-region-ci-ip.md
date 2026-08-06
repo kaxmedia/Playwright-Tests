@@ -22,18 +22,20 @@ origin IP:
 - **Profile pages (authenticated)** — personalized content that only renders for
   mapped regions is absent: the Rewards tab stays in its loading skeleton
   (chip-count / challenges / spin-the-wheel), the marketing interest toggles
-  don't flip, and — added 2026-08-06 — the profile tab-navigation test
-  (`profile.spec.ts:97`, "each tab navigates to its correct URL") times out
-  because the "Profile details" link never becomes visible while the page sits in
-  its GX loading skeleton. All require CI-skip guards; the links/content exist and
-  pass from a real/local IP (live-verified 2026-08-06, chrome).
+  don't flip, and the tab nav ("Profile details" link) never becomes visible while
+  the page sits in its GX loading skeleton. As of 2026-08-06 the ENTIRE
+  authenticated `profile.spec.ts` "Profile Section" describe is CI-skipped in one
+  `beforeEach` (isolated run #1074 showed `:87` failing first and serial-mode
+  cascading the rest to "did not run" — per-test skips were whack-a-mole). Content
+  exists and passes from a real/local IP (live-verified 2026-08-06, chrome).
 - **Sub Category pages** — operator counts differed from the real-user view,
   requiring an operator-count guard.
 - **Tournaments** — a geo/region prompt ("region popup") appeared for the CI
   IP that a mapped-region user would not hit the same way, contributing to the
   dismiss-flow bug fixed in PR #150.
-- **Betting Sites → US Sportsbooks (Firefox only)** — operator list absent for
-  Firefox in CI; see the distinct "Firefox-fingerprint variant" section below.
+- **US Sportsbooks operator list (Firefox only)** — absent for Firefox in CI on
+  BOTH `betting-sites.spec.ts` and `comparison-page.spec.ts`; see the distinct
+  "Firefox-fingerprint variant" section below.
 
 In each case the failure looked like a content/behaviour bug but traced back
 to the same origin.
@@ -56,9 +58,10 @@ same CI job load it fine, and Firefox loads it fine from a real/local IP
 IP geo-gating** — it appears to be a bot-detection / personalization variant that
 keys on Firefox's fingerprint *in combination with* the datacenter origin.
 
-Mitigation added 2026-08-06: skip the US Sportsbooks operator-list suite for
-Firefox in CI (`tests/helpers/oplistSuite.ts` `skipFirefoxCi`, scoped to the US
-config in `tests/betting-sites.spec.ts`).
+Mitigation added 2026-08-06: skip the US Sportsbooks operator-list tests for Firefox
+in CI — `tests/helpers/oplistSuite.ts` `skipFirefoxCi` (scoped to the US config in
+`tests/betting-sites.spec.ts`), and the same firefox+CI+US `beforeEach` skip on the
+`US Sportsbooks` describe in `tests/comparison-page.spec.ts` (run #31095392427).
 
 **Why the distinction matters for the eventual fix:** a mapped-region egress IP
 (the durable fix below) may *not* by itself resolve this one, because the trigger
@@ -84,6 +87,19 @@ regulator link is still caught — only third-party latency stops reding the sui
 
 **Not part of the mapped-region-IP work** — a region egress IP won't change third-party uptime.
 Listed here only so the infra team has the full CI-flakiness picture in one place.
+
+## Variant: Cloudflare bot-challenge (NOT geo/region content gating) — news #31095414565
+
+`news-page.spec.ts` "page has no failed network requests" failed intermittently in CI on a
+`https://www.gambling.com/cdn-cgi/challenge-platform/…` request — Cloudflare's bot-challenge
+platform, injected ONLY for bot-flagged IPs (the CI datacenter). A real visitor never triggers it
+(the page passed 2 h earlier). It's Cloudflare's infrastructure, not the site's own resources.
+
+Mitigation added 2026-08-06: the failed-request check now excludes all `/cdn-cgi/` URLs (Cloudflare
+infra — RUM beacons + the challenge platform), not just `/cdn-cgi/rum`. A genuinely broken
+first-party request still fails the test. Related to the datacenter-IP family but a DISTINCT trigger
+(bot detection, not region content), so a mapped-region egress IP may not stop the challenge —
+worth confirming during the infra fix.
 
 ## Recommended durable fix
 
