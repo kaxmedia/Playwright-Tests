@@ -193,8 +193,11 @@ test.describe('Global News Page', () => {
         try {
           const host = new URL(url).hostname.replace(/^www\./, '');
           if (host !== 'gambling.com') return false;
-          // Cloudflare RUM beacons occasionally fail without affecting page UX
-          if (url.includes('/cdn-cgi/rum')) return false;
+          // Cloudflare infrastructure under /cdn-cgi/ — RUM beacons AND the bot-challenge platform
+          // (cdn-cgi/challenge-platform, which only loads for bot-flagged datacenter IPs like CI) —
+          // is Cloudflare's, not the site's own resources, and its occasional failures don't affect
+          // the page. Excluded so a CI-IP bot-challenge doesn't red the suite (run #31095414565).
+          if (url.includes('/cdn-cgi/')) return false;
           return true;
         } catch {
           return false;
