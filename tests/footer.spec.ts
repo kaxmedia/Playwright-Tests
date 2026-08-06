@@ -8,12 +8,36 @@
 // Run with:  npx playwright test tests/footer.spec.ts --headed --project=chrome
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { type APIRequestContext } from '@playwright/test';
 import { test, expect } from '../fixtures/test';
 import { FooterPage } from '../pages/FooterPage';
 import { GeoHomepage, geoHomepages } from '../pages/GeoHomepage';
 
 // The base URL used to turn relative hrefs (e.g. /terms-and-conditions) into full URLs
 const BASE_URL = 'https://www.gambling.com';
+
+/**
+ * Best-effort reachability of an EXTERNAL regulator/logo landing page. These are third-party sites
+ * gambling.com does not control — often slow, and some bot-guard non-browser requests. Retries with
+ * a generous timeout and returns the HTTP status, or null if it never responded (timeout / network
+ * error). Callers treat null as NON-FATAL: third-party latency from the CI datacenter is not a
+ * footer regression (it flaked the suite before — regulatory-logo 15 s timeouts, run #31087826403).
+ * A real 404 / 5xx status is still returned so a genuinely broken destination fails.
+ * See the "external-dependency flakiness" backlog note.
+ */
+async function fetchLandingStatus(request: APIRequestContext, href: string): Promise<number | null> {
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      const response = await request.get(href, { timeout: 30000, ignoreHTTPSErrors: true });
+
+      return response.status();
+    } catch {
+      // Timeout / connection reset from a slow third-party site — retry once, then give up (null).
+    }
+  }
+
+  return null;
+}
 
 test.describe('Footer', () => {
   let footerPage: FooterPage;
@@ -410,17 +434,20 @@ for (const geo of geoVariants) {
         expect(href, `Expected correct href for logo "${logo.alt}"`).toBe(logo.href);
       }
 
-      // Step 2: Fetch all landing pages in parallel and check they are reachable.
-      // Same strategy as the global logo test above: ignoreHTTPSErrors handles external
-      // sites with cert issues; !== 404 catches dead links; < 500 catches server errors.
+      // Step 2: best-effort reachability. Same lenient status rule as the global logo test
+      // (!== 404 catches a dead link, < 500 catches a broken server — 403 bot-guards are fine),
+      // but a timeout / network error to a slow third-party site is NON-FATAL (see
+      // fetchLandingStatus): it flaked the suite before with 15 s timeouts (run #31087826403), and
+      // external uptime/latency is not a footer regression. 30 s timeout + one retry, then skip.
       const results = await Promise.all(
-        geo.logos.map(async ({ alt, href }) => {
-          const response = await request.get(href, { timeout: 15000, ignoreHTTPSErrors: true });
-          return { alt, href, status: response.status() };
-        })
+        geo.logos.map(async ({ alt, href }) => ({ alt, href, status: await fetchLandingStatus(request, href) })),
       );
 
       for (const { alt, href, status } of results) {
+        if (status === null) {
+          console.warn(`[footer] "${alt}" landing page ${href} unreachable after retries — external-dependency flakiness, not failing.`);
+          continue;
+        }
         expect(status, `"${alt}" logo at ${href} returned 404 — broken link`).not.toBe(404);
         expect(status, `"${alt}" logo at ${href} returned ${status} — server error`).toBeLessThan(500);
       }

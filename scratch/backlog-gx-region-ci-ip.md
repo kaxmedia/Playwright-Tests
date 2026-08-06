@@ -67,6 +67,24 @@ work happens, confirm whether the personalization/bot layer treats Firefox
 differently independent of IP — otherwise this skip may need to stay even after
 the region IP is fixed.
 
+## Variant: External-dependency flakiness (NOT geo/IP gating) — footer
+
+Distinct from all of the above — not about the CI IP's region at all. `footer.spec.ts`'s
+"regulatory logos … landing pages return 200" tests fetch the EXTERNAL regulator/government landing
+pages the footer logos link to (GamCare, GambleAware, gambling commissions, etc.). Those are
+third-party sites gambling.com does not control; when they are slow/unresponsive from the CI
+datacenter the request times out and the test reds. Footer flip-flopped success→failure→success on
+2026-08-05/06 (e.g. failure #31087826403 at 09:08 = 4× `apiRequestContext.get: Timeout 15000ms
+exceeded` on the US/UK/DE/GR regulatory logos; the 10:58 run passed with no code change).
+
+Mitigation added 2026-08-06: the regulatory-logo reachability check is now best-effort
+(`fetchLandingStatus` — 30 s timeout + one retry; a timeout/network error is non-fatal). Logo
+presence + correct href stay HARD assertions and a real 404/5xx still fails, so a genuinely broken
+regulator link is still caught — only third-party latency stops reding the suite.
+
+**Not part of the mapped-region-IP work** — a region egress IP won't change third-party uptime.
+Listed here only so the infra team has the full CI-flakiness picture in one place.
+
 ## Recommended durable fix
 
 Give CI a **mapped-region egress IP** so its geo resolution matches a real
