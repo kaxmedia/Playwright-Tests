@@ -97,9 +97,16 @@ platform, injected ONLY for bot-flagged IPs (the CI datacenter). A real visitor 
 
 Mitigation added 2026-08-06: the failed-request check now excludes all `/cdn-cgi/` URLs (Cloudflare
 infra — RUM beacons + the challenge platform), not just `/cdn-cgi/rum`. A genuinely broken
-first-party request still fails the test. Related to the datacenter-IP family but a DISTINCT trigger
-(bot detection, not region content), so a mapped-region egress IP may not stop the challenge —
-worth confirming during the infra fix.
+first-party request still fails the test.
+
+**⚠️ NOT expected to be resolved by the planned mapped-region-IP fix — track as a SEPARATE
+follow-up.** The trigger is Cloudflare BOT DETECTION (fingerprinting a datacenter / automation
+origin), not region content. A mapped-region egress IP changes the resolved *region*, but a
+hosting/datacenter IP can still be bot-challenged regardless of its geo — so the region fix very
+likely does NOT clear this. Do not assume it's covered: once the region-IP infrastructure lands,
+explicitly **re-verify against the actual egress IP** whether `cdn-cgi/challenge-platform` still
+fires from CI, and if it does pursue a separate fix (e.g. a Cloudflare allowlist / WAF bypass for
+the CI egress IP, or keep the `/cdn-cgi/` exclusion).
 
 ## Recommended durable fix
 
@@ -109,8 +116,12 @@ user in a supported region. Options, in rough order of preference:
 1. Route CI traffic through a proxy / egress with an IP in a mapped region.
 2. Run the CI workers from (or NAT them through) a mapped-region location.
 
-Either approach removes the root cause and lets the test-side guards/skips
-added this session be revisited and simplified once CI sees the real-user view.
+Either approach removes the root cause of the geo/region-content items above and lets those
+test-side guards/skips be revisited once CI sees the real-user view. **It does NOT cover the
+Cloudflare bot-challenge item (news) — that keys on the origin being a datacenter/automation
+client, not on its resolved region, so it needs a separate follow-up (see its section). The
+Firefox-fingerprint operator-list variant is the same family and should also be re-verified against
+the real egress IP rather than assumed fixed.**
 
 ## Notes
 
@@ -118,3 +129,7 @@ added this session be revisited and simplified once CI sees the real-user view.
   region-prompt dismiss) are working around the symptom, not fixing it.
 - Once CI has a mapped-region IP, those workarounds should be reviewed —
   several may no longer be needed.
+- **Exception — Cloudflare bot-challenge (news):** NOT expected to be resolved by the
+  mapped-region-IP fix (it's bot detection, not region content). Keep it as a separate follow-up —
+  re-verify against the actual egress IP once the infra lands; do not close it on the assumption
+  the region fix covered it.
