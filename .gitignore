@@ -22,3 +22,6 @@ Thumbs.db
 
 # Claude Code session memory
 .claude/
+
+# One-off debugging probes — throwaway scripts, not part of the suite
+scratch/
