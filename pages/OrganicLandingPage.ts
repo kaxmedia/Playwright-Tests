@@ -10,10 +10,14 @@ export const ORGANIC_LANDING = {
   casinoReviewSlug: 'kingmaker',
   casinoReviewUrl: 'https://www.gambling.com/ie/online-casinos/kingmaker',
   comparisonUrl: 'https://www.gambling.com/ie/online-casinos',
-  /** Long-form article with in-content operator /go/ links (not a short news brief). */
-  newsArticleSlug: 'why-3et-bookmaker-is-sharp-for-football-betting',
-  newsArticleUrl:
-    'https://www.gambling.com/ie/news/why-3et-bookmaker-is-sharp-for-football-betting',
+  /**
+   * Preferred long-form news article with an in-content oplist.
+   * Short brand briefs (e.g. single-operator promo pieces) often have only one /go/
+   * and no `.operator-item` blocks — Journey 1.4 falls back to a hub scan when needed.
+   */
+  newsArticleSlug: 'troy-parrott-next-club-odds',
+  newsArticleUrl: 'https://www.gambling.com/ie/news/troy-parrott-next-club-odds',
+  newsHubUrl: 'https://www.gambling.com/ie/news',
   strategyHubUrl: 'https://www.gambling.com/ie/strategy',
 } as const;
 
@@ -68,6 +72,38 @@ export class OrganicLandingPage {
       }
     }
     throw lastError;
+  }
+
+  /** True when the article body has a real in-content oplist (not a single brand CTA). */
+  async hasCommercialArticleMarkup(): Promise<boolean> {
+    const goCount = await this.articleInContentGoLinks.count();
+    const opCount = await this.articleOperatorBlocks.count();
+    return goCount >= 3 && opCount >= 1;
+  }
+
+  /**
+   * Open a news article that still carries in-content commercial blocks.
+   * Prefers `ORGANIC_LANDING.newsArticleUrl`, then scans the IE news hub.
+   */
+  async gotoCommercialNewsArticle(): Promise<Response | null> {
+    const preferred = await this.goto(ORGANIC_LANDING.newsArticleUrl);
+    if (await this.hasCommercialArticleMarkup()) return preferred;
+
+    await this.goto(ORGANIC_LANDING.newsHubUrl);
+    const hrefs = await this.page.locator('a[href*="/ie/news/"]').evaluateAll((els) =>
+      [...new Set(els.map((el) => (el as HTMLAnchorElement).href))]
+        .filter((href) => /\/ie\/news\/[^/?#]+/.test(href) && !/\/ie\/news\/?$/.test(href))
+        .slice(0, 20),
+    );
+
+    for (const href of hrefs) {
+      const response = await this.goto(href);
+      if (await this.hasCommercialArticleMarkup()) return response;
+    }
+
+    throw new Error(
+      'Expected at least one IE news article with ≥3 in-content /go/ links and an operator block',
+    );
   }
 
   async dismissCookies(): Promise<void> {

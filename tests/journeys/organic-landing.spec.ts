@@ -116,12 +116,13 @@ test.describe('Organic Landing Journeys — IE', () => {
 
     test.beforeEach(async ({ page }) => {
       journey = new OrganicLandingPage(page);
-      const response = await journey.goto(ORGANIC_LANDING.newsArticleUrl);
+      // Preferred URL may thin out to a single brand CTA — fall back to a hub scan.
+      const response = await journey.gotoCommercialNewsArticle();
       expect(response?.status()).toBeLessThan(400);
     });
 
     test('@regression lands on a long-form article with a descriptive H1', async ({ page }) => {
-      await expect(page).toHaveURL(new RegExp(ORGANIC_LANDING.newsArticleSlug));
+      await expect(page).toHaveURL(/\/ie\/news\/.+/);
       const h1 = page.locator('main h1').first();
       await expect(h1).toBeVisible();
       const title = (await h1.innerText()).trim();
