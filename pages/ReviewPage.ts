@@ -75,20 +75,21 @@ export class ReviewPage {
     this.page = page;
 
     // ── Existing ──────────────────────────────────────────────────────────
-    const casinoRatingContainer = page.locator('div[class*="bg-gdc-gray-200"]').last();
-    const bettingRatingContainer = page.locator(
-      'main.body_content:not(:has(div[class*="bg-gdc-gray-200"])) .user-review-rating-component'
-    ).first();
-    this.ratingContainer = casinoRatingContainer.or(bettingRatingContainer);
+    // Rating widget — prefer `.user-review-rating-component`. Broad
+    // `bg-gdc-gray-200` also matches `.nav-flag` after the nav rebrand.
+    const bettingRatingContainer = page.locator('main .user-review-rating-component').first();
+    const casinoRatingContainer = page
+      .locator('main.body_content div[class*="bg-gdc-gray-200"]:not(.nav-flag)')
+      .last();
+    this.ratingContainer = bettingRatingContainer.or(casinoRatingContainer);
     this.ctaButton = page.locator('a.btn-cta-play-now').last();
 
     // ── Extended ──────────────────────────────────────────────────────────
 
-    // Rating score — casino reviews use the gray rating card; betting reviews use
-    // the user-review-rating block (only when the gray card is absent).
-    const casinoRatingScore = casinoRatingContainer.locator('div.flex').first().locator('span').first();
+    // Rating score — betting reviews use the user-review block; casino uses the gray card.
     const bettingRatingScore = bettingRatingContainer.locator('span.font-bold').first();
-    this.ratingScore = casinoRatingScore.or(bettingRatingScore);
+    const casinoRatingScore = casinoRatingContainer.locator('div.flex').first().locator('span').first();
+    this.ratingScore = bettingRatingScore.or(casinoRatingScore);
 
     // Pros/cons — review hero uses `.pros-and-cons-table-component` with two <ul> lists
     const prosConsSection = page.locator('.pros-and-cons-table-component').first();

@@ -46,13 +46,19 @@ const URLS = {
 // ─── Homepage vertical widget locators ───────────────────────────────────────
 
 function homepageCasinoCta(page: Page) {
-    return page.locator('main a[href*="/go/"][href*="/casino/"]').first();
+    return page
+        .locator(
+            'main a[href*="/go/"][href*="/casino/"], .qp__card a[href*="/go/"][href*="/casino/"], .operator-item a[href*="/go/"][href*="/casino/"]',
+        )
+        .first();
 }
 
 function homepageBettingCta(page: Page) {
-    return page.locator(
-        'main a[href*="/go/"][href*="/betting/"], main a[href*="product-ranking-betting"]'
-    ).first();
+    return page
+        .locator(
+            'main a[href*="/go/"][href*="/betting/"], main a[href*="product-ranking-betting"], .qp__card a[href*="/go/"][href*="/betting/"], .operator-item a[href*="/go/"][href*="/betting/"]',
+        )
+        .first();
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

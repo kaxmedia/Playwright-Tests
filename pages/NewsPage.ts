@@ -32,10 +32,10 @@ export class NewsPage {
 
     // News sections — each category block (h2 heading + cards beneath)
     this.newsSections = page.locator('section, [class*="news-section"], [class*="category"]');
-    this.articleCards = page.locator(
-      'article, [class*="article-card"], [class*="post-card"], [class*="card"]'
-    );
-    this.contentCards = page.locator('article, [class*="card"]');
+    // Top-level listing cards only — `[class*="card"]` also matched nested
+    // `news-card__media` / `__chip` / `__body` fragments after the news rebrand.
+    this.articleCards = page.locator('article.nh-feat, div.news-card');
+    this.contentCards = page.locator('article.nh-feat, div.news-card');
     // Hub links to vertical news listings (e.g. “All Casino News”, “All World Cup 2026 News”).
     this.seeMoreButtons = page.getByRole('link', { name: /^All .+ News$/ });
 
@@ -64,7 +64,7 @@ export class NewsPage {
 
   /** Primary link inside the first visible article/card (smoke navigation). */
   firstArticleCardLink(): Locator {
-    return this.page.locator('article a, [class*="card"] a').first();
+    return this.page.locator('article.nh-feat a, div.news-card a').first();
   }
 
   categorySectionHeading(sectionName: string): Locator {
@@ -80,12 +80,12 @@ export class NewsPage {
   }
 
   listingCardImages(): Locator {
-    return this.page.locator('article img, [class*="card"] img');
+    return this.page.locator('article.nh-feat img, div.news-card img');
   }
 
   async clickFirstArticleInSection(sectionHeading: string): Promise<void> {
     const section = this.page.locator(`section, div`).filter({ hasText: sectionHeading }).first();
-    const firstArticle = section.locator('article a, [class*="card"] a, h3 a').first();
+    const firstArticle = section.locator('article.nh-feat a, div.news-card a, h3 a').first();
     await firstArticle.click();
   }
 

@@ -5,6 +5,7 @@ import { SearchPage } from '../../pages/SearchPage';
 import { ComparisonPage } from '../../pages/ComparisonPage';
 import { AgeVerificationPage } from '../../pages/AgeVerificationPage';
 import { FooterPage } from '../../pages/FooterPage';
+import { isOnGamblingComHost } from '../helpers/affiliateUrl';
 
 // Device emulation is configured per project in playwright.config.ts:
 //   mobile-iphone (WebKit) · mobile-samsung (Chromium)
@@ -181,7 +182,7 @@ test.describe('Mobile Touch Interactions', () => {
       .not.toMatch(/^about:blank$/);
 
     const url = affiliateTab.url();
-    if (url.includes('gambling.com')) {
+    if (isOnGamblingComHost(url)) {
       expect(url, 'On-site affiliate hops must stay on /go/').toContain('/go/');
     } else {
       expect(url, 'Off-site redirect should be https').toMatch(/^https:\/\//);

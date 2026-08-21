@@ -48,9 +48,11 @@ export async function gotoOk(
   expect(response?.status(), `${label} should return HTTP < 400`).toBeLessThan(400);
 }
 
-/** Prefer main-content affiliate links over footer/editorial matches. */
+/** Prefer page commercial CTAs — homepage quick-pick cards sit outside `<main>` post-rebrand. */
 export function mainGoCta(page: Page): Locator {
-  return page.locator('main a[href*="/go/"]').first();
+  return page
+    .locator('main a[href*="/go/"], .qp__card a[href*="/go/"], .operator-item a[href*="/go/"]')
+    .first();
 }
 
 export async function assertMainGoCtaPresent(page: Page): Promise<void> {

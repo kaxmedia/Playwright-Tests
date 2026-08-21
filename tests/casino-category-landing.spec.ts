@@ -237,10 +237,19 @@ test.describe('Category Landing — DE Online Casinos — geo specifics', () => 
     test('@regression header geo switcher is not present in nav (DE has no UK-style geo control)', async ({
         page,
     }) => {
-        const headerGeo = page
-            .locator('nav')
-            .locator('[class*="geo"], [class*="country"], [class*="region"], [data-testid*="geo"]');
-        await expect(headerGeo).toHaveCount(0);
+        // Post-rebrand the nav chrome itself is `.geo-located-global-nav` — that is not a
+        // country picker. Assert no dedicated geo/country switcher control in the header.
+        const headerGeoControl = page.locator('nav').locator(
+            [
+                '[data-testid*="geo"]',
+                'button[class*="geo-switch"]',
+                'a[class*="geo-switch"]',
+                '[class*="geo-switcher"]',
+                '[class*="country-switcher"]',
+                '[class*="region-switcher"]',
+            ].join(', '),
+        );
+        await expect(headerGeoControl).toHaveCount(0);
     });
 
     test('@regression clicking an anchor link does not break the operator list', async () => {

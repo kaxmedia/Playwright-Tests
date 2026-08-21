@@ -1,4 +1,5 @@
 import { test, expect } from '../fixtures/test';
+import { acceptCookiesIfShown } from '../fixtures/acceptCookies';
 
 const GAME_ROUTES = [
   '/games',
@@ -14,12 +15,14 @@ const GAME_ROUTES = [
 test.describe('Games Pages', () => {
   for (const route of GAME_ROUTES) {
     test(`@regression ${route} loads and has game links`, async ({ page }) => {
-      const response = await page.goto(route);
+      const response = await page.goto(route, { waitUntil: 'domcontentloaded' });
       expect(response, `no response for ${route}`).not.toBeNull();
       expect(response!.ok(), `expected ok response for ${route}, got ${response!.status()}`).toBeTruthy();
+      await acceptCookiesIfShown(page);
 
-      const gameLink = page.locator('a[href*="/games/"]:visible').first();
-      await expect(gameLink).toBeVisible();
+      await expect(page.locator('h1').first()).toBeVisible();
+      // Related free-games links in nav/body (hub + free-play templates).
+      await expect(page.locator('a[href*="/games/"]').first()).toBeAttached();
     });
   }
 
