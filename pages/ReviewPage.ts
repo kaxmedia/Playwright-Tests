@@ -75,21 +75,26 @@ export class ReviewPage {
     this.page = page;
 
     // ── Existing ──────────────────────────────────────────────────────────
-    // Rating widget — prefer `.user-review-rating-component`. Broad
-    // `bg-gdc-gray-200` also matches `.nav-flag` after the nav rebrand.
-    const bettingRatingContainer = page.locator('main .user-review-rating-component').first();
-    const casinoRatingContainer = page
-      .locator('main.body_content div[class*="bg-gdc-gray-200"]:not(.nav-flag)')
-      .last();
-    this.ratingContainer = bettingRatingContainer.or(casinoRatingContainer);
+    // Casino reviews render two "Our Rating" cards (mobile `.lg:hidden` + desktop).
+    // Betting reviews only have `.user-review-rating-component`. Prefer a *visible*
+    // editorial card, else the user-avg widget — never union both without narrowing
+    // or Playwright strict-mode fails when casino pages expose both.
+    const editorialRating = page
+      .locator('main div[class*="bg-gdc-gray-200"]:not(.nav-flag)')
+      .filter({ hasText: /Our Rating/i })
+      .locator('visible=true');
+    const userRating = page.locator('main .user-review-rating-component').locator('visible=true');
+    this.ratingContainer = editorialRating.or(userRating).first();
     this.ctaButton = page.locator('a.btn-cta-play-now').last();
 
     // ── Extended ──────────────────────────────────────────────────────────
 
-    // Rating score — betting reviews use the user-review block; casino uses the gray card.
-    const bettingRatingScore = bettingRatingContainer.locator('span.font-bold').first();
-    const casinoRatingScore = casinoRatingContainer.locator('div.flex').first().locator('span').first();
-    this.ratingScore = bettingRatingScore.or(casinoRatingScore);
+    // Numeric score inside the chosen rating widget (e.g. "7.2" or "5.8").
+    this.ratingScore = this.ratingContainer
+      .locator('span')
+      .filter({ hasText: /^\d+(\.\d+)?$/ })
+      .locator('visible=true')
+      .first();
 
     // Pros/cons — review hero uses `.pros-and-cons-table-component` with two <ul> lists
     const prosConsSection = page.locator('.pros-and-cons-table-component').first();
