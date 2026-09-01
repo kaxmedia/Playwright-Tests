@@ -2,7 +2,7 @@ import { type ConsoleMessage, type Page } from '@playwright/test';
 
 /** Same noise patterns as legacy console tests — applied only to first-party script errors. */
 const KNOWN_NOISY_SUBSTRING =
-  /favicon|analytics|comments? count|page views|error fetching|failed to fetch|resizeobserver|permissions-policy|taboola|attestation reporting|cdn-cookieyes\.com|cookieyes/i;
+  /favicon|analytics|comments? count|page views|error fetching|failed to fetch|resizeobserver|permissions-policy|taboola|attestation reporting|cdn-cookieyes\.com|cookieyes|beacon api cannot load|keepalive requests|maximum amount of queued data/i;
 
 /**
  * Tracked production `pageerror`s — tests still run and still fail on any other exception.
@@ -92,12 +92,18 @@ export const KNOWN_CONSOLE_ERROR_ALLOWLIST: ReadonlyArray<{
     pattern: /Cookie .+ has been rejected for invalid domain/i,
     note: 'Firefox first-party-attributed cookie domain rejections (analytics cookies) — browser noise, not page bugs',
   },
+  {
+    id: 'ktag-beacon-keepalive-limit',
+    pattern: /Beacon API cannot load.*ktag\.kaxcdn\.com|maximum amount of queued data of 64Kb for keepalive/i,
+    note: 'Browser keepalive queue limit on ktag collect beacons — third-party analytics CDN, not page logic',
+  },
 ];
 
 /** Always filtered by `unexpectedConsoleErrors` — no opt-in needed. */
 export const ALWAYS_SUPPRESSED_CONSOLE_ERROR_IDS: readonly string[] = [
   'detectincognito-firefox-unhandled-rejection',
   'cookie-rejected-invalid-domain',
+  'ktag-beacon-keepalive-limit',
 ];
 
 /** Returns pageerrors that are not on the known-issue allowlist (by id). */

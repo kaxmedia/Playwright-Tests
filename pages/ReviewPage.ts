@@ -75,20 +75,26 @@ export class ReviewPage {
     this.page = page;
 
     // ── Existing ──────────────────────────────────────────────────────────
-    const casinoRatingContainer = page.locator('div[class*="bg-gdc-gray-200"]').last();
-    const bettingRatingContainer = page.locator(
-      'main.body_content:not(:has(div[class*="bg-gdc-gray-200"])) .user-review-rating-component'
-    ).first();
-    this.ratingContainer = casinoRatingContainer.or(bettingRatingContainer);
+    // Casino reviews render two "Our Rating" cards (mobile `.lg:hidden` + desktop).
+    // Betting reviews only have `.user-review-rating-component`. Prefer a *visible*
+    // editorial card, else the user-avg widget — never union both without narrowing
+    // or Playwright strict-mode fails when casino pages expose both.
+    const editorialRating = page
+      .locator('main div[class*="bg-gdc-gray-200"]:not(.nav-flag)')
+      .filter({ hasText: /Our Rating/i })
+      .locator('visible=true');
+    const userRating = page.locator('main .user-review-rating-component').locator('visible=true');
+    this.ratingContainer = editorialRating.or(userRating).first();
     this.ctaButton = page.locator('a.btn-cta-play-now').last();
 
     // ── Extended ──────────────────────────────────────────────────────────
 
-    // Rating score — casino reviews use the gray rating card; betting reviews use
-    // the user-review-rating block (only when the gray card is absent).
-    const casinoRatingScore = casinoRatingContainer.locator('div.flex').first().locator('span').first();
-    const bettingRatingScore = bettingRatingContainer.locator('span.font-bold').first();
-    this.ratingScore = casinoRatingScore.or(bettingRatingScore);
+    // Numeric score inside the chosen rating widget (e.g. "7.2" or "5.8").
+    this.ratingScore = this.ratingContainer
+      .locator('span')
+      .filter({ hasText: /^\d+(\.\d+)?$/ })
+      .locator('visible=true')
+      .first();
 
     // Pros/cons — review hero uses `.pros-and-cons-table-component` with two <ul> lists
     const prosConsSection = page.locator('.pros-and-cons-table-component').first();

@@ -1,5 +1,6 @@
 import { test, expect } from '../fixtures/test';
 import { SlotsGamesPage, SLOTS_PAGE, TEST_USER } from '../pages/SlotsGamesPage';
+import { isOnGamblingComHost } from './helpers/affiliateUrl';
 
 // ─── Slots Games Widget Tests ─────────────────────────────────────────────────
 //
@@ -287,7 +288,7 @@ test.describe('Slots Games Widget — UK', () => {
 
         const url = affiliateTab.url();
         expect(url).not.toContain('/uk/online-casinos/slots/games');
-        if (url.includes('gambling.com')) {
+        if (isOnGamblingComHost(url)) {
             expect(url, 'On-site affiliate hops must stay on /go/').toContain('/go/');
         } else {
             expect(url, 'Off-site redirect should be https').toMatch(/^https:\/\//);

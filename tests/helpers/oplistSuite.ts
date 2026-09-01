@@ -1,6 +1,7 @@
 import { type Page } from '@playwright/test';
 import { test, expect } from '../../fixtures/test';
 import { ComparisonPage, type ComparisonPageConfig } from '../../pages/ComparisonPage';
+import { isOnGamblingComHost } from './affiliateUrl';
 
 export interface OplistSubPageConfig {
   name: string;
@@ -127,7 +128,7 @@ export function registerOplistGeoSuite(options: OplistGeoSuiteOptions): void {
           .not.toMatch(/^about:blank$/);
 
         const affiliateUrl = affiliateTab.url();
-        if (affiliateUrl.includes('gambling.com')) {
+        if (isOnGamblingComHost(affiliateUrl)) {
           expect(affiliateUrl, 'On-site affiliate hops must stay on /go/').toContain('/go/');
         } else {
           expect(affiliateUrl, 'Off-site redirect should be https').toMatch(/^https:\/\//);
