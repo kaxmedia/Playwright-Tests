@@ -1,6 +1,6 @@
 import { type Locator, type Page } from '@playwright/test';
 import { acceptCookiesIfShown } from '../fixtures/acceptCookies';
-import { acceptRegionPromptIfVisible } from '../fixtures/regionPrompt';
+import { acceptRegionPromptIfVisible, registerRegionPromptHandler } from '../fixtures/regionPrompt';
 
 export const SIGN_IN_USER = {
     email: 'testpot209@gmail.com',
@@ -178,6 +178,7 @@ export class AuthPage {
     }
 
     async goto(): Promise<void> {
+        await registerRegionPromptHandler(this.page);
         await this.page.goto('/');
         await acceptCookiesIfShown(this.page, 3000);
     }
@@ -226,16 +227,52 @@ export class AuthPage {
 
         await acceptRegionPromptIfVisible(this.page);
 
-        // Prefer the auth trigger wrapper — `#gdc-signup-text` alone can miss the click handler
-        // after a same-page sign-out until the nav rebinds.
-        const trigger = this.page
-            .locator('[data-custom-open-supabase="modal-authentication"]')
-            .or(this.headerSignUpBtn)
+        // Prefer a *visible* header trigger. Do not `.first()` bare
+        // `[data-custom-open-supabase]` — the closed mobile-drawer CTA is first in the DOM
+        // and hidden on desktop, so that click never opens the modal (60s timeouts).
+        const headerTrigger = this.page
+            .locator('#authentication-trigger, #gdc-signup-text')
+            .locator('visible=true')
             .first();
-        try {
-            await trigger.click({ timeout: 8000, force: true });
-        } catch {
-            await trigger.evaluate((node: HTMLElement) => node.click());
+        const visibleDrawerCta = this.page
+            .locator('details[data-mnav-drawer] button[data-nav-auth-cta], details[data-mnav-drawer] button[data-custom-open-supabase="modal-authentication"]')
+            .locator('visible=true')
+            .first();
+        const anyVisibleAuthCta = this.page
+            .locator('[data-custom-open-supabase="modal-authentication"]')
+            .locator('visible=true')
+            .first();
+
+        if (await headerTrigger.isVisible().catch(() => false)) {
+            try {
+                await headerTrigger.click({ timeout: 8000, force: true });
+            } catch {
+                await headerTrigger.evaluate((node: HTMLElement) => node.click());
+            }
+        } else if (await visibleDrawerCta.isVisible().catch(() => false)) {
+            await visibleDrawerCta.click({ timeout: 8000 });
+        } else if (await anyVisibleAuthCta.isVisible().catch(() => false)) {
+            try {
+                await anyVisibleAuthCta.click({ timeout: 8000, force: true });
+            } catch {
+                await anyVisibleAuthCta.evaluate((node: HTMLElement) => node.click());
+            }
+        } else {
+            // Mobile: header Sign Up is `hidden sm:block` — open the mnav drawer CTA, or call handleSignUp.
+            const menuToggle = this.page
+                .locator('summary.mnav-toggle, summary[aria-label*="Open main menu" i]')
+                .first();
+            if (await menuToggle.isVisible().catch(() => false)) {
+                await menuToggle.click();
+                await this.page
+                    .locator('details[data-mnav-drawer][open] button[data-nav-auth-cta]')
+                    .click({ timeout: 8000 });
+            } else {
+                await this.page.evaluate(() => {
+                    const fn = (window as unknown as { handleSignUp?: () => void }).handleSignUp;
+                    fn?.();
+                });
+            }
         }
         await this.signupModal.waitFor({ state: 'visible', timeout: 10000 });
     }

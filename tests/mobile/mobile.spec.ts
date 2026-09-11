@@ -59,6 +59,12 @@ test.describe('Mobile Navigation', () => {
     await mobile.acceptCookiesIfShown();
 
     await mobile.openMenu();
+    // Top-level geo/global items are often nested `<details>` accordions — expand one
+    // so child links become visible (Playwright treats closed-details descendants as hidden).
+    const firstAccordion = page.locator('details[data-mnav-drawer][open] details > summary').first();
+    if (await firstAccordion.isVisible().catch(() => false)) {
+      await firstAccordion.click();
+    }
     expect(await mobile.menuPopularLinks.count()).toBeGreaterThanOrEqual(2);
     expect(await mobile.menuLinks.count()).toBeGreaterThanOrEqual(3);
   });
@@ -73,8 +79,8 @@ test.describe('Mobile Navigation', () => {
     await expect(mobile.menuSignInButton).toBeVisible();
     await mobile.menuSignInButton.tap();
 
-    // handleSignIn() clicks #user-login-wrap — opens the shared Welcome Rewards shell
-    // (often still on “Create an account”). Switch to Sign In when that step is shown.
+    // Drawer auth CTA opens Welcome Rewards on “Create an account” / Sign Up.
+    // Switch to Sign In when that step is shown (in-drawer Sign In was removed in the sprint).
     await expect(auth.signupModal).toBeVisible({ timeout: 10000 });
     if (await auth.modal.getByText(/create an account/i).isVisible().catch(() => false)) {
       await auth.signInLink.click();
@@ -138,7 +144,13 @@ test.describe('Mobile Responsive Layout', () => {
     const viewportWidth = page.viewportSize()?.width ?? 0;
     const oversizedImages = await page.evaluate(vpWidth => {
       return Array.from(document.querySelectorAll('img'))
-        .filter(img => img.getBoundingClientRect().width > vpWidth + 5)
+        .filter(img => {
+          // Decorative absolute/fixed art (e.g. global-home Rewards bleed) is intentionally
+          // wider than the viewport — exclude from the in-flow overflow check.
+          const position = getComputedStyle(img).position;
+          if (position === 'absolute' || position === 'fixed') return false;
+          return img.getBoundingClientRect().width > vpWidth + 5;
+        })
         .map(img => img.src);
     }, viewportWidth);
 
@@ -198,18 +210,17 @@ test.describe('Mobile Touch Interactions', () => {
     await mobile.goto('/');
     await mobile.acceptCookiesIfShown();
 
-    const register = mobile.registerNowButton;
+    // Header Sign Up is `hidden sm:block` on mobile — open the drawer CTA first.
+    await mobile.openMenu();
+    const register = mobile.menuSignInButton;
     await expect(register).toBeVisible({ timeout: 15000 });
     const box = await register.boundingBox();
     if (box) {
       expect(box.height).toBeGreaterThanOrEqual(40);
     }
 
-    // Mobile '/' serves the /rewards promo page, whose "Register now" CTA is a
-    // <div role="button"> with a JS-only handler that doesn't fire on a synthetic
-    // tap. Open the auth modal via the page-independent header trigger
-    // (force/JS-click), matching the sign-in test below.
-    await auth.openSignUpModal();
+    // Drawer “Sign Up — it's free” opens the shared auth modal (replaces legacy “Register now”).
+    await register.tap();
     await expect(auth.signupModal).toBeVisible({ timeout: 10000 });
   });
 
