@@ -73,9 +73,10 @@ export class UKCasinoPage {
             '.operator-main a.operator-item__cta_link[href*="/go/uk/"], .operator-main a.operator-item__cta_link[href*="/go/ie/"]'
         );
 
-        // Sticky operator-list anchor strip (desktop #oplistNav, mobile #oplistNavMobile)
-        // Desktop tests: use the md+ strip only — mobile #oplistNavMobile links are hidden and break .first()
-        this.anchorLinks = page.locator('#oplistNav a[href^="#anchor_"]');
+        // Sticky operator-list anchor strip (desktop #oplistNav, mobile #oplistNavMobile).
+        // Desktop tests: use the md+ strip only — mobile #oplistNavMobile links are hidden and break .first().
+        // UK still uses `#anchor_*`; US (and some other geos) use short fragments (`#top`, `#beginners`).
+        this.anchorLinks = page.locator('#oplistNav a[href^="#"]');
         this.anchorMenu = page.locator('#oplistNav');
 
         // Compare — oplist checkboxes; bar is the comparison-tool container (not *-compare-bar classes)

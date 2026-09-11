@@ -41,7 +41,8 @@ export class IECasinoPage {
             '.operator-main a.operator-item__cta_link[href*="/go/ie/"]'
         );
         this.anchorMenu = page.locator('#oplistNav');
-        this.anchorLinks = page.locator('#oplistNav a[href^="#anchor_"]');
+        // Prefer `#anchor_*` when present; fall back to any in-nav fragment (US-style short ids).
+        this.anchorLinks = page.locator('#oplistNav a[href^="#"]');
         this.faqSection = page.locator('.automation-faq-container').first();
         this.faqItems = this.faqSection.locator('dl dt');
         this.footer = page.locator('footer').first();
