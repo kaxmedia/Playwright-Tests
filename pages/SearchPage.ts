@@ -25,10 +25,12 @@ export class SearchPage {
 
   constructor(page: Page) {
     this.page           = page;
-    // SSR adds #search-icon-placeholder; the live nav uses another img.search-icon. Algolia embeds
-    // a separate control named "Search icon" — avoid ambiguous role locators. The nav img is offset
-    // in CSS so Playwright’s pointer click can fail; openSearch() uses a DOM click via evaluate().
-    this.searchIcon     = page.locator('img.search-icon:not(#search-icon-placeholder)');
+    // The nav's search icon now keeps the SSR #search-icon-placeholder id permanently — it no
+    // longer gets swapped for a separate hydrated element, so excluding that id (as this locator
+    // used to) matches nothing. Algolia embeds a separate control named "Search icon" — avoid
+    // ambiguous role locators. The nav img is offset in CSS so Playwright's pointer click can
+    // fail; openSearch() uses a DOM click via evaluate().
+    this.searchIcon     = page.locator('img.search-icon');
     this.searchInput    = page.locator('input.search-input');
     // Prefer the stable id — class alone matches before Algolia expands max-height (stays offsetHeight 0).
     this.resultsContainer = page.locator('#js-search-result');
