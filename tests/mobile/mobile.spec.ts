@@ -201,7 +201,9 @@ test.describe('Mobile Touch Interactions', () => {
     }
 
     await affiliateTab.close();
-    await expect(page).toHaveURL(new RegExp(`${UK_CASINOS}(\\?|$|#)`));
+          // Live production 301s /uk/online-casinos to /uk/online-casinos/best-sites -- tolerate
+          // both so this doesn't fail on the redirect destination alone.
+          await expect(page).toHaveURL(new RegExp(`${UK_CASINOS}(/best-sites)?(\\?|$|#)`));
   });
 
   test('@regression @mobile sign up button is tappable', async ({ page }) => {

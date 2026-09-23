@@ -3,7 +3,8 @@ import { acceptCookiesIfShown } from '../fixtures/acceptCookies';
 import { globalNavLogo } from './globalNavLogo';
 
 export const UK_CASINO = {
-    url: 'https://www.gambling.com/uk/online-casinos',
+            // Live canonical URL as of 2026-09-23: /uk/online-casinos 301s here (verified live).
+            url: 'https://www.gambling.com/uk/online-casinos/best-sites',
     geo: 'uk',
     currency: '£',
     language: 'en',
