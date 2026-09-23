@@ -102,12 +102,14 @@ export class UKCasinoPage {
         this.compareModalSections = this.compareModal.locator('button[id^="category-header-"]');
         this.compareModalCloseBtn = this.compareModal.getByRole('button', { name: /close modal/i });
 
-        // Editorial explainer block (formerly accordion FAQ — now static H2 + body copy)
-        this.faqSection = page
-            .locator('.content-block-component')
-            .filter({ has: page.getByRole('heading', { name: 'What is an Online Casino?' }) })
-            .first();
-        this.faqItems = this.faqSection.locator('p');
+        // Editorial explainer / FAQ block. Live DOM (verified 2026-09-23) is an accordion --
+                // `.automation-faq-container` > `dl` > `.collapsible-container` > `dt.collapsible-header`
+                // (heading) + `dd[hidden="until-found"]` (answer, collapsed until opened) -- matching
+                // DECasinoPage's already-working pattern. `.content-block-component` no longer wraps
+                // this section; that selector matched zero elements and made every FAQ assertion here
+                // look like a content gap when the content was present the whole time, just collapsed.
+                this.faqSection = page.locator('.automation-faq-container');
+                this.faqItems = page.locator('.automation-faq-container dt');
 
         // Footer
         this.footer = page.locator('footer').first();
@@ -166,10 +168,12 @@ export class UKCasinoPage {
         await this.page.waitForTimeout(500);
     }
 
-    /** Returns body copy for the nth paragraph in the explainer block (no expand interaction). */
-    async openFaqItem(index: number): Promise<string> {
-        const item = this.faqItems.nth(index);
-        await item.scrollIntoViewIfNeeded();
-        return item.innerText();
-    }
+    /** Clicks the nth `dt` toggle to expand it, then returns the revealed `dd` answer's body copy. */
+        async openFaqItem(index: number): Promise<string> {
+                    const item = this.faqItems.nth(index);
+                    await item.scrollIntoViewIfNeeded();
+                    await item.click();
+                    await this.page.waitForTimeout(400);
+                    return item.locator('xpath=following-sibling::dd[1]').innerText();
+        }
 }
