@@ -38,7 +38,7 @@ export const subCategoryUrls: SubCategoryConfig[] = [
   { geo: 'NZ', geoPath: '/nz', slug: 'paysafecard' },
   { geo: 'BE', geoPath: '/be', slug: 'paysafecard' },
   { geo: 'UK', geoPath: '/uk', slug: 'fastest-withdrawal' },
-  { geo: 'US', geoPath: '/us', slug: 'fastest-withdrawal' },
+  { geo: 'US', geoPath: '/us', slug: 'fastest-withdrawal', ciIpReducedList: true },
   { geo: 'IN', geoPath: '/in', slug: 'live' },
 ];
 
