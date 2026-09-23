@@ -23,7 +23,7 @@ on:
 run-name: "Visual Regression${{ inputs.correlation_id != '' && format(' #{0}', inputs.correlation_id) || '' }}"
 
 # Auto-cancel superseded runs on the same ref so pushes/reopens don't leave
-# long (~78 min) visual runs stacking up and competing for runners.
+# long visual runs stacking up and competing for runners.
 concurrency:
   group: visual-regression-${{ github.ref }}
   cancel-in-progress: true
@@ -31,15 +31,19 @@ concurrency:
 jobs:
   visual-regression:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false          # a failing shard must not cancel the others
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6]   # 6 shards, matching Run Spec — strategy.job-total keeps --shard N in sync
     container:
       image: mcr.microsoft.com/playwright:v1.59.1-noble
 
     # Normalize update_baselines to a single boolean-string, computed ONCE.
     # workflow_dispatch inputs arrive as STRINGS over the REST API (how the dashboard
-    # dispatches), and in GitHub Actions expressions ANY non-empty string is truthy — so the
-    # literal string "false" evaluated as truthy and a naive `${{ inputs.update_baselines }}`
-    # ALWAYS captured baselines instead of comparing. Compare explicitly against both the
-    # string and boolean forms (and empty, on push/PR) so only a real "true" triggers capture.
+    # dispatches), and in GitHub Actions expressions ANY non-empty string is truthy — so a
+    # naive `${{ inputs.update_baselines }}` ALWAYS captured baselines instead of comparing.
+    # Compare explicitly against both the string and boolean forms (and empty, on push/PR)
+    # so only a real "true" triggers capture.
     env:
       CAPTURE_BASELINES: ${{ inputs.update_baselines == 'true' || inputs.update_baselines == true }}
 
@@ -55,21 +59,66 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run visual regression tests
+      - name: Run visual regression tests (shard ${{ matrix.shard }}/${{ strategy.job-total }})
         env:
-          # Emit a machine-readable JSON report alongside the HTML one so the dashboard can
-          # ingest per-page/project pass/fail + diff-image attachment paths. The diff PNGs
-          # themselves live under test-results/ (uploaded by the failure step below).
-          PLAYWRIGHT_JSON_OUTPUT_NAME: visual-results.json
           # Optional title filter (workflow_dispatch `grep` input). Empty on push/PR and on
           # dispatches that omit it, so ${GREP:+…} expands to nothing → full suite as before.
           # Passed via env (not inlined) so the value is shell-quoted, not command-injected.
           GREP: ${{ inputs.grep }}
-        run: npx playwright test --project=visual-chromium-desktop --project=visual-chromium-android --project=visual-webkit-desktop --project=visual-webkit-ios --reporter=html,json ${{ env.CAPTURE_BASELINES == 'true' && '--update-snapshots' || '' }} ${GREP:+--grep "$GREP"}
+        run: npx playwright test --project=visual-chromium-desktop --project=visual-chromium-android --project=visual-webkit-desktop --project=visual-webkit-ios ${{ env.CAPTURE_BASELINES == 'true' && '--update-snapshots' || '' }} ${GREP:+--grep "$GREP"} --shard=${{ matrix.shard }}/${{ strategy.job-total }} --reporter=blob,line
+
+      - name: Upload blob report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: blob-report-${{ matrix.shard }}
+          path: blob-report/
+          retention-days: 1
+
+      - name: Upload baselines (this shard)
+        if: ${{ always() && env.CAPTURE_BASELINES == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-baselines-${{ matrix.shard }}
+          path: tests/visual/**-snapshots/
+          retention-days: 1
+          if-no-files-found: ignore
+
+  merge-report:
+    needs: [visual-regression]
+    if: always()                # merge even when some shards failed
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.59.1-noble
+
+    env:
+      CAPTURE_BASELINES: ${{ inputs.update_baselines == 'true' || inputs.update_baselines == true }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download all shard blob reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: blob-report-*
+          path: all-blob-reports
+          merge-multiple: true
 
       # Publish the JSON report on every comparison run (pass or fail) so the dashboard has
       # per-page status each time — not only on failure. Skipped for baseline-capture runs
-      # (update_baselines), which don't compare. `always()` so a failing run still uploads it.
+      # (update_baselines), which don't compare. `merge-reports --reporter json` reconstructs
+      # the exact same schema the previous unsharded `--reporter=json` run produced, just
+      # combined across all 6 shards.
+      - name: Merge into single JSON + HTML report
+        if: ${{ env.CAPTURE_BASELINES != 'true' }}
+        run: |
+          npx playwright merge-reports --reporter json ./all-blob-reports > visual-results.json
+          npx playwright merge-reports --reporter html ./all-blob-reports
+
       - name: Upload visual results JSON
         if: ${{ always() && env.CAPTURE_BASELINES != 'true' }}
         uses: actions/upload-artifact@v4
@@ -78,6 +127,14 @@ jobs:
           path: visual-results.json
           retention-days: 30
           if-no-files-found: warn
+
+      - name: Download all shard baselines
+        if: ${{ always() && env.CAPTURE_BASELINES == 'true' }}
+        uses: actions/download-artifact@v4
+        with:
+          pattern: visual-baselines-*
+          path: tests/visual
+          merge-multiple: true
 
       - name: Upload baselines
         if: ${{ always() && env.CAPTURE_BASELINES == 'true' }}
@@ -88,28 +145,46 @@ jobs:
           retention-days: 30
 
       - name: Upload report and results on failure
-        if: failure()
+        if: ${{ always() && needs.visual-regression.result == 'failure' && env.CAPTURE_BASELINES != 'true' }}
         uses: actions/upload-artifact@v4
         with:
           name: visual-regression-report
           path: |
             playwright-report/
-            test-results/
+            all-blob-reports/
           retention-days: 30
 
-      # Small, dedicated artifact of ONLY the per-test comparison PNGs Playwright writes under
-      # test-results/ on a failed toHaveScreenshot — verified against a real failing run:
-      # test-results/<test-dir>/<snapshot>-actual.png (and <snapshot>-diff.png on a same-size
-      # pixel diff). Scoped to those two so it stays small/fast (excludes the generic
-      # test-failed-N.png page screenshots and the ~600MB visual-regression-report bundle above),
-      # for the dashboard's visual-diff viewer to ingest.
+      # Small, dedicated artifact of ONLY the per-test comparison PNGs Playwright attaches on
+      # a failed toHaveScreenshot ("actual" and "diff") — extracted from the merged JSON +
+      # each shard's blob resources, the same way Run Spec's merge-report job extracts its
+      # functional failure screenshots (content-addressed by sha).
+      - name: Collect visual failure screenshots (slim, content-addressed)
+        if: ${{ always() && needs.visual-regression.result == 'failure' && env.CAPTURE_BASELINES != 'true' }}
+        run: |
+          mkdir -p failure-screenshots
+          node -e '
+            const fs = require("fs"), path = require("path");
+            const d = JSON.parse(fs.readFileSync("visual-results.json", "utf8"));
+            const shas = new Set();
+            (function walk(su) {
+              (su.specs || []).forEach(sp => (sp.tests || []).forEach(t => (t.results || []).forEach(r => (r.attachments || []).forEach(a => {
+                if ((a.name === "actual" || a.name === "diff") && a.path && a.path.endsWith(".png")) shas.add(path.basename(a.path));
+              }))));
+              (su.suites || []).forEach(walk);
+            })({ suites: d.suites || [] });
+            let n = 0;
+            for (const s of shas) {
+              const src = path.join("all-blob-reports", "resources", s);
+              if (fs.existsSync(src)) { fs.copyFileSync(src, path.join("failure-screenshots", s)); n++; }
+            }
+            console.log("collected " + n + "/" + shas.size + " failure screenshot(s)");
+          '
+
       - name: Upload visual failure screenshots
-        if: failure()
+        if: ${{ always() && needs.visual-regression.result == 'failure' && env.CAPTURE_BASELINES != 'true' }}
         uses: actions/upload-artifact@v4
         with:
           name: visual-failure-screenshots
-          path: |
-            test-results/**/*-diff.png
-            test-results/**/*-actual.png
+          path: failure-screenshots/
           retention-days: 30
           if-no-files-found: warn
