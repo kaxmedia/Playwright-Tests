@@ -83,9 +83,9 @@ for (const geo of GEOS) {
     const oplistHeight = CLIP_HEIGHTS.oplist[`${geo.name}|${testInfo.project.name}`];
     if (oplistHeight === undefined) throw new Error(`No clip height for oplist ${geo.name}|${testInfo.project.name} — re-run generate-clip-heights.mjs`);
     await page.addStyleTag({
-            content: `.operator-list { height: ${oplistHeight}px !important; max-height: ${oplistHeight}px !important; overflow: hidden !important; }`,
+                  content: `ul.operator-list { height: ${oplistHeight}px !important; max-height: ${oplistHeight}px !important; overflow: hidden !important; }`,
     });
-        await expect(page.locator('.operator-list')).toHaveScreenshot(`oplist-${geo.name}.png`, {
+            await expect(page.locator('ul.operator-list').first()).toHaveScreenshot(`oplist-${geo.name}.png`, {
       threshold: 0,
       maxDiffPixelRatio: 0.13,
       timeout: 30000,
