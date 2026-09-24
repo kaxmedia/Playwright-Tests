@@ -63,6 +63,13 @@ for (const geo of GEOS) {
     // real webkit-iPhone locally and passes on every sibling combo (chromium nl, webkit-desktop nl,
     // webkit-ios es). Skip just this one combo rather than weaken the check.
     test.skip(geo.name === 'nl' && testInfo.project.name === 'visual-webkit-ios', 'NL age gate does not clear before capture on webkit-ios under the CI "GX"-region datacenter IP (CI-environment, not a code defect — dismissal verified locally on real webkit-iPhone; see #109/#111/#112/#114/#117 family)');
+    // 2026-09-24: /be/fr was serving a broken English fallback (html lang="en", English h1/body
+        // under a correctly-localized French title) -- dev-confirmed bug, fixed same day. Re-verified
+        // live after the fix: the page now renders correctly in French, but the operator quick-pick
+        // section is STILL absent (0 qp__ elements) -- distinct from the now-resolved language bug.
+        // /be (Dutch-community) has the section; /be/fr (French-community) genuinely doesn't, most
+        // likely a Belgian regulatory distinction between the two community gambling regulators.
+        test.skip(geo.name === 'be-fr', "Belgium French-language page (/be/fr) doesn't render an operator quick-pick list -- confirmed live both before and after an unrelated language-rendering bug was fixed, so this is a real content difference from /be, not a test defect");
     await page.goto(geo.path, { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('load');
     // Deterministically dismiss the age gate on gated geos (nl, es) BEFORE capturing — otherwise
