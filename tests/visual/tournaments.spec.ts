@@ -22,11 +22,21 @@ test('@visual gambling.com /games/tournaments renders deterministically', async 
   // decline it ("No Thanks" — stay on this site); on the GX CI IP the modal never shows and this
   // is a fast no-op. Settle briefly so the backdrop is fully gone before the pixel capture.
   const regionModal = page.locator('[aria-labelledby="region-prompt-modal-heading"]');
-  // The modal surfaces on a ~5–6s delay after load, so wait generously for it to appear (returns
-  // as soon as it does; on the GX CI IP it never appears and this waits out the timeout once).
-  await regionModal.waitFor({ state: 'visible', timeout: 9000 }).catch(() => {});
-  await acceptRegionPromptIfVisible(page);
-  await regionModal.waitFor({ state: 'hidden', timeout: 3000 }).catch(() => {});
+    // The modal's appearance timing is genuinely non-deterministic -- confirmed live: not yet
+    // visible 6s after load in one trial, still not visible after 20s in another. A single
+    // wait-then-check-once (the previous approach here) leaves the window between that one check
+    // and the actual screenshot call completely unguarded, which is exactly what caused the
+    // undismissed-modal captures (68% pixel diff, run #388 shard 3). Poll for it instead, right up
+    // to just before capturing, so no matter when in that window it appears, it gets dismissed.
+    const regionDeadline = Date.now() + 18000;
+    while (Date.now() < regionDeadline) {
+          if (await regionModal.isVisible().catch(() => false)) {
+                  await acceptRegionPromptIfVisible(page);
+                  break;
+          }
+          await page.waitForTimeout(500);
+    }
+    await regionModal.waitFor({ state: 'hidden', timeout: 3000 }).catch(() => {});
   await page.waitForTimeout(400);
   await expect(page).toHaveScreenshot('tournaments.png', {
     fullPage: false,
