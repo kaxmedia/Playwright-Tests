@@ -1,4 +1,5 @@
 import { test, expect } from '../../fixtures/test';
+import { dismissRegionPromptBeforeCapture } from '../../fixtures/regionPrompt';
 
 const GEOS = [
   { path: '/',      name: 'root' },
@@ -38,6 +39,10 @@ for (const geo of GEOS) {
     await page.addStyleTag({
       content: '*, *::before, *::after { animation-duration: 0s !important; animation-delay: 0s !important; transition-duration: 0s !important; transition-delay: 0s !important; }',
     });
+        // Poll for and dismiss the region-switch modal before capturing -- it appears on a
+        // genuinely non-deterministic delay, and the global addLocatorHandler dismissal never fires
+        // before toHaveScreenshot() (see fixtures/regionPrompt.ts and tests/visual/tournaments.spec.ts).
+        await dismissRegionPromptBeforeCapture(page);
     await expect(page).toHaveScreenshot(`${geo.name}.png`, {
       fullPage: false,
       threshold: 0,
