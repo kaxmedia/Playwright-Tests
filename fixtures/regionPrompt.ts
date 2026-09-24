@@ -84,3 +84,25 @@ export async function acceptRegionPromptIfVisible(page: Page): Promise<void> {
   if (!(await modal.isVisible().catch(() => false))) return;
   await dismissRegionPromptModal(modal);
 }
+
+/**
+ * Poll for and dismiss the region-switch modal for up to `timeoutMs`, right up until the moment
+  * before a screenshot capture. A single wait-then-check-once isn't reliable here: the modal's
+   * appearance delay is genuinely non-deterministic (confirmed live, 2026-09-24: not yet visible 6s
+    * after load in one trial, still not visible after 20s in another), and registerRegionPromptHandler's
+     * addLocatorHandler only fires before Playwright actions, never before toHaveScreenshot() -- so a
+      * modal that appears in that gap sits fully undismissed in the capture (the 68% diff this fixes;
+       * see tests/visual/tournaments.spec.ts run #388 shard 3).
+        */
+export async function dismissRegionPromptBeforeCapture(page: Page, timeoutMs = 18000): Promise<void> {
+    const modal = page.locator('[aria-labelledby="region-prompt-modal-heading"]');
+    const deadline = Date.now() + timeoutMs;
+    while (Date.now() < deadline) {
+          if (await modal.isVisible().catch(() => false)) {
+                  await dismissRegionPromptModal(modal);
+                  break;
+          }
+          await page.waitForTimeout(500);
+    }
+    await modal.waitFor({ state: 'hidden', timeout: 3_000 }).catch(() => {});
+}
