@@ -5,9 +5,21 @@ const MASKS = [
 ];
 
 const SECTIONS = [
-  // best-gambling-sites has real, discrete content (the operator table) — keep the tight default
-  // so a genuine change (e.g. an operator swap) is still caught.
-  { name: 'best-gambling-sites',   heading: 'Best Gambling Sites in the US', maxDiffPixelRatio: 0.04 },
+    // best-gambling-sites has real, discrete content (the operator table), so a genuine change (e.g.
+    // an operator swap) should still be caught -- but it turns out to have the exact same ±1px
+    // sub-pixel HEIGHT jitter as responsible-gambling below (confirmed live via the committed
+    // baselines: chromium-desktop/webkit-desktop are both 412px, chromium-android 484px, webkit-ios
+    // 481px -- CI observed 411/412 on both desktop projects). Pin it the same way; the tight 0.04
+    // ratio still catches real content changes (which shift height by far more than 1px).
+  {
+        name: 'best-gambling-sites', heading: 'Best Gambling Sites in the US', maxDiffPixelRatio: 0.04,
+        pinHeights: {
+                'visual-chromium-desktop': 410,
+                'visual-webkit-desktop': 410,
+                'visual-chromium-android': 482,
+                'visual-webkit-ios': 479,
+        } as Record<string, number>,
+  },
   // responsible-gambling is a block of static legal prose with no dynamic content. Its failures are
   // a ±1px sub-pixel HEIGHT jitter between otherwise-identical renders (e.g. chromium-desktop 209↔208,
   // webkit-ios 362↔363) — a DIMENSION mismatch that hard-fails before pixels are ever compared, so no
@@ -37,7 +49,7 @@ for (const section of SECTIONS) {
     await cb.scrollIntoViewIfNeeded();
     await cb.waitFor({ state: 'visible' });
     await page.waitForTimeout(500);
-    // Pin the block height (responsible-gambling only) to defeat the ±1px sub-pixel jitter — see note above.
+    // Pin the block height (sections with pinHeights) to defeat the ±1px sub-pixel jitter -- see notes above.
     const pin = section.pinHeights?.[testInfo.project.name];
     if (pin) {
       await cb.evaluate((el, h) => {
