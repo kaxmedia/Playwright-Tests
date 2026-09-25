@@ -30,7 +30,11 @@ const GEOS = [
   { path: '/us',    name: 'us' },
 ];
 
-const BASE_MASKS = ['div.home-banner', 'section.carousel', 'div.cky-banner-bottom'];
+// section.ghp-aso is the "Featured in" press-logos strip -- confirmed live, 2026-09-25, that it
+// rotates its selection/order between loads (a real ~17% pixel diff on root, chromium-desktop,
+// deterministic across 3 retries, against a baseline refreshed minutes earlier -- not stale, just
+// non-deterministic content). Masked the same way as the other known-rotating sections below.
+const BASE_MASKS = ['div.home-banner', 'section.carousel', 'section.ghp-aso', 'div.cky-banner-bottom'];
 
 for (const geo of GEOS) {
   test(`@visual gambling.com ${geo.path} renders deterministically`, async ({ page }) => {
