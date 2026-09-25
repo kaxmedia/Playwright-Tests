@@ -59,10 +59,14 @@ for (const section of SECTIONS) {
           const clipHeight = section.clipHeights[testInfo.project.name];
           if (!clipHeight) throw new Error(`No clipHeight configured for ${section.name} on ${testInfo.project.name}`);
           const buffer = await page.screenshot({
-                  clip: { x: box.x, y: box.y, width: box.width, height: clipHeight },
+                          // toMatchSnapshot, unlike toHaveScreenshot, does NOT auto-append the project/platform to
+                      // the snapshot filename -- without it, all 4 projects would collide on the same file. Named
+                      // to match this file's existing toHaveScreenshot-generated paths exactly, so the upcoming
+                      // baseline refresh overwrites the same files rather than leaving orphans.
+              clip: { x: box.x, y: box.y, width: box.width, height: clipHeight },
                   mask: MASKS.map(s => page.locator(s)),
           });
-          expect(buffer).toMatchSnapshot(`us-${section.name}.png`, {
+        expect(buffer).toMatchSnapshot(`us-${section.name}-${testInfo.project.name}-linux.png`, {
                   threshold: 0,
                   maxDiffPixelRatio: section.maxDiffPixelRatio,
           });
