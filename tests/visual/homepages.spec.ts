@@ -34,12 +34,13 @@ const BASE_MASKS = ['div.home-banner', 'section.carousel', 'div.cky-banner-botto
 
 for (const geo of GEOS) {
   test(`@visual gambling.com ${geo.path} renders deterministically`, async ({ page }) => {
-        // The region-modal poll (see dismissRegionPromptBeforeCapture) can take up to 18s, on top of
-        // navigation + render + capture time; that occasionally exceeds the default 60s test timeout on
-        // the slowest project/page combo (webkit-ios, root homepage) with browser-context teardown
-        // mid-capture as a result. Give it real headroom, matching this codebase's own convention for
-        // slower visual/mobile tests (see profile.spec.ts, tournaments.spec.ts).
-        test.setTimeout(90_000);
+            // The region-modal poll (see dismissRegionPromptBeforeCapture) can take up to 18s, on top of
+        // navigation + render + capture time. The 90s timeout (bumped from the default 60s in a first
+        // pass) still wasn't enough for the heaviest page on the slowest project/page combo (webkit-ios,
+        // root homepage) -- confirmed live, 2026-09-25: run #405 timed out again at exactly 90000ms.
+        // Bumped further to 120s, matching this codebase's own convention for its genuinely slowest
+        // tests (see auth.spec.ts, footer.spec.ts, profile.spec.ts).
+        test.setTimeout(120_000);
     await page.goto(geo.path, { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('load');
     await page.addStyleTag({
