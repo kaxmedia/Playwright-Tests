@@ -37,23 +37,24 @@ const GEOS = [
 const BASE_MASKS = ['div.home-banner', 'section.carousel', 'section.ghp-aso', 'div.cky-banner-bottom'];
 
 for (const geo of GEOS) {
-  test(`@visual gambling.com ${geo.path} renders deterministically`, async ({ page }) => {
-            // The region-modal poll (see dismissRegionPromptBeforeCapture) can take up to 18s, on top of
-        // navigation + render + capture time. The 90s timeout (bumped from the default 60s in a first
-        // pass) still wasn't enough for the heaviest page on the slowest project/page combo (webkit-ios,
-        // root homepage) -- confirmed live, 2026-09-25: run #405 timed out again at exactly 90000ms.
-        // Bumped further to 120s, matching this codebase's own convention for its genuinely slowest
-        // tests (see auth.spec.ts, footer.spec.ts, profile.spec.ts).
-        test.setTimeout(120_000);
+  test(`@visual gambling.com ${geo.path} renders deterministically`, async ({ page }, testInfo) => {
+    // root on webkit-ios is uniquely heavy (root is the largest/heaviest homepage, webkit-ios the
+    // slowest project) -- this exact combination has now timed out at 60s, then 90s, then 120s in
+    // three successive passes (confirmed live across runs #405, #419, #426), while every other of
+    // the 103 geo/project combinations in this file passes comfortably well under 90s. Rather than
+    // keep inflating the timeout for all of them, give just this one combination real headroom.
+    test.setTimeout(
+      geo.name === 'root' && testInfo.project.name === 'visual-webkit-ios' ? 240_000 : 90_000
+    );
     await page.goto(geo.path, { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('load');
     await page.addStyleTag({
       content: '*, *::before, *::after { animation-duration: 0s !important; animation-delay: 0s !important; transition-duration: 0s !important; transition-delay: 0s !important; }',
     });
-        // Poll for and dismiss the region-switch modal before capturing -- it appears on a
-        // genuinely non-deterministic delay, and the global addLocatorHandler dismissal never fires
-        // before toHaveScreenshot() (see fixtures/regionPrompt.ts and tests/visual/tournaments.spec.ts).
-        await dismissRegionPromptBeforeCapture(page);
+    // Poll for and dismiss the region-switch modal before capturing -- it appears on a
+    // genuinely non-deterministic delay, and the global addLocatorHandler dismissal never fires
+    // before toHaveScreenshot() (see fixtures/regionPrompt.ts and tests/visual/tournaments.spec.ts).
+    await dismissRegionPromptBeforeCapture(page);
     await expect(page).toHaveScreenshot(`${geo.name}.png`, {
       fullPage: false,
       threshold: 0,
