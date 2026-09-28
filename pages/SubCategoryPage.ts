@@ -37,7 +37,10 @@ export const subCategoryUrls: SubCategoryConfig[] = [
   { geo: 'DE', geoPath: '/de', slug: 'paysafecard' },
   { geo: 'NZ', geoPath: '/nz', slug: 'paysafecard' },
   { geo: 'BE', geoPath: '/be', slug: 'paysafecard' },
-  { geo: 'UK', geoPath: '/uk', slug: 'fastest-withdrawal' },
+  // UK /fastest-withdrawal removed -- confirmed live, 2026-09-28: the URL now redirects to
+  // /uk/online-casinos/articles/fast-withdrawal, a converted editorial article with zero
+  // li.operator-item cards (genuinely restructured, not a transient issue). US /fastest-withdrawal
+  // is unaffected and still a real toplist page.
   { geo: 'US', geoPath: '/us', slug: 'fastest-withdrawal', ciIpReducedList: true },
   { geo: 'IN', geoPath: '/in', slug: 'live' },
 ];
