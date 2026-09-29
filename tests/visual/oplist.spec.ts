@@ -8,7 +8,8 @@ const GEOS = [
   { path: '/au',    name: 'au' },
   { path: '/be',    name: 'be' },
   { path: '/be/fr', name: 'be-fr' },
-  { path: '/br',    name: 'br' },
+  // /br removed -- confirmed live, 2026-09-29: the Brazil homepage is now a genuine "Page Not
+  // Found" 404 (a real site change, not transient), so there's no operator list to capture either.
   { path: '/ca',    name: 'ca' },
   { path: '/ca/fr', name: 'ca-fr' },
   { path: '/de',    name: 'de' },
