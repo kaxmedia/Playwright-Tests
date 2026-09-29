@@ -96,7 +96,12 @@ export const comparisonPages: ComparisonPageConfig[] = [
   // ── UK ──────────────────────────────────────────────────────────────────────
   {
     name: 'UK Casino',
-    url: 'https://www.gambling.com/uk/online-casinos',
+    // Confirmed live, 2026-09-28: /uk/online-casinos has been converted into a navigational hub page
+    // (category tiles, no operator-item cards at all -- zero found, in any browser, not a
+    // CI/Firefox-fingerprint quirk). The actual toplist moved to /uk/online-casinos/best-sites
+    // (10 li.operator-item found there), matching the same UK restructuring already handled for
+    // category-landing pages (see the /best-sites redirect fix elsewhere in this repo).
+    url: 'https://www.gambling.com/uk/online-casinos/best-sites',
     category: 'casino',
     expectedCardCountMin: 20,
     hasRating: true,
