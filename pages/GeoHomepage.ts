@@ -59,7 +59,8 @@ export const geoHomepages: GeoHomepageConfig[] = [
   { name: 'NO',      path: '/no',     expectedLang: 'no-NO', geoRestricted: true },
   { name: 'DK',      path: '/dk',     expectedLang: 'da-DK' },
   { name: 'AT',      path: '/at',     expectedLang: 'de-AT' },
-  { name: 'BR',      path: '/br',     expectedLang: 'pt-BR' },
+  // BR removed -- confirmed live, 2026-09-29: /br is now a genuine "Page Not Found" 404, the
+  // Brazil homepage has been removed from the site entirely.
   { name: 'PE',      path: '/pe',     expectedLang: 'es-PE' },
   { name: 'AU',      path: '/au',     expectedLang: 'en-AU' },
   { name: 'CA-EN',   path: '/ca',     expectedLang: 'en-CA' },
