@@ -65,7 +65,7 @@ async function captureHomepage(geo, { page }, testInfo) {
 }
 
 for (const geo of GEOS) {
-  test(`@visual gambling.com ${geo.path} renders deterministically`, (fixtures, testInfo) => captureHomepage(geo, fixtures, testInfo));
+  test(`@visual gambling.com ${geo.path} renders deterministically`, ({ page }, testInfo) => captureHomepage(geo, { page }, testInfo));
 }
 
 // root+webkit-ios genuinely crashes during --update-snapshots runs (not just slow) -- confirmed
@@ -79,5 +79,5 @@ for (const geo of GEOS) {
 test.describe('root homepage', () => {
   test.describe.configure({ retries: 0 });
   const rootGeo = { path: '/', name: 'root' };
-  test(`@visual gambling.com ${rootGeo.path} renders deterministically`, (fixtures, testInfo) => captureHomepage(rootGeo, fixtures, testInfo));
+  test(`@visual gambling.com ${rootGeo.path} renders deterministically`, ({ page }, testInfo) => captureHomepage(rootGeo, { page }, testInfo));
 });
