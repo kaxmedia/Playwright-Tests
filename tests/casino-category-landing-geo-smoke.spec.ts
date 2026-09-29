@@ -1,7 +1,10 @@
 ﻿import { test, expect } from '../fixtures/test';
 
 const geos = [
-  { geo: 'UK', path: '/uk/online-casinos', currency: 'GBP' },
+  // UK path updated -- confirmed live, 2026-09-29: /uk/online-casinos is now a navigational hub page
+  // (zero operator-item cards), same root cause already fixed in pages/ComparisonPage.ts (see PR
+  // #202). The actual toplist moved to /uk/online-casinos/best-sites.
+  { geo: 'UK', path: '/uk/online-casinos/best-sites', currency: 'GBP' },
   { geo: 'IE', path: '/ie/online-casinos', currency: 'EUR' },
   { geo: 'CA', path: '/ca/online-casinos', currency: 'CAD' },
   { geo: 'NZ', path: '/nz/online-casinos', currency: 'NZD' },
