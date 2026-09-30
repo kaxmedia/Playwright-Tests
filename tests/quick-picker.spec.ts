@@ -19,9 +19,9 @@
 
 import { test, expect } from '../fixtures/test';
 import { acceptCookiesIfShown } from '../fixtures/acceptCookies';
+import { registerAgeVerificationHandler } from '../fixtures/ageVerification';
 import { GeoHomepage, geoHomepages } from '../pages/GeoHomepage';
 import { QuickPicker } from '../pages/QuickPicker';
-import { AgeVerificationPage, type GeoKey } from '../pages/AgeVerificationPage';
 
 // Filter-group indices, by DOM order (verified live on /uk, /de, /is, /no —
 // order is consistent even though the labels and pill text are localised).
@@ -34,12 +34,6 @@ const TYPE = 2;
 // checking the first 10 gives meaningful coverage without the overhead.
 const MAX_CARDS_TO_CHECK = 10;
 
-/** Paths that serve the micromodal age gate before the page is interactive. */
-const AGE_GATE_BY_PATH: Record<string, GeoKey> = {
-  '/nl': 'nl',
-  '/es': 'es',
-};
-
 for (const config of geoHomepages) {
   test.describe(`Quick Picker — ${config.name} geo`, () => {
     test.skip(!!config.geoRestricted, `${config.name} is geo-restricted — quick picker suite requires a local VPN`);
@@ -48,20 +42,13 @@ for (const config of geoHomepages) {
     let qp: QuickPicker;
 
     test.beforeEach(async ({ page }) => {
+      // Register before goto so a late-appearing NL/ES age gate is dismissed
+      // before every action (one-shot isVisible after load races the modal).
+      await registerAgeVerificationHandler(page);
       gh = new GeoHomepage(page);
       qp = new QuickPicker(page);
       await gh.goto(config.path);
       await acceptCookiesIfShown(page);
-
-      const ageKey = AGE_GATE_BY_PATH[config.path];
-      if (ageKey) {
-        const age = new AgeVerificationPage(page, ageKey);
-        if (await age.modal.isVisible().catch(() => false)) {
-          await age.acceptAge();
-          await age.modal.waitFor({ state: 'hidden', timeout: 8_000 }).catch(() => {});
-        }
-      }
-
       await qp.waitForReady();
     });
 
@@ -125,7 +112,9 @@ for (const config of geoHomepages) {
     // T7 ─ @smoke ─────────────────────────────────────────────────────────────
     test(`${config.name} — @smoke @regression Reset restores the pills the widget loaded with`, async () => {
       const initial = await qp.snapshotActivePills();
-      expect(initial.length, 'widget should expose filter groups before Reset exercise').toBeGreaterThan(0);
+      // Snapshot is one active-pill index per filter *group* (Where/Deposit/Type),
+      // not per pill — length should stay 3 even when Type's pill list remounts.
+      expect(initial.length, 'widget should expose all three filter groups before Reset').toBe(3);
 
       // Change every group that has a second option, so Reset has something
       // to actually undo.
@@ -139,13 +128,8 @@ for (const config of geoHomepages) {
       await qp.clickReset();
       const afterReset = await qp.snapshotActivePills();
 
-      // Type (and sometimes Deposit) pill *lists* remount when Where changes, so
-      // compare only the shared prefix of group indices that still exist.
-      const len = Math.min(initial.length, afterReset.length);
-      expect(
-        afterReset.slice(0, len),
-        'Reset should restore the pills active on initial load',
-      ).toEqual(initial.slice(0, len));
+      expect(afterReset.length, 'Reset must leave all three filter groups intact').toBe(initial.length);
+      expect(afterReset, 'Reset should restore the pills active on initial load').toEqual(initial);
     });
 
     // T8 ─ @smoke ─────────────────────────────────────────────────────────────
@@ -201,6 +185,9 @@ for (const config of geoHomepages) {
         const rel = (await cta.getAttribute('rel')) ?? '';
         expect(rel, `card ${i} Play Now rel`).toContain('nofollow');
         expect(rel, `card ${i} Play Now rel`).toContain('sponsored');
+        // Site note (not asserted): live CTAs currently omit `noopener` on
+        // target="_blank" — reverse-tabnabbing exposure for a content/security
+        // ticket, not a suite regression until product adds it.
 
         // Review / T&Cs link is content-optional — some operators ship without
         // a review page (live on /in, /dk, /ro, /nz, /is, …). Assert shape only

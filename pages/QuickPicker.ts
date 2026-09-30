@@ -140,9 +140,11 @@ export class QuickPicker {
     const pill = this.pillsInGroup(groupIndex).nth(pillIndex);
     const firstCta = this.cards.first().locator('.qp__cta');
     const before = await firstCta.getAttribute('data-product-type').catch(() => null);
-    // force: age-gate / cookie remnants can intercept the centre of the pill
-    // even after dismissal attempts (seen on /es and /nl → 60s click timeouts).
-    await pill.click({ force: true });
+    // Ordinary click — NL/ES age-gate overlays are dismissed by
+    // `registerAgeVerificationHandler` before each action. Do not use
+    // `{ force: true }`: that would click through a real blocking overlay and
+    // hide regressions the filter tests are meant to catch.
+    await pill.click();
     // Poll briefly for the first card's CTA attribute to change. Some clicks
     // legitimately don't change it (e.g. re-selecting the same category), so
     // this never hard-fails — callers assert the actual behaviour they care
@@ -187,11 +189,11 @@ export class QuickPicker {
   }
 
   async clickNext(): Promise<void> {
-    await this.nextArrow.click({ force: true });
+    await this.nextArrow.click();
   }
 
   async clickPrev(): Promise<void> {
-    await this.prevArrow.click({ force: true });
+    await this.prevArrow.click();
   }
 
   /** Current horizontal offset of the offer-card track (live-verified via scrollLeft). */
