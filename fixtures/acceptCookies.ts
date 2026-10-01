@@ -8,7 +8,8 @@ import { type Page } from '@playwright/test';
  */
 export async function acceptCookiesIfShown(page: Page, timeoutMs = 5000): Promise<void> {
   const accept = page.getByRole('button', {
-    name: /accept all|alle akzeptieren|aksepter alt|godta alle|accepter alles|aceptar todo|aceitar todos|accetta tutto/i,
+    // NL CookieYes uses “Accepteer alles” (double-e); keep “accepter” for FR/BE variants.
+    name: /accept all|accepteer alles|accepter alles|alle akzeptieren|aksepter alt|godta alle|aceptar todo|aceitar todos|accetta tutto/i,
   });
   try {
     await accept.click({ timeout: timeoutMs });

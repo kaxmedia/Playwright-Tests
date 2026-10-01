@@ -10,7 +10,9 @@ import { isOnGamblingComHost } from '../helpers/affiliateUrl';
 // Device emulation is configured per project in playwright.config.ts:
 //   mobile-iphone (WebKit) · mobile-samsung (Chromium)
 
-const UK_CASINOS = '/uk/online-casinos';
+// Hub has no oplist post-release; CTA / operator-list checks use best-sites.
+const UK_CASINOS_HUB = '/uk/online-casinos';
+const UK_CASINOS_OPLIST = '/uk/online-casinos/best-sites';
 
 async function assertNoHorizontalOverflow(page: Page) {
   const viewportWidth = page.viewportSize()?.width ?? 0;
@@ -42,7 +44,7 @@ test.describe('Mobile Navigation', () => {
 
   test('@regression @mobile logo is tappable and returns to homepage', async ({ page }) => {
     const mobile = new MobilePage(page);
-    await mobile.goto(UK_CASINOS);
+    await mobile.goto(UK_CASINOS_HUB);
     await mobile.acceptCookiesIfShown();
 
     const logo = mobile.logoHomeLink;
@@ -107,7 +109,7 @@ test.describe('Mobile Responsive Layout', () => {
 
   test('@regression @mobile category landing page has no horizontal scroll', async ({ page }) => {
     const mobile = new MobilePage(page);
-    await mobile.goto(UK_CASINOS);
+    await mobile.goto(UK_CASINOS_HUB);
     await mobile.acceptCookiesIfShown();
     await assertNoHorizontalOverflow(page);
   });
@@ -162,7 +164,7 @@ test.describe('Mobile Responsive Layout', () => {
 test.describe('Mobile Touch Interactions', () => {
   test('@regression @mobile CTA buttons are tappable', async ({ page }) => {
     const cp = new ComparisonPage(page);
-    await cp.goto(UK_CASINOS);
+    await cp.goto(UK_CASINOS_OPLIST);
     await new MobilePage(page).acceptCookiesIfShown();
 
     const card = cp.nthCard(0);
@@ -179,7 +181,7 @@ test.describe('Mobile Touch Interactions', () => {
 
   test('@regression @mobile CTA opens affiliate flow in new tab on tap', async ({ page }) => {
     const cp = new ComparisonPage(page);
-    await cp.goto(UK_CASINOS);
+    await cp.goto(UK_CASINOS_OPLIST);
     await new MobilePage(page).acceptCookiesIfShown();
 
     const card = cp.nthCard(0);
@@ -201,9 +203,7 @@ test.describe('Mobile Touch Interactions', () => {
     }
 
     await affiliateTab.close();
-          // Live production 301s /uk/online-casinos to /uk/online-casinos/best-sites -- tolerate
-          // both so this doesn't fail on the redirect destination alone.
-          await expect(page).toHaveURL(new RegExp(`${UK_CASINOS}(/best-sites)?(\\?|$|#)`));
+    await expect(page).toHaveURL(new RegExp(`${UK_CASINOS_OPLIST}(\\?|$|#)`));
   });
 
   test('@regression @mobile sign up button is tappable', async ({ page }) => {
@@ -249,7 +249,7 @@ test.describe('Mobile Touch Interactions', () => {
 
   test('@regression @mobile operator list is present on category page', async ({ page }) => {
     const cp = new ComparisonPage(page);
-    await cp.goto(UK_CASINOS);
+    await cp.goto(UK_CASINOS_OPLIST);
     await new MobilePage(page).acceptCookiesIfShown();
 
     await expect(cp.cards.first()).toBeVisible();

@@ -65,13 +65,18 @@ export class UKCasinoPage {
         // Operator list — `.operator-item` rows + primary ranking CTAs (matches live oplist markup)
         this.operatorList = page.locator('main .operator-list').first();
         this.operatorRows = page.locator('main .operator-list:not([data-disabled]) .operator-item');
-        this.operatorLogos = this.operatorRows.locator('a[href*="/go/uk/"] > img, a[href*="/go/ie/"] > img');
-        this.operatorRatings = this.operatorRows.locator('.operator-column-ranking-v2');
+        // Legacy: direct child img on /go/ anchor. Refresh: image link + logo img.
+        this.operatorLogos = this.operatorRows.locator(
+            'a.operator-item__image_link img, a[href*="/go/uk/"] > img, a[href*="/go/ie/"] > img',
+        );
+        this.operatorRatings = this.operatorRows.locator(
+            '.operator-column-ranking-v2, .oplist-refresh-ribbon',
+        );
         // Primary Visit CTA per row. Bare `gtm-operator-content` also matches a second
         // offer-text clone that stays hidden (parent `.hidden`) — that made nth(1)+
-        // visibility checks flake under personalization.
+        // visibility checks flake under personalization. Refresh: exclude sheet CTA clones.
         this.operatorCTAs = this.operatorRows.locator(
-            '.operator-main a.operator-item__cta_link[href*="/go/uk/"], .operator-main a.operator-item__cta_link[href*="/go/ie/"]'
+            '.operator-main a.operator-item__cta_link[href*="/go/uk/"], .operator-main a.operator-item__cta_link[href*="/go/ie/"], a.operator-item__cta_link.oplist-refresh-cta:not(.oplist-refresh-sheet-cta)[href*="/go/uk/"], a.operator-item__cta_link.oplist-refresh-cta:not(.oplist-refresh-sheet-cta)[href*="/go/ie/"]',
         );
 
         // Sticky operator-list anchor strip (desktop #oplistNav, mobile #oplistNavMobile).

@@ -18,7 +18,7 @@ import {
 } from '../helpers/ktag-assertions';
 
 // A category/listing page that is guaranteed to have at least one operator list
-const OPLIST_PAGE = 'https://www.gambling.com/uk/online-casinos';
+const OPLIST_PAGE = 'https://www.gambling.com/uk/online-casinos/best-sites';
 
 test.describe('Ktag — oplistimp event @ktag @oplistimp @regression', () => {
 

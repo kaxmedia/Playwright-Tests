@@ -587,8 +587,10 @@ export class ComparisonPage {
   }
 
   // Rank number element — visible integer label (1, 2, 3…).
+  // Legacy: `div.operator-column-ranking-v2`. Refresh oplist: `div.oplist-refresh-ribbon`
+  // (aria-hidden for a11y — assert attached/text, not visible, in suites that cover refresh).
   rankLabel(card: Locator): Locator {
-    return card.locator('div.operator-column-ranking-v2');
+    return card.locator('div.operator-column-ranking-v2, div.oplist-refresh-ribbon').first();
   }
 
   // Founded/launched year label — text is localised ("Launched 2024" / "Gegründet 2021").
@@ -646,15 +648,19 @@ export class ComparisonPage {
   // Per-card terms / age-warning text element.
   // Text varies: "18+. Gamble Responsibly…" (UK), "18+. Es gelten die AGB" (DE),
   // "Must be 21+ to participate…" (US).
+  // Legacy: `span.terms-and-conditions`. Refresh oplist: `div.oplist-refresh-terms`.
   termsText(card: Locator): Locator {
-    return card.locator('span.terms-and-conditions');
+    return card.locator('span.terms-and-conditions, div.oplist-refresh-terms').first();
   }
 
-  // Regulator / licence badge image inside its container.
-  // Present on UK (Gambling Commission), DE (GGL Legal), IT (ADM), GR (ΕΕΕΠ).
-  // Absent on US — use hasBadge flag in ComparisonPageConfig before asserting.
+  // Regulator / licence badge.
+  // Legacy: `div.gambling-comission-logo img` (UK GC, DE GGL, IT ADM, GR ΕΕΕΠ).
+  // Refresh oplist: geo-flag button with GC overlay (`button.oplist-refresh-geo-flag--gc`).
+  // Absent on US / IE / NZ — use hasBadge in ComparisonPageConfig before asserting.
   regulatorBadge(card: Locator): Locator {
-    return card.locator('div.gambling-comission-logo img').first();
+    return card
+      .locator('div.gambling-comission-logo img, button.oplist-refresh-geo-flag--gc')
+      .first();
   }
 
   // Review/read-more anchor — class varies by oplist version
@@ -666,13 +672,15 @@ export class ComparisonPage {
   // ── Expandable details panel ────────────────────────────────────────────────
 
   // "More Details" / "Weniger Infos" toggle button.
+  // Legacy: `div.more_info_button`. Refresh oplist: `button.oplist-refresh-more`.
   detailsToggle(card: Locator): Locator {
-    return card.locator('div.more_info_button');
+    return card.locator('div.more_info_button, button.oplist-refresh-more').first();
   }
 
   // The expandable details panel (hidden by default on most cards).
+  // Legacy: `div.more-info-table`. Refresh: `div.oplist-refresh-more-info`.
   detailsPanel(card: Locator): Locator {
-    return card.locator('div.more-info-table');
+    return card.locator('div.more-info-table, div.oplist-refresh-more-info').first();
   }
 
   // Click the toggle to open the details panel if it is not already visible.
@@ -683,7 +691,7 @@ export class ComparisonPage {
     await panel.waitFor({ state: 'visible' });
   }
 
-  // Get the value element for a named attribute in the expanded details panel.
+  // Get the value element for a named attribute in the details panel.
   // The "Our Rating" attribute value is the numeric score (e.g. "9.9").
   // Other available labels (vary by geo): "Payout Speed", "Bonus Wagering",
   // "Casino Games", "Live Casino Games", "Promo Code".
@@ -693,11 +701,20 @@ export class ComparisonPage {
   //   const rating = comparisonPage.detailAttributeValue(card, 'Our Rating');
   //   await expect(rating).toHaveText(/^\d+\.\d+$/);
   detailAttributeValue(card: Locator, labelText: string): Locator {
-    return this.detailsPanel(card)
+    const legacy = this.detailsPanel(card)
       .locator('div.attribute')
       .filter({
         has: this.page.locator('div.attribute-name-text', { hasText: labelText }),
       })
       .locator('div.attribute-value');
+
+    const refresh = this.detailsPanel(card)
+      .locator('div.oplist-refresh-fact')
+      .filter({
+        has: this.page.locator('.oplist-refresh-fact-lbl', { hasText: labelText }),
+      })
+      .locator('div.oplist-refresh-fact-val');
+
+    return legacy.or(refresh).first();
   }
 }

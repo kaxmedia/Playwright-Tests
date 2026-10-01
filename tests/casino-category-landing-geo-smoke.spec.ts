@@ -1,7 +1,9 @@
 ﻿import { test, expect } from '../fixtures/test';
 
 const geos = [
-  { geo: 'UK', path: '/uk/online-casinos', currency: 'GBP' },
+  // UK /online-casinos is now a navigational hub (no operator-item cards);
+  // the toplist lives at /uk/online-casinos/best-sites (same as UKCasinoPage / ComparisonPage).
+  { geo: 'UK', path: '/uk/online-casinos/best-sites', currency: 'GBP' },
   { geo: 'IE', path: '/ie/online-casinos', currency: 'EUR' },
   { geo: 'CA', path: '/ca/online-casinos', currency: 'CAD' },
   { geo: 'NZ', path: '/nz/online-casinos', currency: 'NZD' },

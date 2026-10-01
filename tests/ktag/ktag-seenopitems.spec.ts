@@ -17,7 +17,7 @@ import {
 } from '../helpers/ktag-assertions';
 import { oplistGoCta } from '../helpers/oplistCta';
 
-const OPLIST_PAGE = 'https://www.gambling.com/uk/online-casinos';
+const OPLIST_PAGE = 'https://www.gambling.com/uk/online-casinos/best-sites';
 
 /** Load oplist page and wait for a CTA — faster/more reliable than networkidle. */
 async function openOplist(page: import('@playwright/test').Page) {

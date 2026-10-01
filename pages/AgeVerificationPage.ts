@@ -1,4 +1,5 @@
 import { Page, Locator } from '@playwright/test';
+import { acceptCookiesIfShown } from '../fixtures/acceptCookies';
 import { globalNavLogo } from './globalNavLogo';
 
 export const AGE_VERIFICATION_GEOS = {
@@ -117,13 +118,22 @@ export class AgeVerificationPage {
     /**
      * Clicks the footer “no gambling ads” control — navigates to the geo responsible-gambling URL
      * (not an in-place toggle).
+     *
+     * CookieYes often docks over the footer on NL; dismiss it first. Prefer `check()` over a raw
+     * click — WebKit intermittently swallows label/checkbox clicks (region-prompt handler / overlay
+     * timing) without toggling `checked`, and the site only redirects when the click lands checked.
      */
     async tickFooterOptOut(): Promise<void> {
+        await acceptCookiesIfShown(this.page, 4000);
         await this.footer.scrollIntoViewIfNeeded();
         await this.page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+        await this.footerCheckbox.waitFor({ state: 'visible', timeout: 10000 });
         await Promise.all([
-            this.page.waitForURL(/verantwoord-gokken|juego-responsable/, { timeout: 20000 }),
-            this.footerCheckbox.click({ force: true }),
+            this.page.waitForURL(/verantwoord-gokken|juego-responsable/, {
+                timeout: 20000,
+                waitUntil: 'domcontentloaded',
+            }),
+            this.footerCheckbox.check(),
         ]);
     }
 }

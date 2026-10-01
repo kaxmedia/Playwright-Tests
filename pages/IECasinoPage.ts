@@ -34,11 +34,17 @@ export class IECasinoPage {
         this.geoSwitcher = page.locator('[class*="geo"], [class*="country"], [class*="region"], [data-testid*="geo"]').first();
         this.operatorList = page.locator('main .operator-list').first();
         this.operatorRows = page.locator('main .operator-list:not([data-disabled]) .operator-item');
-        this.operatorLogos = this.operatorRows.locator('a[href*="/go/ie/"] > img');
-        this.operatorRatings = this.operatorRows.locator('.operator-column-ranking-v2');
-        // Primary Visit CTA only — excludes hidden duplicate offer-text /go/ clones.
+        // Legacy: direct child img on /go/ anchor. Refresh: `.oplist-refresh-logo-img` under image link.
+        this.operatorLogos = this.operatorRows.locator(
+            'a.operator-item__image_link img, a[href*="/go/ie/"] > img',
+        );
+        // Legacy rank column, or refresh ribbon (same visual rank 1/2/3…).
+        this.operatorRatings = this.operatorRows.locator(
+            '.operator-column-ranking-v2, .oplist-refresh-ribbon',
+        );
+        // Primary Visit CTA only — excludes sheet/drawer CTA clones on refresh cards.
         this.operatorCTAs = this.operatorRows.locator(
-            '.operator-main a.operator-item__cta_link[href*="/go/ie/"]'
+            '.operator-main a.operator-item__cta_link[href*="/go/ie/"], a.operator-item__cta_link.oplist-refresh-cta:not(.oplist-refresh-sheet-cta)[href*="/go/ie/"]',
         );
         this.anchorMenu = page.locator('#oplistNav');
         // Prefer `#anchor_*` when present; fall back to any in-nav fragment (US-style short ids).
