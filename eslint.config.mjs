@@ -32,7 +32,7 @@ export default tseslint.config(
     eslint.configs.recommended,
     ...tseslint.configs.recommended,
     {
-        files: ['tests/**/*.ts'],
+        files: ['tests/**/*.ts', 'pages/**/*.ts', 'fixtures/**/*.ts'],
         ...playwright.configs['flat/recommended'],
         rules: {
             ...(playwright.configs['flat/recommended'].rules ?? {}),
