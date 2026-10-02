@@ -16,8 +16,8 @@ export class FooterPage {
   // "Privacy and Cookies Policy" compliance link — same reason for exact:true and .first()
   readonly privacyLink: Locator;
 
-  // The <p> at the bottom of the footer — disclaimer + copyright (entity may be
-  // "GDC Media Ltd" or the longer "GDC Media Limited" depending on geo/copy).
+  // The <p> at the bottom of the footer — disclaimer + copyright.
+  // Live copy (2026-10): legal entity is "Grandstand Media Limited" (replaces GDC Media Ltd/Limited).
   readonly legalText: Locator;
 
   // Every <a> tag inside the footer — used for the bulk link count and broken-link check
@@ -33,9 +33,8 @@ export class FooterPage {
     this.termsLink               = this.footer.getByRole('link', { name: 'Terms and Conditions',        exact: true }).first();
     this.privacyLink             = this.footer.getByRole('link', { name: 'Privacy and Cookies Policy', exact: true }).first();
 
-    // Copyright / disclaimer paragraph — site copy shortened "Limited" → "Ltd" on
-    // several geos; accept both forms so the locator still resolves.
-    this.legalText = this.footer.locator('p').filter({ hasText: /GDC Media Ltd\.?(?:imited)?/i });
+    // Copyright / disclaimer paragraph — entity renamed to Grandstand Media Limited (2026 release).
+    this.legalText = this.footer.locator('p').filter({ hasText: /Grandstand Media Limited/i });
 
     this.allLinks = this.footer.locator('a');
   }

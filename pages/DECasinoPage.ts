@@ -43,11 +43,15 @@ export class DECasinoPage {
 
         this.operatorList = page.locator('main .operator-list').first();
         this.operatorRows = page.locator('main .operator-list:not([data-disabled]) .operator-item');
-        this.operatorLogos = this.operatorRows.locator('a[href*="/go/de/"] > img');
-        this.operatorRatings = this.operatorRows.locator('.operator-column-ranking-v2');
-        // Primary Visit CTA only — excludes hidden duplicate offer-text /go/ clones.
+        this.operatorLogos = this.operatorRows.locator(
+            'a.operator-item__image_link img, a[href*="/go/de/"] > img',
+        );
+        this.operatorRatings = this.operatorRows.locator(
+            '.operator-column-ranking-v2, .oplist-refresh-ribbon',
+        );
+        // Primary Visit CTA only — excludes hidden duplicate offer-text /go/ clones and refresh sheet CTAs.
         this.operatorCTAs = this.operatorRows.locator(
-            '.operator-main a.operator-item__cta_link[href*="/go/de/"]'
+            '.operator-main a.operator-item__cta_link[href*="/go/de/"], a.operator-item__cta_link.oplist-refresh-cta:not(.oplist-refresh-sheet-cta)[href*="/go/de/"]',
         );
 
         // DE uses short fragment ids (#casino, #Top_5_Casinos, …), not the UK #anchor_* scheme

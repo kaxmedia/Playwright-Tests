@@ -24,7 +24,7 @@ import {
 } from '../helpers/ktag-assertions';
 import { oplistGoCta } from '../helpers/oplistCta';
 
-const OPLIST_PAGE = 'https://www.gambling.com/uk/online-casinos';
+const OPLIST_PAGE = 'https://www.gambling.com/uk/online-casinos/best-sites';
 
 /**
  * Extract a /go/... URL from the first CTA anchor on the page.

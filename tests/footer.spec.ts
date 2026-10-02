@@ -100,12 +100,11 @@ test.describe('Footer', () => {
     expect(response.status()).toBe(200);
   });
 
-  // Test 5: The copyright paragraph at the bottom names the GDC Media legal entity
-  test('@smoke @regression copyright text contains "GDC Media Ltd"', async () => {
+  // Test 5: The copyright paragraph at the bottom names the Grandstand Media legal entity
+  test('@smoke @regression copyright text contains "Grandstand Media Limited"', async () => {
     // Scroll the copyright paragraph into view — it is at the very bottom of the footer
     await footerPage.legalText.scrollIntoViewIfNeeded();
-    // Copy varies by geo between "GDC Media Ltd" and "GDC Media Limited"
-    await expect(footerPage.legalText).toContainText(/GDC Media Ltd\.?(?:imited)?/i);
+    await expect(footerPage.legalText).toContainText(/Grandstand Media Limited/i);
   });
 
   // ─── Regression tests ────────────────────────────────────────────────────────
@@ -301,7 +300,7 @@ const geoVariants = [
     termsHref: '/terms-and-conditions',
     privacyText: 'Privacy and Cookies Policy',
     privacyHref: '/uk/privacy-policy',
-    copyrightContains: /GDC Media Ltd\.?(?:imited)?/i,
+    copyrightContains: /Grandstand Media Limited/i,
     // Regulatory logos confirmed in the UK footer — Gamstop and GambleAware are UKGC requirements
     logos: [
       { alt: 'Gamstop',              href: 'https://www.gamstop.co.uk'                       },
@@ -321,7 +320,7 @@ const geoVariants = [
     termsHref: '/de/geschaeftsbedingungen',
     privacyText: 'Datenschutz',
     privacyHref: '/de/datenschutz',
-    copyrightContains: /GDC Media Ltd\.?(?:imited)?/i,
+    copyrightContains: /Grandstand Media Limited/i,
     // Regulatory logos confirmed in the DE footer — DE has no geo flag selector unlike other geos
     logos: [
       { alt: 'Spiel nicht bis zur Glücksspielsucht', href: 'https://www.spielen-mit-verantwortung.de'    },
@@ -340,7 +339,7 @@ const geoVariants = [
     termsHref: '/gr/terms-and-conditions',
     privacyText: 'Πολιτική απορρήτου και Cookies',
     privacyHref: '/gr/privacy-policy',
-    copyrightContains: /GDC Media Ltd\.?(?:imited)?/i,
+    copyrightContains: /Grandstand Media Limited/i,
     // Regulatory logos confirmed in the GR footer — EEEP is the Greek gaming regulator
     logos: [
       { alt: 'Keoea',                href: 'https://www.kethea.gr/'                           },
@@ -408,10 +407,9 @@ for (const geo of geoVariants) {
       expect(href).toContain(geo.privacyHref);
     });
 
-    // Test G5: The copyright paragraph names the correct legal entity for this geo.
-    // US shows "GDC Media America Inc"; other geos show "GDC Media Ltd" / "Limited".
-    // We locate the paragraph using © rather than the entity name itself, because the
-    // entity name is what we are asserting — it should not also be the locator.
+    // Test G5: The copyright / disclaimer paragraph names the correct legal entity for this geo.
+    // Non-US geos: "Grandstand Media Limited". US also keeps "GDC Media America Inc" in the same block.
+    // Locate via © so the entity name under test is not also the locator key.
     test('@smoke @regression copyright names the correct legal entity', async () => {
       const copyright = footerPage.footer.locator('p').filter({ hasText: '©' }).first();
       await copyright.scrollIntoViewIfNeeded();

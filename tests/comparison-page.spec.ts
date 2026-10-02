@@ -198,10 +198,9 @@ for (const config of comparisonPages) {
     // These skip automatically for geos where the feature is absent.
 
     // T9 ─ @smoke ─ skip when hasRating: false or hasLazyRating: true ─────────
-    // Reads rating from the hidden more-info-table DOM without expanding —
-    // works only on pages where the panel is server-rendered (Global Casino,
-    // UK Casino). Lazy-rendered pages (GR, UK Sports, US, IE) do not have the
-    // panel in the DOM until the toggle is clicked; those are skipped here.
+    // Reads rating from the details panel DOM without expanding when the markup is
+    // present (legacy more-info-table, or refresh oplist-refresh-fact even while hidden).
+    // Lazy-rendered pages that omit the panel until click are skipped via hasLazyRating.
     //
     // TODO: Lazy-rendered rating — full coverage requires click-to-expand.
     // Deferred to follow-up PR (PR #9 candidate) — would need to integrate
@@ -214,10 +213,14 @@ for (const config of comparisonPages) {
       await cp.goto(config.url);
       for (let i = 0; i < 5; i++) {
         const card = cp.nthCard(i);
-        const ratingText = await cp.detailAttributeValue(card, config.ratingLabel ?? 'Our Rating').first().textContent();
-        const rating = parseFloat((ratingText ?? '').trim());
-        expect(rating).toBeGreaterThanOrEqual(0);
-        expect(rating).toBeLessThanOrEqual(10);
+        const ratingText =
+          (await cp
+            .detailAttributeValue(card, config.ratingLabel ?? 'Our Rating')
+            .first()
+            .textContent({ timeout: 5000 })) ?? '';
+        const rating = parseFloat(ratingText.trim());
+        expect(rating, `Card ${i} rating "${ratingText}"`).toBeGreaterThanOrEqual(0);
+        expect(rating, `Card ${i} rating "${ratingText}"`).toBeLessThanOrEqual(10);
       }
     });
 
@@ -226,7 +229,11 @@ for (const config of comparisonPages) {
       test.skip(!config.hasBadge, 'No regulator badge on this geo');
       const cp = new ComparisonPage(page);
       await cp.goto(config.url);
-      expect(await page.locator('div.gambling-comission-logo').count()).toBeGreaterThan(0);
+      // Legacy logo wrapper or refresh oplist GC geo-flag button.
+      const badgeCount = await page
+        .locator('div.gambling-comission-logo, button.oplist-refresh-geo-flag--gc')
+        .count();
+      expect(badgeCount).toBeGreaterThan(0);
     });
 
     // T11 ─ @smoke ─ universal ────────────────────────────────────────────────
@@ -241,11 +248,18 @@ for (const config of comparisonPages) {
       const cp = new ComparisonPage(page);
       await cp.goto(config.url);
       const matches: string[] = [];
-      for (let i = 0; i < 5; i++) {
-        const text = (await cp.termsText(cp.nthCard(i)).textContent()) ?? '';
+      const checkUpTo = Math.min(await cp.cards.count(), 5);
+      for (let i = 0; i < checkUpTo; i++) {
+        // timeout: 0 — missing terms must not burn the full test timeout per card (seen as 60s flakes
+        // when geos moved to oplist-refresh before the dual terms locator landed).
+        const text =
+          (await cp.termsText(cp.nthCard(i)).textContent({ timeout: 0 }).catch(() => '')) ?? '';
         if (text.includes(config.ageLimit)) matches.push(text);
       }
-      expect(matches.length).toBeGreaterThan(0);
+      expect(
+        matches.length,
+        `Expected at least one of the first ${checkUpTo} cards to include "${config.ageLimit}" in terms`,
+      ).toBeGreaterThan(0);
     });
 
   });

@@ -15,7 +15,7 @@ import {
 } from '../helpers/ktag-assertions';
 import { oplistGoCta } from '../helpers/oplistCta';
 
-const OPLIST_PAGE = 'https://www.gambling.com/uk/online-casinos';
+const OPLIST_PAGE = 'https://www.gambling.com/uk/online-casinos/best-sites';
 
 test.describe('Ktag — oplistclk event @ktag @oplistclk @regression', () => {
 
