@@ -181,8 +181,9 @@ export function registerOplistGeoSuite(options: OplistGeoSuiteOptions): void {
         const card = oplist.nthCard(0);
         const rank = oplist.rankLabel(card);
         // Refresh oplist ribbon is aria-hidden (decorative); legacy ranking div is visible.
+        // Legacy markup can include a leading newline in textContent (e.g. "\n1" on DE Sports).
         await expect(rank).toBeAttached();
-        await expect(rank).toHaveText(/^\d+$/);
+        await expect(rank).toHaveText(/^\s*\d+\s*$/);
       });
 
       test('@regression top 3 cards have distinct operator names', async () => {

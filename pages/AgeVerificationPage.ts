@@ -119,9 +119,10 @@ export class AgeVerificationPage {
      * Clicks the footer “no gambling ads” control — navigates to the geo responsible-gambling URL
      * (not an in-place toggle).
      *
-     * CookieYes often docks over the footer on NL; dismiss it first. Prefer `check()` over a raw
-     * click — WebKit intermittently swallows label/checkbox clicks (region-prompt handler / overlay
-     * timing) without toggling `checked`, and the site only redirects when the click lands checked.
+     * CookieYes often docks over the footer on NL/ES; dismiss it first. Prefer a plain `click()`
+     * over `check()`: toggling this input navigates away, and Playwright’s `check()` then waits
+     * for the (now-detached) box to report `checked`, which times out for the full test budget.
+     * Native/DOM click still fires the site’s redirect handler (live-verified 2026-10-02).
      */
     async tickFooterOptOut(): Promise<void> {
         await acceptCookiesIfShown(this.page, 4000);
@@ -133,7 +134,7 @@ export class AgeVerificationPage {
                 timeout: 20000,
                 waitUntil: 'domcontentloaded',
             }),
-            this.footerCheckbox.check(),
+            this.footerCheckbox.click(),
         ]);
     }
 }
