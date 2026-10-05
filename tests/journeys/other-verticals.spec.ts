@@ -179,8 +179,9 @@ test.describe('Journey 6.4 — Sweepstakes / social casino (slots/games hub)', (
     });
 
     test('@regression slots/games hub breadcrumb links to casino toplist @journey', async ({ page }) => {
+        // Live slots/games hub uses nav.nh-hero__crumbs (not #breadcrumb / .automation-breadcrumb).
         const casinoBreadcrumb = page.locator(
-            'nav#breadcrumb a[href="/ie/online-casinos"], nav.automation-breadcrumb a[href="/ie/online-casinos"]'
+            'nav#breadcrumb a[href="/ie/online-casinos"], nav.automation-breadcrumb a[href="/ie/online-casinos"], nav.nh-hero__crumbs a[href="/ie/online-casinos"]'
         ).first();
         await expect(casinoBreadcrumb).toBeAttached();
     });

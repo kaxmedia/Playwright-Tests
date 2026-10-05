@@ -26,11 +26,12 @@ test.describe('Category Landing — UK Online Casinos — geo specifics', () => 
     });
 
     test('@regression primary row CTAs are visible (one per operator row)', async () => {
+        // Refresh oplist Visit CTAs live outside `.operator-main` (`.oplist-refresh-cta-col`).
+        // Use UKCasinoPage.operatorCTAs which covers legacy + refresh (excludes sheet clones).
         const rowLimit = Math.min(await ukPage.operatorRows.count(), 3);
+        expect(await ukPage.operatorCTAs.count()).toBeGreaterThanOrEqual(rowLimit);
         for (let r = 0; r < rowLimit; r++) {
-            const rowCta = ukPage.operatorRows.nth(r).locator(
-                '.operator-main a.operator-item__cta_link[href*="/go/uk/"], .operator-main a.operator-item__cta_link[href*="/go/ie/"]'
-            ).first();
+            const rowCta = ukPage.operatorCTAs.nth(r);
             await rowCta.evaluate((el: HTMLElement) => el.scrollIntoView({ block: 'center' }));
             await expect(rowCta).toBeVisible({ timeout: 8000 });
         }
