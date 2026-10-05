@@ -160,13 +160,24 @@ export class ReviewPage {
 
   // Returns all JSON-LD <script> blocks on the page as parsed objects.
   // Used to verify structured data (Review schema, BreadcrumbList, etc.) is present.
+  // Confirmed live, 2026-10-05: structured data is now consolidated into a single
+  // @graph-wrapped script (Organization, WebSite, WebPage, BreadcrumbList, FAQPage, ItemList,
+  // Product, etc. as entries inside one @graph array) instead of separate top-level scripts each
+  // with their own @type. Flatten @graph entries into the returned array so callers checking
+  // b['@type'] see each schema type individually, same as before this site change.
   async getJsonLdBlocks(): Promise<Record<string, unknown>[]> {
     const blocks = await this.page.locator('script[type="application/ld+json"]').all();
     const parsed: Record<string, unknown>[] = [];
     for (const block of blocks) {
       try {
         const text = await block.textContent();
-        if (text) parsed.push(JSON.parse(text) as Record<string, unknown>);
+        if (!text) continue;
+        const json = JSON.parse(text) as Record<string, unknown>;
+        if (Array.isArray(json['@graph'])) {
+          parsed.push(...(json['@graph'] as Record<string, unknown>[]));
+        } else {
+          parsed.push(json);
+        }
       } catch {
         // Skip malformed blocks — test can assert on the resulting array length
       }

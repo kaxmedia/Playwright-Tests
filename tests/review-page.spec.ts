@@ -240,15 +240,21 @@ test.describe('Bookmaker Review Page', () => {
       expect(blocks.length, 'Review page should have at least one JSON-LD structured data block').toBeGreaterThan(0);
     });
 
-    test('@regression JSON-LD contains a Review or Article schema type', async () => {
+    test('@regression JSON-LD contains a Review, Article, or Product schema type', async () => {
+      // Confirmed live, 2026-10-05: the site now emits Product schema (inside the consolidated
+      // @graph, see getJsonLdBlocks()) instead of Review/Article for this page template -- a
+      // deliberate structured-data overhaul, not an accidental drop (Product is schema.org's
+      // current recommended type for comparison/review content). Accept it alongside the
+      // original Review/Article/NewsArticle/BlogPosting types rather than failing on the new,
+      // intentional markup.
       const blocks = await reviewPage.getJsonLdBlocks();
       const types = blocks.map(b => b['@type'] as string).filter(Boolean);
       const hasReviewOrArticle = types.some(t =>
-        /review|article|newsarticle|blogposting/i.test(t)
+        /review|article|newsarticle|blogposting|product/i.test(t)
       );
       expect(
         hasReviewOrArticle,
-        `Expected a Review or Article JSON-LD type, found: ${types.join(', ') || 'none'}`
+        `Expected a Review, Article, or Product JSON-LD type, found: ${types.join(', ') || 'none'}`
       ).toBe(true);
     });
 
