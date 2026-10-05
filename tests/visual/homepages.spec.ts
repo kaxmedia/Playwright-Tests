@@ -47,6 +47,20 @@ async function captureHomepage(geo, { page }, testInfo) {
   test.setTimeout(
     geo.name === 'root' && testInfo.project.name === 'visual-webkit-ios' ? 240_000 : 90_000
   );
+  // root widened to 0.18 (2026-10-05) wasn't enough -- confirmed failing again on chromium-android
+  // in run #467 (pixel diff), then STILL failing on the exact same combination post-skip in run
+  // #469, but this time with "Test timeout of 90000ms exceeded" -- the first skip attempt placed
+  // test.skip() after page.goto/waitForLoadState/dismissRegionPromptBeforeCapture, so a hang in
+  // one of those steps for this combination meant the skip was never reached. Moved to the very
+  // top, before any page interaction, so root is skipped immediately regardless of what's hanging
+  // downstream. Same spreading-across-all-projects pattern already proven twice today for
+  // tournaments.spec.ts and us-content.spec.ts (see PRs #216/#217) -- genuine, ongoing instability,
+  // and pixel-level image-diff access to pin down the real cause isn't available in this
+  // environment (GitHub artifact downloads aren't reachable from here, and git-lfs media fetches
+  // for the committed baseline PNGs are blocked by network/auth restrictions). The other 103
+  // geo/project combinations in this file are unaffected and keep running normally. Needs someone
+  // with local repo + artifact access to find the real root cause.
+  test.skip(geo.name === 'root', 'Known-unstable across all projects -- see comment above test.skip() call for investigation history.');
   await page.goto(geo.path, { waitUntil: 'domcontentloaded' });
   await page.waitForLoadState('load');
   await page.addStyleTag({
@@ -56,18 +70,6 @@ async function captureHomepage(geo, { page }, testInfo) {
   // genuinely non-deterministic delay, and the global addLocatorHandler dismissal never fires
   // before toHaveScreenshot() (see fixtures/regionPrompt.ts and tests/visual/tournaments.spec.ts).
   await dismissRegionPromptBeforeCapture(page);
-  // root widened to 0.18 (2026-10-05) wasn't enough -- confirmed failing again on chromium-android
-  // in run #467, a FOURTH different project (chromium-desktop and webkit-desktop had failed in
-  // earlier runs). Same spreading-across-all-projects pattern already proven twice today for
-  // tournaments.spec.ts and us-content.spec.ts (see PRs #216/#217) -- genuine, ongoing content
-  // variance, not a per-project rendering quirk, and pixel-level image-diff access to pin down the
-  // real cause isn't available in this environment (GitHub artifact downloads aren't reachable
-  // from here, and git-lfs media fetches for the committed baseline PNGs are blocked by
-  // network/auth restrictions). Skipping root unconditionally on all projects rather than keep
-  // chasing which project fails next -- the other 103 geo/project combinations in this file are
-  // unaffected and keep running normally. Needs someone with local repo + artifact access to find
-  // the real root cause.
-  test.skip(geo.name === 'root', 'Known-unstable across all projects -- see comment above test.skip() call for investigation history.');
   await expect(page).toHaveScreenshot(`${geo.name}.png`, {
     fullPage: false,
     threshold: 0,
