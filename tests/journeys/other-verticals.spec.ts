@@ -74,7 +74,7 @@ test.describe('Journey 6.1 — Poker toplist', () => {
 
     test('@regression poker toplist breadcrumb links back to IE homepage @journey', async ({ page }) => {
         const homeBreadcrumb = page.locator(
-            'nav#breadcrumb a[href="/ie"], nav.automation-breadcrumb a[href="/ie"]'
+            'nav.nh-hero__crumbs a[href="/ie"]'
         ).first();
         await expect(homeBreadcrumb).toBeAttached();
     });
@@ -178,9 +178,11 @@ test.describe('Journey 6.4 — Sweepstakes / social casino (slots/games hub)', (
         await expect(cta).toBeAttached();
     });
 
+    // Confirmed live, 2026-09-29: the breadcrumb nav's class changed from #breadcrumb/.automation-breadcrumb
+    // to .nh-hero__crumbs (a site redesign) -- the link itself (/ie/online-casinos) is unchanged and correct.
     test('@regression slots/games hub breadcrumb links to casino toplist @journey', async ({ page }) => {
         const casinoBreadcrumb = page.locator(
-            'nav#breadcrumb a[href="/ie/online-casinos"], nav.automation-breadcrumb a[href="/ie/online-casinos"]'
+            'nav.nh-hero__crumbs a[href="/ie/online-casinos"]'
         ).first();
         await expect(casinoBreadcrumb).toBeAttached();
     });
