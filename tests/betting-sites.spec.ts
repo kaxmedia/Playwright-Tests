@@ -54,10 +54,12 @@ registerOplistGeoSuite({
   suiteLabel: 'Betting Sites',
   pages: bettingPages,
   // #925: US Sportsbooks operator list fails to render for Firefox from the CI datacenter IP
-  // (firefox-fingerprint personalization variant, not geo). Scoped to US — the only geo that
-  // exhibited it (all 11 firefox failures in run #925 were US Sportsbooks); chrome/webkit and a
-  // real/local IP are unaffected. Other geos load fine on firefox-CI, so they are NOT skipped.
-  skipFirefoxCi: (config) => config.url === 'https://www.gambling.com/us/sportsbooks',
+  // (browser-fingerprint personalization variant, not geo). Scoped to US — the only geo that
+  // exhibited it (all 11 firefox failures in run #925 were US Sportsbooks); a real/local IP is
+  // unaffected. Other geos load fine in CI, so they are NOT skipped. Originally Firefox-only
+  // (chrome/webkit confirmed unaffected 2026-08-06) -- webkit started failing the same way as of
+  // run #1450 (2026-10-05), so the option (and this skip) now also covers webkit.
+  skipBrowserFingerprintCi: (config) => config.url === 'https://www.gambling.com/us/sportsbooks',
 });
 
 registerOplistSubPageSuite({
