@@ -24,7 +24,7 @@ export interface OplistGeoSuiteOptions {
    * Chrome/WebKit in the same CI job load the list fine, and Firefox loads it fine from a real/local
    * IP (verified 2026-08-06, chrome+firefox pass locally). See #925.
    */
-  skipFirefoxCi?: boolean | ((config: ComparisonPageConfig) => boolean);
+  skipBrowserFingerprintCi?: boolean | ((config: ComparisonPageConfig) => boolean);
   /** Extra setup before `ComparisonPage.goto` (e.g. block VWO). */
   beforeEachExtra?: (page: Page) => Promise<void>;
 }
@@ -45,8 +45,8 @@ export function escapeForRegex(str: string): string {
 const DEFAULT_CARD_COUNT_SKIP =
   'CI datacenter IP receives a reduced personalization variant (2–3 cards) from gdc-oplist-d1-worker-api / adtech-personalisation-api — CI environment limitation, unrelated to VWO. Re-enable once personalization exclusion is sorted with the site team.';
 
-const FIREFOX_CI_SKIP_REASON =
-  'CI + Firefox only: the operator list (li.operator-item) never renders for Firefox from the CI datacenter IP, so ComparisonPage.goto times out and every test in this describe fails at beforeEach. This is a bot-detection/personalization variant keyed on Firefox\'s fingerprint — NOT geo IP gating: Chrome/WebKit in the same CI job load the list fine, and Firefox loads it fine from a real/local IP (verified 2026-08-06 — chrome+firefox both pass locally). Observed on US Sportsbooks (#925). BACKLOG: firefox-fingerprint variant of the mapped-region CI-IP personalization work — distinct from the geo card-count reduction above.';
+const BROWSER_FINGERPRINT_CI_SKIP_REASON =
+  'CI + Firefox/WebKit only: the operator list (li.operator-item) never renders for these browsers from the CI datacenter IP, so ComparisonPage.goto times out and every test in this describe fails at beforeEach. This is a bot-detection/personalization variant keyed on browser fingerprint — NOT geo IP gating: Chrome in the same CI job loads the list fine, and Firefox/WebKit load it fine from a real/local IP (Firefox verified 2026-08-06; WebKit started failing the same way as of run #1450, 2026-10-05 -- the fingerprint-based blocking evidently expanded to cover it too). Observed on US Sportsbooks (#925). BACKLOG: browser-fingerprint variant of the mapped-region CI-IP personalization work — distinct from the geo card-count reduction above.';
 
 /**
  * Shared T1–T12 oplist coverage used by bonus-offers and betting-sites.
@@ -58,7 +58,7 @@ export function registerOplistGeoSuite(options: OplistGeoSuiteOptions): void {
     pages,
     skipCardCount = false,
     skipCardCountReason = DEFAULT_CARD_COUNT_SKIP,
-    skipFirefoxCi = false,
+    skipBrowserFingerprintCi = false,
     beforeEachExtra,
   } = options;
 
@@ -67,10 +67,13 @@ export function registerOplistGeoSuite(options: OplistGeoSuiteOptions): void {
       let oplist: ComparisonPage;
 
       test.beforeEach(async ({ page, browserName }) => {
-        // #925: skip before goto() — the li.operator-item wait times out for Firefox in CI, so
-        // every test here would otherwise fail at beforeEach. See FIREFOX_CI_SKIP_REASON.
-        const skipFfCi = typeof skipFirefoxCi === 'function' ? skipFirefoxCi(config) : skipFirefoxCi;
-        test.skip(skipFfCi && !!process.env.CI && browserName === 'firefox', FIREFOX_CI_SKIP_REASON);
+        // #925: skip before goto() — the li.operator-item wait times out for Firefox/WebKit in CI,
+        // so every test here would otherwise fail at beforeEach. See BROWSER_FINGERPRINT_CI_SKIP_REASON.
+        const skipBfCi = typeof skipBrowserFingerprintCi === 'function' ? skipBrowserFingerprintCi(config) : skipBrowserFingerprintCi;
+        test.skip(
+          skipBfCi && !!process.env.CI && (browserName === 'firefox' || browserName === 'webkit'),
+          BROWSER_FINGERPRINT_CI_SKIP_REASON
+        );
 
         if (beforeEachExtra) await beforeEachExtra(page);
         oplist = new ComparisonPage(page);

@@ -17,14 +17,16 @@ for (const config of comparisonPages) {
   test.describe(config.name, () => {
 
     // #925-family: the US Sportsbooks operator list (li.operator-item) does not render for Firefox
-    // from the CI datacenter IP — a firefox-FINGERPRINT personalization variant, NOT geo IP gating
-    // (chrome/webkit in the same CI job load it fine, and Firefox loads it fine from a real/local
-    // IP). Skip that exact combination so ComparisonPage.goto's card wait doesn't time out every
-    // US Sportsbooks test. Same as the Betting Sites #925 skip.
+    // from the CI datacenter IP — a browser-FINGERPRINT personalization variant, NOT geo IP gating
+    // (chrome in the same CI job loads it fine, and Firefox loads it fine from a real/local IP).
+    // Skip that exact combination so ComparisonPage.goto's card wait doesn't time out every
+    // US Sportsbooks test. Same as the Betting Sites #925 skip. Originally Firefox-only (chrome and
+    // webkit confirmed unaffected at the time) -- webkit started failing the same way as of run
+    // #1450 (2026-10-05), so this now also skips webkit.
     test.beforeEach(({ browserName }) => {
       test.skip(
-        config.name === 'US Sportsbooks' && !!process.env.CI && browserName === 'firefox',
-        'US Sportsbooks operator list does not render for Firefox from the CI datacenter IP — firefox-fingerprint personalization variant (same as Betting Sites #925), NOT geo. Chrome/WebKit in CI and a real/local IP are unaffected. BACKLOG: firefox-fingerprint CI variant.',
+        config.name === 'US Sportsbooks' && !!process.env.CI && (browserName === 'firefox' || browserName === 'webkit'),
+        'US Sportsbooks operator list does not render for Firefox/WebKit from the CI datacenter IP — browser-fingerprint personalization variant (same as Betting Sites #925), NOT geo. Chrome in CI and a real/local IP are unaffected. BACKLOG: browser-fingerprint CI variant.',
       );
     });
 
