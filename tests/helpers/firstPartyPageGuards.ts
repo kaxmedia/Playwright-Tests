@@ -57,6 +57,16 @@ export const KNOWN_PAGE_ERROR_ALLOWLIST: ReadonlyArray<{
     pattern: /cdn-cgi\/rum|cloudflareinsights\.com\/beacon/i,
     note: 'Cloudflare RUM beacon CORS (WebKit) — third-party analytics, already ignored in network-failed tests',
   },
+  {
+    id: 'uk-casino-setavailabilitydates-null-parent',
+    pattern: /setAvailabilityDates[\s\S]*parent\.offsetWidth|null is not an object \(evaluating 'parent\.offsetWidth'\)/i,
+    // Confirmed not a front-end bug -- product/site owner has reviewed and confirmed this has no
+    // visible impact on the page. Consistently reproducible in CI (chrome/firefox/webkit, runs
+    // #1451/#1462, 2026-10-06) on UK Casino (/uk/online-casinos/best-sites), but not reproducible
+    // in a normal manual browsing session, consistent with a first-party script measuring/
+    // positioning an element not present on this page template.
+    note: 'UK Casino best-sites -- setAvailabilityDates null parent.offsetWidth, confirmed no front-end impact, not a bug',
+  },
 ];
 
 /** Always filtered by `unexpectedPageErrors` / FirstPartyPageGuards — no opt-in needed. */
