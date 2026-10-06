@@ -108,6 +108,9 @@ export const comparisonPages: ComparisonPageConfig[] = [
     hasBadge: true,
     ageLimit: '18+',
     hasOplistPagination: true,
+    // Confirmed not a front-end bug -- see uk-casino-setavailabilitydates-null-parent in
+    // firstPartyPageGuards.ts for the full error and investigation notes.
+    knownPageErrorIds: ['uk-casino-setavailabilitydates-null-parent'],
   },
   {
     name: 'UK Sports',
