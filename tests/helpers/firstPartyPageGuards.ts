@@ -59,13 +59,18 @@ export const KNOWN_PAGE_ERROR_ALLOWLIST: ReadonlyArray<{
   },
   {
     id: 'uk-casino-setavailabilitydates-null-parent',
-    pattern: /setAvailabilityDates[\s\S]*parent\.offsetWidth|null is not an object \(evaluating 'parent\.offsetWidth'\)/i,
+    // Matches on the function name alone -- confirmed live, 2026-10-06 (PR #221 follow-up): the
+    // underlying null-reference TypeError is phrased differently per browser (chrome: "Cannot
+    // read properties of null (reading 'offsetWidth')"; webkit: "null is not an object (evaluating
+    // 'parent.offsetWidth')"), so matching the exact message text missed chrome. setAvailabilityDates
+    // is the one constant across all three browsers' stack traces.
+    pattern: /setAvailabilityDates/i,
     // Confirmed not a front-end bug -- product/site owner has reviewed and confirmed this has no
     // visible impact on the page. Consistently reproducible in CI (chrome/firefox/webkit, runs
     // #1451/#1462, 2026-10-06) on UK Casino (/uk/online-casinos/best-sites), but not reproducible
     // in a normal manual browsing session, consistent with a first-party script measuring/
     // positioning an element not present on this page template.
-    note: 'UK Casino best-sites -- setAvailabilityDates null parent.offsetWidth, confirmed no front-end impact, not a bug',
+    note: 'UK Casino best-sites -- setAvailabilityDates null-reference, confirmed no front-end impact, not a bug',
   },
 ];
 
