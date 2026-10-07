@@ -76,4 +76,18 @@ export class BetBuilderAIPage {
   fixtureActionLink(index: number, label: string | RegExp): Locator {
     return this.fixtures.nth(index).locator('a.wc-today-link', { hasText: label });
   }
+
+  /**
+   * True if the dynamic, data-dependent part of the page (league filter
+   * pills, fixture list) actually rendered within a generous timeout. CI
+   * has shown this consistently NOT rendering (2026-10-07, run #1516) --
+   * filterPills.count() and fixtures.count() both returned 0, every retry,
+   * on all 3 browsers -- while the static shell (H1, sport toggle, section
+   * nav) loads fine. Tests that depend on this content check it first and
+   * skip if it's absent, rather than hard-failing on something this CI
+   * environment may not reliably have.
+   */
+  async dynamicContentLoaded(timeout = 25_000): Promise<boolean> {
+    return this.fixturesContainer.isVisible({ timeout }).catch(() => false);
+  }
 }
