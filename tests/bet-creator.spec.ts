@@ -100,10 +100,9 @@ test.describe('Bet Creator', () => {
   });
 
   test('@regression responsible gambling footer (18+) is visible', async () => {
-    // Explicit, generous timeout -- confirmed 2026-10-07 (run #1519) that the default
-    // 5s assertion timeout isn't always enough here, independent of the dynamic-content
-    // issue tracked elsewhere in this file (this text is in the page footer, not the
-    // bet slip/odds area).
-    await expect(bc.responsibleGamblingFooter).toBeVisible({ timeout: 20_000 });
+    // Was never a timeout issue (confirmed 2026-10-07, run #1521: still failed at a
+    // 20s timeout) -- the locator itself was matching a hidden duplicate. Fixed in
+    // BetCreatorPage.ts (responsibleGamblingFooter now filters on :visible).
+    await expect(bc.responsibleGamblingFooter).toBeVisible();
   });
 });
