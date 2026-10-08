@@ -6,6 +6,9 @@ registerCasinoLandingSmoke({
     describeTitle: 'Category Landing — IE Online Casinos',
     expectedUrl: IE_CASINO.url,
     goHrefContains: '/go/ie/',
+    // Live-verified 2026-10-08: #oplistNav has been removed from this page too (same as
+    // UK -- see casino-category-landing.spec.ts), confirmed live, not a CI flake.
+    hasAnchorMenu: false,
     createPage: (page) => new IECasinoPage(page),
 });
 
@@ -17,15 +20,9 @@ test.describe('Category Landing — IE Online Casinos — geo specifics', () => 
         await iePage.goto();
     });
 
-    test('@regression clicking an anchor link updates the operator list', async () => {
-        const firstLink = iePage.anchorLinks.first();
-        await firstLink.scrollIntoViewIfNeeded();
-        await firstLink.click();
-        await iePage.page.waitForTimeout(2000);
-
-        const afterCount = await iePage.getOperatorCount();
-        expect(afterCount).toBeGreaterThanOrEqual(1);
-    });
+    // The "clicking an anchor link" test that lived here was removed 2026-10-08: #oplistNav
+    // no longer exists on this page -- live-verified, not a CI flake. See the hasAnchorMenu
+    // note on the registerCasinoLandingSmoke call above.
 
     test('@regression FAQ has at least 3 items', async () => {
         const count = await iePage.faqItems.count();
