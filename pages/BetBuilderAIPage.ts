@@ -88,6 +88,11 @@ export class BetBuilderAIPage {
    * environment may not reliably have.
    */
   async dynamicContentLoaded(timeout = 25_000): Promise<boolean> {
-    return this.fixturesContainer.isVisible({ timeout }).catch(() => false);
+    // Check the first actual fixture card, not fixturesContainer -- the container
+    // itself renders (empty) regardless of whether its dynamic children populate,
+    // so checking the container alone always returned true and let the broken
+    // tests run anyway (confirmed 2026-10-07, run #1518 -- still failing with
+    // this check in place).
+    return this.fixtures.first().isVisible({ timeout }).catch(() => false);
   }
 }
