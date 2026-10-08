@@ -52,11 +52,20 @@ export class BetCreatorPage {
     this.leagueButtons = page.getByRole('button', { name: /^(England|Spain|Germany|Italy|France|USA|UEFA)/ });
     this.betSlipHeading = page.getByRole('heading', { name: /bet slip/i }).first();
     this.placeBetsButton = page.getByRole('button', { name: /place bets/i }).first();
-    // .first() -- confirmed 2026-10-07 (run #1519): resolves to 2 elements without it,
-    // same desktop/mobile duplication pattern as homeTab/chatTab/builderTab above.
-    this.chatInput = page.getByPlaceholder(/what would you like to ask/i).first();
+    // :visible, not .first() -- confirmed 2026-10-07 (run #1521): unlike
+    // homeTab/chatTab/builderTab above, the FIRST of the 2 duplicated elements here
+    // is the hidden one (offsetParent null) and the SECOND is the genuinely visible
+    // one -- .first() picked the wrong copy and failed with "Received: hidden".
+    // Filtering on :visible is correct regardless of DOM order, unlike assuming
+    // which index is visible.
+    this.chatInput = page.getByPlaceholder(/what would you like to ask/i).and(page.locator(':visible'));
     this.poweredByClaude = page.getByText(/powered by\s*claude/i);
-    this.responsibleGamblingFooter = page.getByText(/18\+/).first();
+    // :visible, not .first() -- confirmed 2026-10-07 (run #1521): same issue as
+    // chatInput above. 3 "18+" text nodes exist (mobile-hidden footer, a promo
+    // card disclaimer, and the real footer); the first in DOM order is the
+    // hidden one, so .first() + toBeVisible() timed out waiting on it even at
+    // 20s. This was never a timeout problem, as I'd assumed in the prior fix.
+    this.responsibleGamblingFooter = page.getByText(/18\+/).and(page.locator(':visible')).first();
   }
 
   async goto(): Promise<void> {
