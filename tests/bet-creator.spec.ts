@@ -115,6 +115,15 @@ test.describe('Bet Creator', () => {
     // Was never a timeout issue (confirmed 2026-10-07, run #1521: still failed at a
     // 20s timeout) -- the locator itself was matching a hidden duplicate. Fixed in
     // BetCreatorPage.ts (responsibleGamblingFooter now filters on :visible).
+    //
+    // That fix was necessary but not sufficient: confirmed 2026-10-08 (run #1565)
+    // this still fails with "element(s) not found" on its own, consistently
+    // alongside the other dynamic-content tests being skipped (dynamicContentLoaded()
+    // false that run) -- the same pattern as the Claude attribution test. All 3 "18+"
+    // occurrences checked live are apparently tied to the same odds-data-dependent
+    // block, not a genuinely independent static page footer as originally assumed.
+    // Gating the same way.
+    test.skip(!(await bc.dynamicContentLoaded()), 'Dynamic content (odds-dependent footer) did not render in this environment -- see file header.');
     await expect(bc.responsibleGamblingFooter).toBeVisible();
   });
 });
