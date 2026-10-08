@@ -44,7 +44,7 @@
 // Run with:
 //   npx playwright test tests/bet-creator.spec.ts --project=chrome
 //   npx playwright test tests/bet-creator.spec.ts --grep @regression
-// ────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
 
 import { test, expect } from '../fixtures/test';
 import { BetCreatorPage } from '../pages/BetCreatorPage';
@@ -100,6 +100,10 @@ test.describe('Bet Creator', () => {
   });
 
   test('@regression responsible gambling footer (18+) is visible', async () => {
-    await expect(bc.responsibleGamblingFooter).toBeVisible();
+    // Explicit, generous timeout -- confirmed 2026-10-07 (run #1519) that the default
+    // 5s assertion timeout isn't always enough here, independent of the dynamic-content
+    // issue tracked elsewhere in this file (this text is in the page footer, not the
+    // bet slip/odds area).
+    await expect(bc.responsibleGamblingFooter).toBeVisible({ timeout: 20_000 });
   });
 });
