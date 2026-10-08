@@ -59,7 +59,11 @@ export class BetCreatorPage {
     // Filtering on :visible is correct regardless of DOM order, unlike assuming
     // which index is visible.
     this.chatInput = page.getByPlaceholder(/what would you like to ask/i).and(page.locator(':visible'));
-    this.poweredByClaude = page.getByText(/powered by\s*claude/i);
+    // Confirmed live (2026-10-07, run #1522): "Powered by" and "Claude" render in
+    // separate sibling <span> elements (<div><span>Powered by</span><span>Claude</span>...),
+    // not one span with the full phrase -- a regex spanning both fragments doesn't
+    // reliably match via getByText. Targeting the exact "Claude" span directly instead.
+    this.poweredByClaude = page.getByText('Claude', { exact: true }).and(page.locator(':visible'));
     // :visible, not .first() -- confirmed 2026-10-07 (run #1521): same issue as
     // chatInput above. 3 "18+" text nodes exist (mobile-hidden footer, a promo
     // card disclaimer, and the real footer); the first in DOM order is the
