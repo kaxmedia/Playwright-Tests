@@ -52,7 +52,9 @@ export class BetCreatorPage {
     this.leagueButtons = page.getByRole('button', { name: /^(England|Spain|Germany|Italy|France|USA|UEFA)/ });
     this.betSlipHeading = page.getByRole('heading', { name: /bet slip/i }).first();
     this.placeBetsButton = page.getByRole('button', { name: /place bets/i }).first();
-    this.chatInput = page.getByPlaceholder(/what would you like to ask/i);
+    // .first() -- confirmed 2026-10-07 (run #1519): resolves to 2 elements without it,
+    // same desktop/mobile duplication pattern as homeTab/chatTab/builderTab above.
+    this.chatInput = page.getByPlaceholder(/what would you like to ask/i).first();
     this.poweredByClaude = page.getByText(/powered by\s*claude/i);
     this.responsibleGamblingFooter = page.getByText(/18\+/).first();
   }
