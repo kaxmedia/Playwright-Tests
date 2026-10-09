@@ -1,5 +1,6 @@
 import { test, expect } from '../fixtures/test';
 import { SearchPage } from '../pages/SearchPage';
+import { acceptRegionPromptIfVisible } from '../fixtures/regionPrompt';
 
 test.describe('Search', () => {
   let searchPage: SearchPage;
@@ -8,6 +9,11 @@ test.describe('Search', () => {
     const response = await page.goto('/');
     expect(response?.ok()).toBeTruthy();
     searchPage = new SearchPage(page);
+    // Confirmed 2026-10-09 (run #1576): same gap as homepage.spec.ts -- the region-prompt
+    // modal's auto-dismiss handler only fires before Playwright actions, not before passive
+    // toBeVisible() assertions. "search icon is visible in the navigation bar" was flaky on
+    // webkit for this reason. Explicit one-shot dismiss closes the gap.
+    await acceptRegionPromptIfVisible(page);
   });
 
   test('@smoke @regression search icon is visible in the navigation bar', async () => {
