@@ -171,7 +171,13 @@ test.describe('Journey 5.4 — In-play betting (betting toplist)', () => {
 
     test('@regression in-play entry lands on betting toplist with H1 @journey', async ({ page }) => {
         await expect(page).toHaveURL(/\/ie\/betting-sites\/?$/);
-        await expect(page.locator('main.body_content h1').first()).toBeVisible();
+        // Live-verified 2026-10-09: the H1 on this redirected-to page has moved out of
+        // main.body_content into a new nh-hero section (same site-wide hero redesign
+        // already found elsewhere this session -- e.g. nav.nh-hero__crumbs). Confirmed
+        // only one h1 exists on the page, so dropping the stale scope is safe here; the
+        // other main.body_content-scoped assertions on this page (CTAs, h2s, text) are
+        // confirmed still correct and left unchanged.
+        await expect(page.locator('h1').first()).toBeVisible();
     });
 
     test('@regression in-play journey surfaces live betting content and bookmaker CTAs @journey', async ({ page }) => {
@@ -261,7 +267,13 @@ test.describe('Journey 5.7 — Odds comparison (best-odds-guaranteed page)', () 
 
     test('@regression best odds entry lands on betting toplist with H1 @journey', async ({ page }) => {
         await expect(page).toHaveURL(/\/ie\/betting-sites\/?$/);
-        await expect(page.locator('main.body_content h1').first()).toBeVisible();
+        // Live-verified 2026-10-09: the H1 on this redirected-to page has moved out of
+        // main.body_content into a new nh-hero section (same site-wide hero redesign
+        // already found elsewhere this session -- e.g. nav.nh-hero__crumbs). Confirmed
+        // only one h1 exists on the page, so dropping the stale scope is safe here; the
+        // other main.body_content-scoped assertions on this page (CTAs, h2s, text) are
+        // confirmed still correct and left unchanged.
+        await expect(page.locator('h1').first()).toBeVisible();
         await expect(page.locator('main.body_content').getByText(/best odds/i).first()).toBeAttached();
     });
 
@@ -288,7 +300,13 @@ test.describe('Journey 5.8 — Acca / bet builder page', () => {
 
     test('@regression bet builder entry lands on betting toplist with H1 @journey', async ({ page }) => {
         await expect(page).toHaveURL(/\/ie\/betting-sites\/?$/);
-        await expect(page.locator('main.body_content h1').first()).toBeVisible();
+        // Live-verified 2026-10-09: the H1 on this redirected-to page has moved out of
+        // main.body_content into a new nh-hero section (same site-wide hero redesign
+        // already found elsewhere this session -- e.g. nav.nh-hero__crumbs). Confirmed
+        // only one h1 exists on the page, so dropping the stale scope is safe here; the
+        // other main.body_content-scoped assertions on this page (CTAs, h2s, text) are
+        // confirmed still correct and left unchanged.
+        await expect(page.locator('h1').first()).toBeVisible();
         await expect(page.locator('main.body_content').getByText(/bet builder|acca/i).first()).toBeAttached();
     });
 
