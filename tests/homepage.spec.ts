@@ -1,6 +1,5 @@
 import { test, expect } from '../fixtures/test';
 import { HomePage } from '../pages/HomePage';
-import { acceptRegionPromptIfVisible } from '../fixtures/regionPrompt';
 
 test.describe('Homepage', () => {
   let homePage: HomePage;
@@ -9,14 +8,6 @@ test.describe('Homepage', () => {
     const response = await page.goto('/');
     expect(response?.ok()).toBeTruthy();
     homePage = new HomePage(page);
-    // Confirmed 2026-10-09 (run #1576): the region-prompt modal's auto-dismiss handler
-    // (_acceptRegionPrompt in fixtures/test.ts) only fires before Playwright *actions* --
-    // not before passive assertions like toHaveTitle()/toBeVisible(). "page loads and has
-    // the correct title" hard-failed on webkit every retry (title came back "" with the
-    // modal intercepting), and the two toBeVisible() tests were flaky for the same reason
-    // (a race on the modal's non-deterministic appearance delay, per regionPrompt.ts's own
-    // docs). Explicit one-shot dismiss here closes that gap for every test in this file.
-    await acceptRegionPromptIfVisible(page);
   });
 
   test('@smoke @regression page loads and has the correct title', async ({ page }) => {
