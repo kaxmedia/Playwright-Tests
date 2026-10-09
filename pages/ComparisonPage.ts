@@ -164,7 +164,13 @@ export const comparisonPages: ComparisonPageConfig[] = [
     // "Show More" pagination (18 is the full list), and CI sees the same 18 — a real/local IP
     // agrees with CI, so this is NOT the GX-region operator rotation seen in sub-category (PR #151).
     // The previous minimum of 20 was simply stale; the page genuinely lists 18 betting sites now.
-    expectedCardCountMin: 18,
+    //
+    // Re-verified 2026-10-08: /ie/betting-sites now renders exactly 17 operator cards (down from
+    // 18) -- CI's "Received: 17" matched a live check exactly, same /go/ fingerprint already
+    // documented for this page (real/local IP agrees with CI, not a GX-region rotation). This is the
+    // second time this specific minimum has needed lowering as operators naturally drop off this
+    // market (previously 20 -> 18 on 2026-08-05, confirmed again now at 18 -> 17). Not a bug.
+    expectedCardCountMin: 17,
     hasRating: true,
     hasBadge: false,
     ageLimit: '18+',

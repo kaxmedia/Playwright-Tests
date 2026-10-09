@@ -14,6 +14,11 @@ registerCasinoLandingSmoke({
     describeTitle: 'Category Landing — UK Online Casinos',
     expectedUrl: UK_CASINO.url,
     goHrefContains: '/go/',
+    // Live-verified 2026-10-08: #oplistNav (the sticky anchor-menu strip) has been removed
+    // from this page -- confirmed live, zero matches, and the in-page section targets it
+    // used to link to (anchor_top_10_online_casinos etc.) are now unlinked from anywhere.
+    // Not a CI flake: a real/local IP session shows the same absence.
+    hasAnchorMenu: false,
     createPage: (page) => new UKCasinoPage(page),
 });
 
@@ -37,32 +42,10 @@ test.describe('Category Landing — UK Online Casinos — geo specifics', () => 
         }
     });
 
-    test('@regression clicking an anchor link updates the operator list', async () => {
-        await ukPage.getOperatorCount();
-
-        const firstLink = ukPage.anchorLinks.first();
-        await firstLink.scrollIntoViewIfNeeded();
-        await firstLink.click();
-        await ukPage.page.waitForTimeout(2000);
-
-        const afterCount = await ukPage.getOperatorCount();
-        expect(afterCount).toBeGreaterThanOrEqual(1);
-    });
-
-    test('@regression clicking a second anchor link also renders a list', async () => {
-        const links = ukPage.anchorLinks;
-        const linkCount = await links.count();
-
-        if (linkCount >= 2) {
-            const secondLink = links.nth(1);
-            await secondLink.scrollIntoViewIfNeeded();
-            await secondLink.click();
-            await ukPage.page.waitForTimeout(2000);
-
-            const afterCount = await ukPage.getOperatorCount();
-            expect(afterCount).toBeGreaterThanOrEqual(1);
-        }
-    });
+    // The two "clicking an anchor link" tests that lived here were removed 2026-10-08:
+    // #oplistNav (and the anchor links inside it) no longer exists on this page -- live-
+    // verified, not a CI flake. See the hasAnchorMenu note on the registerCasinoLandingSmoke
+    // call above.
 
     test('@regression compare checkboxes are present on operator rows', async () => {
         const count = await ukPage.compareCheckboxes.count();

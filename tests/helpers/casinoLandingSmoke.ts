@@ -29,6 +29,14 @@ export interface CasinoLandingSmokeOptions {
   hasRatings?: boolean;
   /** When false, skips the geo-switcher assertion (e.g. DE has no UK-style header control). */
   hasGeoSwitcher?: boolean;
+  /**
+   * When false, skips the shared anchor-menu assertions. Live-verified 2026-10-08: the
+   * #oplistNav sticky anchor strip has been removed from the UK and IE casino category
+   * pages (confirmed live on both -- zero matches, and the in-page section targets it used
+   * to link to are now unlinked). DE still has it (confirmed live, count: 1), so this
+   * defaults to true and only UK/IE opt out.
+   */
+  hasAnchorMenu?: boolean;
   createPage: (page: Page) => CasinoLandingPageLike;
 }
 
@@ -43,6 +51,7 @@ export function registerCasinoLandingSmoke(options: CasinoLandingSmokeOptions): 
     goHrefContains,
     hasRatings = true,
     hasGeoSwitcher = true,
+    hasAnchorMenu = true,
     createPage,
   } = options;
 
@@ -128,13 +137,15 @@ export function registerCasinoLandingSmoke(options: CasinoLandingSmokeOptions): 
       }
     });
 
-    test('@regression anchor menu is visible', async () => {
-      await expect(landing.anchorMenu).toBeVisible();
-    });
+    if (hasAnchorMenu) {
+      test('@regression anchor menu is visible', async () => {
+        await expect(landing.anchorMenu).toBeVisible();
+      });
 
-    test('@regression anchor menu has at least 3 links', async () => {
-      expect(await landing.anchorLinks.count()).toBeGreaterThanOrEqual(3);
-    });
+      test('@regression anchor menu has at least 3 links', async () => {
+        expect(await landing.anchorLinks.count()).toBeGreaterThanOrEqual(3);
+      });
+    }
 
     test('@regression FAQ section is present', async () => {
       await expect(landing.faqSection).toBeVisible();
