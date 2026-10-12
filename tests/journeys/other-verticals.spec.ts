@@ -252,7 +252,14 @@ test.describe('Journey 6.5 — UK Poker toplist', () => {
 
     test('@regression UK poker toplist breadcrumb links back to UK homepage @journey', async ({ page }) => {
         // Live-verified 2026-10-08: UK uses nav.nh-hero__crumbs, not nav.automation-breadcrumb.
-        const homeBreadcrumb = page.locator('nav.nh-hero__crumbs a[href="/uk"]').first();
+        // Re-verified 2026-10-09: the markup is NOT stable -- a later live check on this same
+        // page found nav#breadcrumb.automation-breadcrumb back in place instead, consistently
+        // reproducing on both chrome and firefox in CI. Rather than re-guess which one is
+        // "current", using both as fallbacks -- the same robust pattern already applied to
+        // the IE breadcrumb fix elsewhere in this file.
+        const homeBreadcrumb = page.locator(
+            'nav#breadcrumb a[href="/uk"], nav.automation-breadcrumb a[href="/uk"], nav.nh-hero__crumbs a[href="/uk"]'
+        ).first();
         await expect(homeBreadcrumb).toBeAttached();
     });
 });
@@ -336,7 +343,11 @@ test.describe('Journey 6.8 — UK Sweepstakes / social casino (slots/games hub)'
     });
 
     test('@regression UK slots/games hub breadcrumb links to casino toplist @journey', async ({ page }) => {
-        const casinoBreadcrumb = page.locator('nav.nh-hero__crumbs a[href="/uk/online-casinos"]').first();
+        // Re-verified 2026-10-09: same markup instability found and fixed on the UK poker
+        // breadcrumb test above -- using both forms as fallbacks rather than a single selector.
+        const casinoBreadcrumb = page.locator(
+            'nav#breadcrumb a[href="/uk/online-casinos"], nav.automation-breadcrumb a[href="/uk/online-casinos"], nav.nh-hero__crumbs a[href="/uk/online-casinos"]'
+        ).first();
         await expect(casinoBreadcrumb).toBeAttached();
     });
 });
