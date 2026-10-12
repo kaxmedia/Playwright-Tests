@@ -1,5 +1,6 @@
 import { test, expect } from '../../fixtures/test';
 import { dismissRegionPromptBeforeCapture } from '../../fixtures/regionPrompt';
+import { dismissAgeGateForGeo } from '../../fixtures/ageGate';
 
 // 'root' is handled separately below (test.describe, its own retry policy) -- see the comment
 // there for why.
@@ -66,6 +67,14 @@ async function captureHomepage(geo, { page }, testInfo) {
   await page.addStyleTag({
     content: '*, *::before, *::after { animation-duration: 0s !important; animation-delay: 0s !important; transition-duration: 0s !important; transition-delay: 0s !important; }',
   });
+  // Live-verified 2026-10-12: /es's visual regression failure is the age-verification gate
+  // ("¿Eres mayor de edad?") overlaying the homepage -- the same hard, deterministic gate
+  // tests/visual/oplist.spec.ts, bonus-pages.spec.ts, and review-pages.spec.ts already dismiss,
+  // just never wired up here. No-op on non-gated geos, so safe to call unconditionally for
+  // every geo in this loop (same pattern as those three files). Dismissed BEFORE the
+  // region-prompt poll below: the age gate is a hard block that likely prevents the
+  // region-prompt from even appearing while it's up.
+  await dismissAgeGateForGeo(page, geo.name);
   // Poll for and dismiss the region-switch modal before capturing -- it appears on a
   // genuinely non-deterministic delay, and the global addLocatorHandler dismissal never fires
   // before toHaveScreenshot() (see fixtures/regionPrompt.ts and tests/visual/tournaments.spec.ts).
