@@ -19,9 +19,13 @@
 //       * Game rules: /ie/online-casinos/blackjack used as canonical game-rules
 //         page — covers rules, strategy, and operator CTAs on one template.
 //       * Site search: search input uses class .search-input; results page
-//         renders at /?s={query} — no dedicated /search path on IE. The input is
-//         in the IE nav DOM (attached) but the interactive panel opens on the
-//         global homepage `/` — SearchPage reused for open/fill (same as search.spec).
+//         live-verified 2026-10-12: /?s={query} no longer renders a results page at
+//         all -- it silently resolves to the plain homepage. This is a genuine product
+//         change, not a flake: the site's search has moved fully to the inline Algolia
+//         autocomplete dropdown (SearchPage.resultsContainer / resultItems), the same
+//         UX search.spec.ts already tests. The input is in the IE nav DOM (attached) but
+//         the interactive panel opens on the global homepage `/` — SearchPage reused for
+//         open/fill/assert (same as search.spec).
 //       * Author page: /authors/larry-henry used as representative author.
 //         /ie/authors redirects to /authors (global, not IE-specific).
 //   - SearchPage POM reused for Journey 9.3 interactive search. Otherwise raw locators.
@@ -149,11 +153,18 @@ test.describe('Journey 9.3 — Site search', () => {
         await expect(searchPage.searchInput).toHaveValue('blackjack');
     });
 
-    test('@regression search results page loads for a known query @journey', async ({ page }) => {
-        // Direct /?s= navigation — leaves beforeEach IE URL intentionally.
-        await gotoOk(page, `${GDC_ORIGIN}/?s=blackjack`, 'Search results page');
-        await expect(page).toHaveURL(/[?&]s=blackjack/);
-        await expect(page.locator('main.body_content h1').first()).toBeVisible();
+    test('@regression search for a known query surfaces matching results @journey', async ({ page }) => {
+        // Live-verified 2026-10-12: /?s=blackjack no longer renders a results page --
+        // it silently resolves to the plain homepage (a genuine product change, not a
+        // flake or a modal/selector issue). Search is inline-only now, via the same
+        // Algolia dropdown already covered in search.spec.ts. Rewritten to match that --
+        // leaves beforeEach IE URL intentionally, same as the original did.
+        await page.goto(URLS.globalHomepage);
+        const searchPage = new SearchPage(page);
+        await searchPage.searchFor('blackjack');
+        await expect(searchPage.resultsContainer).toBeVisible();
+        await expect(searchPage.resultItems.first()).toBeVisible();
+        expect(await searchPage.resultItems.count()).toBeGreaterThanOrEqual(1);
     });
 });
 
