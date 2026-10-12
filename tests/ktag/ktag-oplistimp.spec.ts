@@ -7,6 +7,16 @@
  * Key characteristic: ONE oplistimp event covers ALL oplists on the page.
  * Each oplistimp_N key is an ARRAY of item objects (not an object with
  * initial_items — that's a count string inside each item).
+ *
+ * Scope note (investigated 2026-10-12): this file intentionally covers ONE
+ * representative oplist page, not every vertical (casino/poker/bingo/lottery/
+ * sweepstakes/betting all render the same shared operator-list component and
+ * fire this event the same way). Adding a ktag-poker.spec.ts / ktag-bingo.spec.ts
+ * etc. would re-test the identical shared code path against a different URL --
+ * low-value, higher-maintenance duplication, not new coverage. If a specific
+ * vertical is ever suspected of genuinely different tracking behaviour, that's
+ * a reason to add a targeted case here -- not a reason to fork the whole file
+ * per vertical.
  */
 
 import { test, expect } from '../../fixtures/ktag';
