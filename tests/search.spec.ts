@@ -1,5 +1,6 @@
 import { test, expect } from '../fixtures/test';
 import { SearchPage } from '../pages/SearchPage';
+import { dismissRegionPromptBeforeCapture } from '../fixtures/regionPrompt';
 
 test.describe('Search', () => {
   let searchPage: SearchPage;
@@ -8,6 +9,11 @@ test.describe('Search', () => {
     const response = await page.goto('/');
     expect(response?.ok()).toBeTruthy();
     searchPage = new SearchPage(page);
+    // Same gap as homepage.spec.ts (see its beforeEach for the full explanation of why
+    // the one-shot acceptRegionPromptIfVisible() attempt in PR #232 made things worse,
+    // not better). dismissRegionPromptBeforeCapture polls for up to 18s instead of
+    // checking once, which is the correct fix for this class of problem.
+    await dismissRegionPromptBeforeCapture(page);
   });
 
   test('@smoke @regression search icon is visible in the navigation bar', async () => {
