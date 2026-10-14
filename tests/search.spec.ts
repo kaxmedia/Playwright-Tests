@@ -8,6 +8,14 @@ test.describe('Search', () => {
     const response = await page.goto('/');
     expect(response?.ok()).toBeTruthy();
     searchPage = new SearchPage(page);
+    // Same gap as homepage.spec.ts (see its beforeEach for the full history of why two
+    // prior dismiss-the-modal attempts both caused a 60s beforeEach timeout). CSS-hiding
+    // instead of dismissing sidesteps Playwright's actionability/handler system entirely,
+    // and as a bonus means the (now display:none) modal can never intercept clicks on the
+    // search icon either, since hidden elements are removed from hit-testing.
+    await page.addStyleTag({
+      content: '[aria-labelledby="region-prompt-modal-heading"] { display: none !important; }',
+    });
   });
 
   test('@smoke @regression search icon is visible in the navigation bar', async () => {
