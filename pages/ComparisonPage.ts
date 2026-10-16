@@ -1,4 +1,5 @@
 import { type Page, type Locator, type Response } from '@playwright/test';
+import { dismissEditorPopupIfVisible } from '../fixtures/editorPopup';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ComparisonPageConfig — per-URL configuration for parameterised tests.
@@ -472,7 +473,17 @@ export class ComparisonPage {
         if (response !== null && response.status() >= 400) {
           throw new Error(`${url} returned HTTP ${response.status()}`);
         }
-        await this.cards.first().waitFor({ state: 'attached' });
+        // Cards are usually in the first HTML. If they are not, an editor popup
+        // may be covering the page. Close it when it is there; if it has been
+        // removed, this does nothing and the list wait continues as before.
+        const cardsAttached = await this.cards.first()
+          .waitFor({ state: 'attached', timeout: 8_000 })
+          .then(() => true)
+          .catch(() => false);
+        if (!cardsAttached) {
+          await dismissEditorPopupIfVisible(this.page, 4_000);
+          await this.cards.first().waitFor({ state: 'attached' });
+        }
         return response;
       } catch (error) {
         lastError = error;
