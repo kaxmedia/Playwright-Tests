@@ -15,9 +15,10 @@
 //   - Title: "BetBuilderAI | Build smarter bets."
 //   - Sport toggle: a.nav-sport (Football / NFL) -- NFL is a full page
 //     navigation to /betbuilderai/nfl/, not a client-side tab swap
-//   - Section nav: a.nav-link (Matches / Squads / Predictions / Community /
-//     Offers) -- Community carries a.nav-link-with-badge with "BETA" text,
-//     confirming it's a recently-added, still-beta section
+//   - Section nav: a.nav-link (Matches / Squads / Predictions / Accas /
+//     Community / Offers). Community used to carry a BETA badge; as of
+//     2026-10-19 it is a plain link. Accas is the item with
+//     a.nav-link-with-badge, labelled NEW.
 //   - League filter pills: button.wc-groups-filter-pill (All, MLS, EPL,
 //     LaLiga, Serie A, Bundes, Ligue 1, Champ, UCL, UEL, Carabao)
 //   - Fixture list container: div.wc-groups-fixtures
@@ -42,6 +43,7 @@ export class BetBuilderAIPage {
   readonly sportToggleNfl: Locator;
   readonly sectionNavLinks: Locator;
   readonly communityNavLink: Locator;
+  readonly accasNavLink: Locator;
   readonly filterPills: Locator;
   readonly fixturesContainer: Locator;
   readonly fixtures: Locator;
@@ -54,7 +56,8 @@ export class BetBuilderAIPage {
     this.sportToggleFootball = page.locator('a.nav-sport', { hasText: /football/i });
     this.sportToggleNfl = page.locator('a.nav-sport', { hasText: /nfl/i });
     this.sectionNavLinks = page.locator('a.nav-link');
-    this.communityNavLink = page.locator('a.nav-link-with-badge', { hasText: /community/i });
+    this.communityNavLink = page.locator('a.nav-link', { hasText: /^community$/i });
+    this.accasNavLink = page.locator('a.nav-link-with-badge', { hasText: /accas/i });
     this.filterPills = page.locator('button.wc-groups-filter-pill');
     this.fixturesContainer = page.locator('div.wc-groups-fixtures');
     this.fixtures = page.locator('div.wc-fix');

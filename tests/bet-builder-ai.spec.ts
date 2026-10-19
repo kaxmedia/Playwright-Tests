@@ -16,9 +16,9 @@
 //     (Games/Teams tabs, no wc-fix fixture cards), so only a basic
 //     cross-navigation smoke check is included here; NFL would need its
 //     own page object and spec for deeper coverage
-//   - "Community" nav item carries a visible "BETA" badge -- confirms this
-//     section is newly added and still in beta, consistent with the whole
-//     product being recent
+//   - "Community" is a plain nav item. It used to carry a BETA badge; that
+//     badge was removed (seen 2026-10-19). "Accas" is the nav item that
+//     now carries a badge, labelled NEW.
 //   - Fixture cards (div.wc-fix) render team names and a kickoff time;
 //     30 fixtures present on a default load
 //   - "Back to gambling.com" link returns to the bare site origin
@@ -71,18 +71,23 @@ test.describe('BetBuilderAI', () => {
     await expect(page.locator('h1').first()).toBeVisible();
   });
 
-  test('@regression section nav exposes Matches, Squads, Predictions, Community, Offers', async () => {
+  test('@regression section nav exposes Matches, Squads, Predictions, Accas, Community, Offers', async () => {
     const count = await bb.sectionNavLinks.count();
-    expect(count).toBeGreaterThanOrEqual(5);
+    expect(count).toBeGreaterThanOrEqual(6);
     const texts = (await bb.sectionNavLinks.allTextContents()).map((t) => t.trim());
-    for (const label of ['Matches', 'Squads', 'Predictions', 'Offers']) {
+    for (const label of ['Matches', 'Squads', 'Predictions', 'Accas', 'Community', 'Offers']) {
       expect(texts.some((t) => t.includes(label)), `expected a nav link containing "${label}"`).toBe(true);
     }
   });
 
-  test('@regression Community nav item is marked BETA', async () => {
+  test('@regression Community nav item is no longer marked BETA', async () => {
     await expect(bb.communityNavLink).toBeVisible();
-    await expect(bb.communityNavLink).toContainText(/beta/i);
+    await expect(bb.communityNavLink).not.toContainText(/beta/i);
+  });
+
+  test('@regression Accas nav item is marked NEW', async () => {
+    await expect(bb.accasNavLink).toBeVisible();
+    await expect(bb.accasNavLink).toContainText(/new/i);
   });
 
   test('@smoke @regression league filter pills are present and include at least 5 leagues', async () => {

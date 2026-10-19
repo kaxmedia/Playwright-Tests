@@ -12,6 +12,16 @@ function popupLocator(page: Page): Locator {
   return page.locator(POPUP);
 }
 
+/**
+ * The campaign Playwright should watch. Adoric often leaves an empty
+ * `div.__ADORIC__` in the page as well as the real lightbox. A handler locator
+ * that matches both makes every later action fail with a strict-mode error
+ * (seen on the Austria Quick Picker). Watching one visible campaign avoids that.
+ */
+function visiblePopup(page: Page): Locator {
+  return popupLocator(page).filter({ visible: true }).first();
+}
+
 /** Resolve to true once the popup is gone; never throws. */
 async function waitGone(popup: Locator, timeout: number): Promise<boolean> {
   return popup.waitFor({ state: 'hidden', timeout }).then(() => true).catch(() => false);
@@ -42,11 +52,12 @@ async function dismissEditorPopup(popup: Locator): Promise<void> {
  */
 export async function dismissEditorPopupIfVisible(page: Page, waitForAppearMs = 0): Promise<void> {
   const popup = popupLocator(page);
-  const visible = waitForAppearMs > 0
-    ? await popup.first().waitFor({ state: 'visible', timeout: waitForAppearMs }).then(() => true).catch(() => false)
-    : await popup.first().isVisible().catch(() => false);
+  const visible = visiblePopup(page);
+  const shown = waitForAppearMs > 0
+    ? await visible.waitFor({ state: 'visible', timeout: waitForAppearMs }).then(() => true).catch(() => false)
+    : await visible.isVisible().catch(() => false);
 
-  if (!visible) return;
+  if (!shown) return;
   await dismissEditorPopup(popup);
 }
 
@@ -60,7 +71,7 @@ export async function registerEditorPopupHandler(page: Page): Promise<void> {
 
   const popup = popupLocator(page);
   await page.addLocatorHandler(
-    popup,
+    visiblePopup(page),
     async () => {
       await dismissEditorPopup(popup);
     },
