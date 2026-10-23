@@ -145,6 +145,26 @@ test.describe('SEO — robots.txt', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
+// 3b. llms.txt (GDCU-9354) — the LLM-facing site summary at the root
+// Live-verified 2026-10-23: 200, text/plain, ~8 KB of markdown opening "# Gambling.com".
+// ─────────────────────────────────────────────────────────────────────────────
+test.describe('SEO — llms.txt', () => {
+
+  test('@regression returns 200 with real plain-text content about Gambling.com', async ({ request }) => {
+    const res = await request.get(`${BASE_URL}/llms.txt`);
+    expect(res.status()).toBe(200);
+    expect(res.headers()['content-type']).toContain('text/plain');
+
+    const body = await res.text();
+    // Rules out an empty file, a placeholder, or an HTML error page served with a 200.
+    expect(body.trim().length, 'llms.txt is empty or a placeholder').toBeGreaterThan(500);
+    expect(body).not.toMatch(/<html/i);
+    expect(body).toMatch(/gambling\.com/i);
+  });
+
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
 // 4. HTML head tags — parameterised across key pages
 //
 // HOW PARAMETERISATION WORKS (same pattern as the footer geo tests in PR #6)
@@ -479,6 +499,46 @@ test.describe('SEO — JSON-LD structured data', () => {
       }
     }
   });
+
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 15b. ItemList on operator-list pages (GDCU-9349, for AI/LLM visibility)
+// Live-verified 2026-10-23: each page below has a @graph script holding Organization, WebSite,
+// WebPage and an ItemList of the ranked operators (10 / 50 / 50 ListItems). Only real
+// operator-list pages: /uk/online-casinos is a hub whose standalone "Related reviews" ItemList
+// sits outside @graph, so it's deliberately not used here.
+// ─────────────────────────────────────────────────────────────────────────────
+test.describe('SEO — ItemList structured data on operator-list pages', () => {
+  const operatorListPages = ['/uk/online-casinos/best-sites', '/ie/online-casinos', '/uk/betting-sites'];
+
+  for (const path of operatorListPages) {
+    test(`@regression ${path} has an ItemList of operators in its JSON-LD @graph`, async ({ page }) => {
+      await page.goto(path, { waitUntil: 'domcontentloaded' });
+      const scripts = await page.locator('script[type="application/ld+json"]').allTextContents();
+      expect(scripts.length, `no JSON-LD on ${path}`).toBeGreaterThan(0);
+
+      const graphNodes: Array<Record<string, unknown>> = [];
+      for (const raw of scripts) {
+        let parsed: unknown;
+        expect(() => { parsed = JSON.parse(raw); }, `invalid JSON-LD on ${path}:\n  ${raw.substring(0, 120)}`).not.toThrow();
+        const graph = (parsed as { '@graph'?: unknown })['@graph'];
+        if (Array.isArray(graph)) graphNodes.push(...graph);
+      }
+
+      const isType = (node: Record<string, unknown>, type: string) => ([] as unknown[]).concat(node['@type']).includes(type);
+      const itemList = graphNodes.find((node) => isType(node, 'ItemList'));
+      expect(itemList, `no ItemList inside any @graph on ${path}`).toBeTruthy();
+
+      const items = (itemList!.itemListElement ?? []) as Array<Record<string, unknown>>;
+      expect(items.length, `ItemList on ${path} has no entries`).toBeGreaterThan(0);
+      for (const item of items) {
+        expect(isType(item, 'ListItem'), `ItemList entry is not a ListItem on ${path}`).toBe(true);
+        expect(item.position, `ListItem without a position on ${path}`).toBeTruthy();
+        expect(item.name, `ListItem without a name on ${path}`).toBeTruthy();
+      }
+    });
+  }
 
 });
 

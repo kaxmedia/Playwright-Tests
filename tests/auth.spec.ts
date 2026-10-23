@@ -754,3 +754,37 @@ test.describe('Authentication — Sign Up & Sign In', () => {
     });
 
 });
+// ─── GDCU-9276 regression: the sign-up modal must not open by itself ──────────
+//
+// The bug: a fresh, logged-out page load popped #signup-modal open with no user action.
+// #signup-modal is always in the DOM (it's reused for every auth step), so the check is that
+// it stays HIDDEN for a window after load — not that it's absent. The cookie-consent banner
+// (CookieYes) and, on the global homepage, the region prompt are expected on a fresh load and
+// are separate elements, so neither counts. No clicks happen during the window, so nothing
+// here (or the auto region-prompt handler) can open or close the modal on the test's behalf.
+// Live-verified 2026-10-23: modal hidden at 1/3/6/10/15s on all four pages below.
+test.describe('Sign-up modal does not auto-open on a fresh page load (GDCU-9276)', () => {
+    const pages = [
+        { name: 'global homepage', path: '/' },
+        { name: 'UK casino listing', path: '/uk/online-casinos/best-sites' },
+        { name: 'IE casino listing', path: '/ie/online-casinos' },
+        { name: 'global casino listing', path: '/online-casinos' },
+    ];
+
+    for (const pg of pages) {
+        test(`@smoke @regression sign-up modal stays closed after load — ${pg.name}`, async ({ page }) => {
+            const signupModal = new AuthPage(page).signupModal;
+
+            await page.goto(pg.path, { waitUntil: 'domcontentloaded' });
+            // Guards against a vacuous pass: if the modal's id ever changes, fail loudly here.
+            await expect(signupModal, '#signup-modal is no longer in the page — update the locator').toBeAttached({ timeout: 15000 });
+
+            // The bug opened the modal after a delay, so a single check right after load isn't
+            // enough: sample it across a window long enough to cover the original pop-up.
+            for (let elapsed = 0; elapsed <= 10_000; elapsed += 1_000) {
+                expect(await signupModal.isVisible(), `sign-up modal opened by itself ~${elapsed / 1000}s after loading ${pg.path}`).toBe(false);
+                await page.waitForTimeout(1_000);
+            }
+        });
+    }
+});
