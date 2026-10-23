@@ -47,7 +47,10 @@ async function hideFloatingChrome(section: Locator): Promise<void> {
 
 async function openStable(page: Page, path: string): Promise<void> {
   await page.goto(path, { waitUntil: 'domcontentloaded' });
-  await page.waitForLoadState('load');
+  // Capped: in CI the global homepage's 'load' event (every image, ad and tracker) can take longer
+  // than the whole test budget (first capture run timed out with the hero already fully rendered).
+  // Each test waits for its own section to be visible instead, which is what an element shot needs.
+  await page.waitForLoadState('load', { timeout: 20_000 }).catch(() => {});
   await page.addStyleTag({
     content: '*, *::before, *::after { animation-duration: 0s !important; animation-delay: 0s !important; transition-duration: 0s !important; transition-delay: 0s !important; }',
   });
