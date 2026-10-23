@@ -63,4 +63,26 @@ test.describe('Category Landing — IE Online Casinos — geo specifics', () => 
         const count = await links.count();
         expect(count).toBeGreaterThan(5);
     });
+
+    // GDCU-9136: IE compliance — every offer card carries this hardcoded line, linking Dunlewey
+    // Addiction Services. Live-verified 2026-10-23 on all 54 cards (both card layouts): the line
+    // opens the card's terms, and some operators append their own T&Cs after it, so this checks
+    // the line is present rather than that it's the whole terms text.
+    test('@regression every offer card shows the IE compliance line linking Dunlewey (GDCU-9136)', async () => {
+        const complianceLine = 'Enjoy gambling responsibly. Dunlewey Addiction Services. 18+. New customers only. T&Cs apply.';
+        await expect(iePage.operatorRows.first()).toBeVisible();
+
+        const cards = await iePage.operatorRows.evaluateAll((rows) => rows.map((row, i) => ({
+            index: i + 1,
+            name: (row.querySelector('img')?.getAttribute('alt') || '').trim(),
+            text: (row.textContent || '').replace(/\s+/g, ' '),
+            dunleweyLinks: row.querySelectorAll('a[href*="dunlewey.org"]').length,
+        })));
+
+        expect(cards.length, 'no IE offer cards found').toBeGreaterThan(0);
+        const missingLine = cards.filter((c) => !c.text.includes(complianceLine)).map((c) => `#${c.index} ${c.name}`);
+        const missingLink = cards.filter((c) => c.dunleweyLinks === 0).map((c) => `#${c.index} ${c.name}`);
+        expect(missingLine, `cards without "${complianceLine}"`).toEqual([]);
+        expect(missingLink, 'cards without a link to dunlewey.org').toEqual([]);
+    });
 });
