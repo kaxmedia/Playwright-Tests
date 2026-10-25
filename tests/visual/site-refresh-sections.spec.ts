@@ -1,5 +1,4 @@
 import { test, expect, type Locator, type Page } from '../../fixtures/test';
-import { dismissRegionPromptBeforeCapture } from '../../fixtures/regionPrompt';
 
 // ─── Site Refresh sections (redesign shipping since v_184) ────────────────────
 //
@@ -51,10 +50,17 @@ async function openStable(page: Page, path: string): Promise<void> {
   // than the whole test budget (first capture run timed out with the hero already fully rendered).
   // Each test waits for its own section to be visible instead, which is what an element shot needs.
   await page.waitForLoadState('load', { timeout: 20_000 }).catch(() => {});
+  // The region prompt is HIDDEN, not dismissed. On the global homepage in CI it can't be closed (every
+  // fallback in dismissRegionPromptModal times out), and the auto region-prompt locator handler then
+  // re-fires before every action AND assertion, so the test froze until its timeout. Confirmed from
+  // the CI traces of runs 39975366794 / 39980946428. It's an overlay, irrelevant to these sections,
+  // and once hidden the handler never fires.
   await page.addStyleTag({
-    content: '*, *::before, *::after { animation-duration: 0s !important; animation-delay: 0s !important; transition-duration: 0s !important; transition-delay: 0s !important; }',
+    content: [
+      '*, *::before, *::after { animation-duration: 0s !important; animation-delay: 0s !important; transition-duration: 0s !important; transition-delay: 0s !important; }',
+      '[aria-labelledby="region-prompt-modal-heading"] { display: none !important; }',
+    ].join('\n'),
   });
-  await dismissRegionPromptBeforeCapture(page);
 }
 
 for (const section of SECTIONS) {
