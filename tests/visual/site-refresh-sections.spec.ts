@@ -59,6 +59,9 @@ async function openStable(page: Page, path: string): Promise<void> {
     content: [
       '*, *::before, *::after { animation-duration: 0s !important; animation-delay: 0s !important; transition-duration: 0s !important; transition-delay: 0s !important; }',
       '[aria-labelledby="region-prompt-modal-heading"] { display: none !important; }',
+      // Hidden rather than masked: the banner is fixed to the viewport bottom, so a mask was painted
+      // over 9-44% of each section (worst on mobile) in the first captured baselines.
+      '.cky-consent-container, .cky-banner-bottom { display: none !important; }',
     ].join('\n'),
   });
 }
@@ -79,7 +82,6 @@ for (const section of SECTIONS) {
       threshold: 0,
       maxDiffPixelRatio: 0.02,
       timeout: 30_000,
-      mask: [page.locator('div.cky-banner-bottom')],
     });
   });
 }
