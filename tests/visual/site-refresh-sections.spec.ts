@@ -19,7 +19,13 @@ import { test, expect, type Locator, type Page } from '../../fixtures/test';
 // ─────────────────────────────────────────────────────────────────────────────
 
 const SECTIONS: Array<{ name: string; path: string; selector: string; hideCss?: string }> = [
-  { name: 'root-hero', path: '/', selector: '.ghp-hero-shell' },
+  {
+    name: 'root-hero',
+    path: '/',
+    selector: '.ghp-hero-shell',
+    // Same CDN-variant photo problem as the compare banner below (24% diff between CI runs).
+    hideCss: '.ghp-hero-shell img { visibility: hidden !important; }',
+  },
   {
     name: 'root-compare-banner',
     path: '/',
@@ -30,7 +36,13 @@ const SECTIONS: Array<{ name: string; path: string; selector: string; hideCss?: 
     // heading and copy, which a mask would paint over), so the text, steps and CTA stay compared.
     hideCss: '.global-home-cmp__banner img { visibility: hidden !important; }',
   },
-  { name: 'root-rewards-banner', path: '/', selector: '.global-home-rewb__banner' },
+  {
+    name: 'root-rewards-banner',
+    path: '/',
+    selector: '.global-home-rewb__banner',
+    // Same CDN-variant photo problem (19% diff between CI runs on webkit-ios).
+    hideCss: '.global-home-rewb__banner img { visibility: hidden !important; }',
+  },
   { name: 'root-faq', path: '/', selector: 'section.global-home-faq' },
   { name: 'uk-best-sites-faq', path: '/uk/online-casinos/best-sites', selector: '.automation-faq-container' },
   { name: 'ie-casinos-faq', path: '/ie/online-casinos', selector: '.automation-faq-container' },
@@ -89,7 +101,10 @@ for (const section of SECTIONS) {
     await hideFloatingChrome(el);
 
     await expect(el).toHaveScreenshot(`${section.name}.png`, {
-      threshold: 0,
+      // Playwright's default per-pixel threshold, not 0: text anti-aliasing varies slightly between CI
+      // runs (3% of pixels at threshold 0 on android, 1% at 0.2). Real layout, colour or copy changes
+      // still exceed the 2% budget by far.
+      threshold: 0.2,
       maxDiffPixelRatio: 0.02,
       timeout: 30_000,
     });
