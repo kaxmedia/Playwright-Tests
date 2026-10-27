@@ -70,8 +70,9 @@ test.describe('Bet Creator', () => {
 
   test('@smoke @regression league list shows at least 5 leagues', async () => {
     test.skip(!(await bc.dynamicContentLoaded()), 'Dynamic content (league list) did not render in this environment -- see file header.');
-    const count = await bc.leagueButtons.count();
-    expect(count).toBeGreaterThanOrEqual(5);
+    // Polled, not a one-shot count(): the league list renders ~1s AFTER the bet slip that
+    // dynamicContentLoaded() waits on, so an immediate count() read 0 (confirmed 2026-10-27).
+    await expect.poll(() => bc.leagueButtons.count(), { timeout: 15_000 }).toBeGreaterThanOrEqual(5);
   });
 
   test('@regression selecting a league reveals upcoming matches', async () => {

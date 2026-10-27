@@ -22,8 +22,11 @@
 //     selector (BetMGM, Betfair, Paddy Power, Bet365, Bwin) and a
 //     "PLACE BETS (0/0)" button that is disabled/inert until selections
 //     are made -- tests should not attempt to actually place a bet
-//   - Bottom: an AI chat input, placeholder "What would you like to ask?",
-//     with "Powered by Claude" / "Data by OpticOdds" attribution nearby
+//   - Bottom: an AI chat input, with "Powered by Claude" / "Data by OpticOdds"
+//     attribution nearby. Copy changed 2026-10-27: the input is now a <textarea>
+//     with placeholder "Type your prompt..." (was "What would you like to ask?"),
+//     under a "What are we betting on today?" line (a <span>, not a heading).
+//     Same on the Home view and the Chat tab, in all 3 browsers.
 //   - Responsible-gambling footer: "18+", BeGambleAware, GamStop links
 
 import { type Page, type Locator } from '@playwright/test';
@@ -58,7 +61,8 @@ export class BetCreatorPage {
     // one -- .first() picked the wrong copy and failed with "Received: hidden".
     // Filtering on :visible is correct regardless of DOM order, unlike assuming
     // which index is visible.
-    this.chatInput = page.getByPlaceholder(/what would you like to ask/i).and(page.locator(':visible'));
+    // Placeholder copy changed 2026-10-27 (see header); the hidden-first duplicate is unchanged.
+    this.chatInput = page.getByPlaceholder(/type your prompt/i).and(page.locator(':visible'));
     // Confirmed live (2026-10-07, run #1522): "Powered by" and "Claude" render in
     // separate sibling <span> elements (<div><span>Powered by</span><span>Claude</span>...),
     // not one span with the full phrase -- a regex spanning both fragments doesn't
@@ -105,6 +109,8 @@ export class BetCreatorPage {
 
   /** The "UPCOMING MATCHES" section heading shown after selecting a league. */
   get upcomingMatchesHeading(): Locator {
-    return this.page.getByText(/upcoming matches/i).first();
+    // :visible, not a bare .first() -- confirmed 2026-10-27: same hidden-first duplicate as
+    // chatInput (4 matches; the first in DOM order is hidden), so .first() never became visible.
+    return this.page.getByText(/upcoming matches/i).and(this.page.locator(':visible')).first();
   }
 }
