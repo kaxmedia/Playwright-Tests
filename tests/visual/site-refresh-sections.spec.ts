@@ -18,9 +18,18 @@ import { test, expect, type Locator, type Page } from '../../fixtures/test';
 // between loads on /ie).
 // ─────────────────────────────────────────────────────────────────────────────
 
-const SECTIONS = [
+const SECTIONS: Array<{ name: string; path: string; selector: string; hideCss?: string }> = [
   { name: 'root-hero', path: '/', selector: '.ghp-hero-shell' },
-  { name: 'root-compare-banner', path: '/', selector: '.global-home-cmp__banner' },
+  {
+    name: 'root-compare-banner',
+    path: '/',
+    selector: '.global-home-cmp__banner',
+    // The background photo comes from objects.kaxmedia.com/auto/ (format picked by the CDN) and
+    // alternates between two renderings across CI runs: 42% of pixels differ at threshold 0, still
+    // 3% at 0.2, though visually identical. Hidden (not masked: on desktop it sits behind the
+    // heading and copy, which a mask would paint over), so the text, steps and CTA stay compared.
+    hideCss: '.global-home-cmp__banner img { visibility: hidden !important; }',
+  },
   { name: 'root-rewards-banner', path: '/', selector: '.global-home-rewb__banner' },
   { name: 'root-faq', path: '/', selector: 'section.global-home-faq' },
   { name: 'uk-best-sites-faq', path: '/uk/online-casinos/best-sites', selector: '.automation-faq-container' },
@@ -70,6 +79,7 @@ for (const section of SECTIONS) {
   test(`@visual Site Refresh ${section.name} (${section.path}) renders deterministically`, async ({ page }) => {
     test.setTimeout(120_000);
     await openStable(page, section.path);
+    if (section.hideCss) await page.addStyleTag({ content: section.hideCss });
 
     const el = page.locator(section.selector).first();
     await expect(el, `${section.selector} not found on ${section.path} — the redesign markup changed`).toBeVisible({ timeout: 30_000 });
