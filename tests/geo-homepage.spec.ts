@@ -70,11 +70,11 @@ for (const config of geoRestrictedHomepages) {
     test(`${config.name} — @smoke @regression ${config.path} stays on the geo path for non-local visitors`, async ({ page }) => {
       const response = await page.goto(config.path, { waitUntil: 'domcontentloaded' });
       expect(response?.status(), `${config.path} should respond`).toBeLessThan(400);
-      // Pre-rebrand (verified 2026-07): non-local visitors saw "Offer not available for
-      // your location" instead of a Play CTA. Post-rebrand (2026-08): /no stays on /no
-      // and still renders Spill Nå / /go/ CTAs from an IE IP — geo-block copy is gone.
-      // Assert the stable contract we can still enforce without a Norway VPN: the geo
-      // path does not bounce the visitor away.
+      // The CTA geo-block is covered in norway-geo-block.spec.ts. Operator lists show "Offer not
+      // available for your location" to non-NO visitors. The live "Spill Nå" /go/ CTAs on the /no
+      // homepage are the quick picker, which is an accepted exception (confirmed 2026-10-27).
+      // Here, assert only that the geo path doesn't bounce the visitor away. Visitors from markets with
+      // their own site (DE, SE, NL, ...) ARE redirected client-side to that market; CI's US runners aren't.
       const pathRe = new RegExp(`${config.path.replace('/', '\\/')}(\\/|$|\\?)`);
       await page.waitForURL(pathRe, { timeout: 20_000 });
       await expect(page).toHaveURL(pathRe);
