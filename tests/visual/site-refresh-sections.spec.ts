@@ -18,7 +18,7 @@ import { test, expect, type Locator, type Page } from '../../fixtures/test';
 // between loads on /ie).
 // ─────────────────────────────────────────────────────────────────────────────
 
-const SECTIONS: Array<{ name: string; path: string; selector: string; hideCss?: string }> = [
+const SECTIONS: Array<{ name: string; path: string; selector: string; hideCss?: string; maxDiffPixelRatio?: number }> = [
   {
     name: 'root-hero',
     path: '/',
@@ -35,6 +35,10 @@ const SECTIONS: Array<{ name: string; path: string; selector: string; hideCss?: 
     // 3% at 0.2, though visually identical. Hidden (not masked: on desktop it sits behind the
     // heading and copy, which a mask would paint over), so the text, steps and CTA stay compared.
     hideCss: '.global-home-cmp__banner img { visibility: hidden !important; }',
+    // Sits ~2950px down the page at a sub-pixel offset that varies between CI runs, so every text edge
+    // resamples: ~3% of pixels even at threshold 0.2 (seen on chromium-desktop and android), with the
+    // banner visually identical. Bounded by a one-pixel resample; layout, colour and CTA changes still fail.
+    maxDiffPixelRatio: 0.05,
   },
   {
     name: 'root-rewards-banner',
@@ -105,7 +109,7 @@ for (const section of SECTIONS) {
       // runs (3% of pixels at threshold 0 on android, 1% at 0.2). Real layout, colour or copy changes
       // still exceed the 2% budget by far.
       threshold: 0.2,
-      maxDiffPixelRatio: 0.02,
+      maxDiffPixelRatio: section.maxDiffPixelRatio ?? 0.02,
       timeout: 30_000,
     });
   });
