@@ -33,6 +33,13 @@ const BONUS_MASKS = [
 for (const geo of GEOS) {
   test(`@visual gambling.com ${geo.path} bonus renders deterministically`, async ({ page }, testInfo) => {
     test.skip(testInfo.project.name === 'visual-chromium-android', 'chromium-android masking incomplete on bonus pages — Pixel 7 DOM differs from desktop/iOS; revisit after Android selector recon');
+    // 2026-11-02 dashboard: /at bonus failed 23–46% across desktop/iOS. Live top cards (Rolling
+    // Slots / Slotbox / Wild Tokyo) differ from the committed baseline lineup — same GX-region
+    // operator rotation family as oplist/sub-category. House rule: rotation ⇒ skip, never rebaseline.
+    test.skip(
+      geo.name === 'at',
+      '/at bonus top-card operator lineup rotates between baseline and CI (23–46% pixel diffs, run dashboard 2026-11-02) — GX-region rotation, not a rendering bug; same family as oplist/sub-category skips',
+    );
         const response = await page.goto(`${geo.path}${BONUS_PATH}`, { waitUntil: 'domcontentloaded' });
     expect(response?.ok()).toBeTruthy();
     await page.waitForLoadState('load');

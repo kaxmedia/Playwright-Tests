@@ -43,9 +43,12 @@ const SECTIONS: Array<{ name: string; path: string; selector: string; hideCss?: 
   {
     name: 'root-rewards-banner',
     path: '/',
-    selector: '.global-home-rewb__banner',
-    // Same CDN-variant photo problem (19% diff between CI runs on webkit-ios).
-    hideCss: '.global-home-rewb__banner img { visibility: hidden !important; }',
+    // Live 2026-11-02: `.global-home-rewb__banner` was removed. `.rewards-promo-banner`
+    // ("Coming Soon") stays attached-but-hidden from the CI GX egress IP, so capture the
+    // Free Play rewards section (`section#rewards.global-home-fp`) that replaced the old banner.
+    selector: 'section#rewards.global-home-fp, section.global-home-fp',
+    // Tile / game art still CDN-variants across CI runs — hide images, keep copy + layout.
+    hideCss: 'section#rewards.global-home-fp img, section.global-home-fp img { visibility: hidden !important; }',
   },
   { name: 'root-faq', path: '/', selector: 'section.global-home-faq' },
   { name: 'uk-best-sites-faq', path: '/uk/online-casinos/best-sites', selector: '.automation-faq-container' },
@@ -98,8 +101,12 @@ for (const section of SECTIONS) {
     if (section.hideCss) await page.addStyleTag({ content: section.hideCss });
 
     const el = page.locator(section.selector).first();
-    await expect(el, `${section.selector} not found on ${section.path} — the redesign markup changed`).toBeVisible({ timeout: 30_000 });
-    await el.scrollIntoViewIfNeeded();
+    // Mid-page sections (rewards promo) sit ~3000px down. Playwright's scrollIntoViewIfNeeded
+    // hangs for the full test budget on the global homepage in CI (region-prompt locator handler /
+    // actionability loop — same family as openStable's CSS hide). Native scrollIntoView bypasses that.
+    await expect(el, `${section.selector} not found on ${section.path} — the redesign markup changed`).toBeAttached({ timeout: 30_000 });
+    await el.evaluate((node: HTMLElement) => node.scrollIntoView({ block: 'center', inline: 'nearest' }));
+    await expect(el).toBeVisible({ timeout: 15_000 });
     // Lower sections lazy-load their images once scrolled to.
     await page.waitForLoadState('networkidle', { timeout: 15_000 }).catch(() => {});
     await hideFloatingChrome(el);
