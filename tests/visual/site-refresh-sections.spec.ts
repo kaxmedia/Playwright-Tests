@@ -100,8 +100,11 @@ for (const section of SECTIONS) {
     if (section.hideCss) await page.addStyleTag({ content: section.hideCss });
 
     const el = page.locator(section.selector).first();
-    await expect(el, `${section.selector} not found on ${section.path} — the redesign markup changed`).toBeVisible({ timeout: 30_000 });
+    // Rewards promo (and other mid-page sections) can sit below the fold as `visibility:
+    // hidden` / zero-box until scrolled — wait for attached, then bring into view, then assert.
+    await expect(el, `${section.selector} not found on ${section.path} — the redesign markup changed`).toBeAttached({ timeout: 30_000 });
     await el.scrollIntoViewIfNeeded();
+    await expect(el).toBeVisible({ timeout: 15_000 });
     // Lower sections lazy-load their images once scrolled to.
     await page.waitForLoadState('networkidle', { timeout: 15_000 }).catch(() => {});
     await hideFloatingChrome(el);
