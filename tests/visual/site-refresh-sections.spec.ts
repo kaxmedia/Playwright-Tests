@@ -43,9 +43,11 @@ const SECTIONS: Array<{ name: string; path: string; selector: string; hideCss?: 
   {
     name: 'root-rewards-banner',
     path: '/',
-    selector: '.global-home-rewb__banner',
-    // Same CDN-variant photo problem (19% diff between CI runs on webkit-ios).
-    hideCss: '.global-home-rewb__banner img { visibility: hidden !important; }',
+    // Live 2026-11-02: `.global-home-rewb__banner` was removed; the homepage rewards promo
+    // is now `.rewards-promo-banner` ("NEW REWARDS PROGRAMME" / Coming Soon).
+    selector: '.rewards-promo-banner',
+    // Same CDN-variant photo problem as the old rewb banner (art still rotates across CI runs).
+    hideCss: '.rewards-promo-banner img { visibility: hidden !important; }',
   },
   { name: 'root-faq', path: '/', selector: 'section.global-home-faq' },
   { name: 'uk-best-sites-faq', path: '/uk/online-casinos/best-sites', selector: '.automation-faq-container' },
