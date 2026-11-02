@@ -18,7 +18,15 @@ import { test, expect, type Locator, type Page } from '../../fixtures/test';
 // between loads on /ie).
 // ─────────────────────────────────────────────────────────────────────────────
 
-const SECTIONS: Array<{ name: string; path: string; selector: string; hideCss?: string; maxDiffPixelRatio?: number }> = [
+const SECTIONS: Array<{
+  name: string;
+  path: string;
+  selector: string;
+  hideCss?: string;
+  maxDiffPixelRatio?: number;
+  /** Fixed capture height per visual project (see pinHeight() below). */
+  pinHeights?: Record<string, number>;
+}> = [
   {
     name: 'root-hero',
     path: '/',
@@ -49,6 +57,15 @@ const SECTIONS: Array<{ name: string; path: string; selector: string; hideCss?: 
     selector: 'section#rewards.global-home-fp, section.global-home-fp',
     // Tile / game art still CDN-variants across CI runs — hide images, keep copy + layout.
     hideCss: 'section#rewards.global-home-fp img, section.global-home-fp img { visibility: hidden !important; }',
+    // Natural height is fractional and differs ~1px between engines (live 2026-11-02: 595.48 chromium /
+    // 594.48 webkit on desktop, 631.13 / 630.45 on mobile), so CI flipped 596<->595 and 632<->631.
+    // Pinned ~5px below natural height: that only trims the section's 40px bottom padding.
+    pinHeights: {
+      'visual-chromium-desktop': 590,
+      'visual-webkit-desktop': 590,
+      'visual-chromium-android': 625,
+      'visual-webkit-ios': 625,
+    },
   },
   { name: 'root-faq', path: '/', selector: 'section.global-home-faq' },
   { name: 'uk-best-sites-faq', path: '/uk/online-casinos/best-sites', selector: '.automation-faq-container' },
@@ -69,6 +86,27 @@ async function hideFloatingChrome(section: Locator): Promise<void> {
         el.style.setProperty('visibility', 'hidden', 'important');
       }
     }
+  });
+}
+
+/**
+ * Make the element capture exactly `height` px tall on every run.
+ *
+ * A CSS height pin alone isn't enough: Playwright sizes an element capture as
+ * ceil(top + height) - floor(top) (helper.enclosingIntRect), so a box pinned to N px whose top sits
+ * at a fractional pixel (this section: 1522.141px desktop, 1566.641px mobile) captures as N+1, and
+ * the top fraction shifts whenever content above it changes. (us-content.spec.ts saw the same:
+ * a fixed CSS height still flipped 207/208.) So pin the height, then translate the element up by
+ * its top fraction so the box starts on a whole pixel. The sub-pixel shift is far inside the
+ * comparison threshold.
+ */
+async function pinHeight(page: Page, selector: string, el: Locator, height: number): Promise<void> {
+  await page.addStyleTag({
+    content: `${selector} { height: ${height}px !important; max-height: ${height}px !important; min-height: 0 !important; overflow: hidden !important; }`,
+  });
+  await el.evaluate((node: HTMLElement) => {
+    const frac = node.getBoundingClientRect().top % 1;
+    node.style.setProperty('transform', frac ? `translateY(${-frac}px)` : 'none', 'important');
   });
 }
 
@@ -95,7 +133,7 @@ async function openStable(page: Page, path: string): Promise<void> {
 }
 
 for (const section of SECTIONS) {
-  test(`@visual Site Refresh ${section.name} (${section.path}) renders deterministically`, async ({ page }) => {
+  test(`@visual Site Refresh ${section.name} (${section.path}) renders deterministically`, async ({ page }, testInfo) => {
     test.setTimeout(120_000);
     await openStable(page, section.path);
     if (section.hideCss) await page.addStyleTag({ content: section.hideCss });
@@ -110,6 +148,11 @@ for (const section of SECTIONS) {
     // Lower sections lazy-load their images once scrolled to.
     await page.waitForLoadState('networkidle', { timeout: 15_000 }).catch(() => {});
     await hideFloatingChrome(el);
+    if (section.pinHeights) {
+      const height = section.pinHeights[testInfo.project.name];
+      if (height === undefined) throw new Error(`No pinHeights entry for ${section.name} on ${testInfo.project.name}`);
+      await pinHeight(page, section.selector, el, height);
+    }
 
     await expect(el).toHaveScreenshot(`${section.name}.png`, {
       // Playwright's default per-pixel threshold, not 0: text anti-aliasing varies slightly between CI
