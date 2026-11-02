@@ -100,10 +100,11 @@ for (const section of SECTIONS) {
     if (section.hideCss) await page.addStyleTag({ content: section.hideCss });
 
     const el = page.locator(section.selector).first();
-    // Rewards promo (and other mid-page sections) can sit below the fold as `visibility:
-    // hidden` / zero-box until scrolled — wait for attached, then bring into view, then assert.
+    // Mid-page sections (rewards promo) sit ~3000px down. Playwright's scrollIntoViewIfNeeded
+    // hangs for the full test budget on the global homepage in CI (region-prompt locator handler /
+    // actionability loop — same family as openStable's CSS hide). Native scrollIntoView bypasses that.
     await expect(el, `${section.selector} not found on ${section.path} — the redesign markup changed`).toBeAttached({ timeout: 30_000 });
-    await el.scrollIntoViewIfNeeded();
+    await el.evaluate((node: HTMLElement) => node.scrollIntoView({ block: 'center', inline: 'nearest' }));
     await expect(el).toBeVisible({ timeout: 15_000 });
     // Lower sections lazy-load their images once scrolled to.
     await page.waitForLoadState('networkidle', { timeout: 15_000 }).catch(() => {});
