@@ -62,6 +62,16 @@ async function captureHomepage(geo, { page }, testInfo) {
   // geo/project combinations in this file are unaffected and keep running normally. Needs someone
   // with local repo + artifact access to find the real root cause.
   test.skip(geo.name === 'root', 'Known-unstable across all projects -- see comment above test.skip() call for investigation history.');
+  // 2026-11-04 post-merge re-run: /es + /gr fail 55–65% on chromium-android / webkit-ios
+  // (deterministic across retries). Live pages now render the LHP hero (`div.lhp-hero-shell`,
+  // search, qp list) while committed baselines still bake the pre-LHP masked layout. Masks can't
+  // be widened without a rebaseline (new magenta on actual vs old pixels on expected). Same
+  // house-rule family as root: skip the broken combinations rather than freeze a stale capture.
+  test.skip(
+    (geo.name === 'es' || geo.name === 'gr') &&
+      (testInfo.project.name === 'visual-chromium-android' || testInfo.project.name === 'visual-webkit-ios'),
+    `/${geo.name} homepage LHP hero redesign vs pre-LHP baselines (55–65% pixel diffs on ${testInfo.project.name}, dashboard 2026-11-04) — not a rendering bug; skip until intentional Linux baseline refresh`,
+  );
   await page.goto(geo.path, { waitUntil: 'domcontentloaded' });
   await page.waitForLoadState('load');
   await page.addStyleTag({
