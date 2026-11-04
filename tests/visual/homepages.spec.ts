@@ -45,8 +45,14 @@ async function captureHomepage(geo, { page }, testInfo) {
   // three successive passes (confirmed live across runs #405, #419, #426), while every other of
   // the 103 geo/project combinations in this file passes comfortably well under 90s. Rather than
   // keep inflating the timeout for all of them, give just this one combination real headroom.
+  // 2026-11-04: /es on visual-webkit-desktop also flaked at exactly ~91s (age-gate dismiss + LHP
+  // capture + screenshot stabilize), then passed on retry — scoped 180s headroom, not a global bump.
   test.setTimeout(
-    geo.name === 'root' && testInfo.project.name === 'visual-webkit-ios' ? 240_000 : 90_000
+    geo.name === 'root' && testInfo.project.name === 'visual-webkit-ios'
+      ? 240_000
+      : geo.name === 'es' && testInfo.project.name === 'visual-webkit-desktop'
+        ? 180_000
+        : 90_000
   );
   // root widened to 0.18 (2026-10-05) wasn't enough -- confirmed failing again on chromium-android
   // in run #467 (pixel diff), then STILL failing on the exact same combination post-skip in run
