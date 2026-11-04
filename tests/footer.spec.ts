@@ -340,9 +340,10 @@ const geoVariants = [
     privacyText: 'Πολιτική απορρήτου και Cookies',
     privacyHref: '/gr/privacy-policy',
     copyrightContains: /Grandstand Media Limited/i,
-    // Regulatory logos confirmed in the GR footer — EEEP is the Greek gaming regulator
+    // Regulatory logos confirmed in the GR footer — EEEP is the Greek gaming regulator.
+    // Live 2026-11-04: Keoea/kethea.gr was replaced by Eopae (eopae.gr).
     logos: [
-      { alt: 'Keoea',                href: 'https://www.kethea.gr/'                           },
+      { alt: 'Eopae',                href: 'https://eopae.gr/'                                 },
       { alt: 'EEEP',                 href: 'https://www.gamingcommission.gov.gr/'              },
       { alt: 'GambleAware',          href: 'https://www.gambleaware.org'                       },
       { alt: 'GPWA Approved Portal', href: 'https://certify.gpwa.org/verify/gambling.com'      },

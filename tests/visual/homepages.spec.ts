@@ -79,6 +79,15 @@ async function captureHomepage(geo, { page }, testInfo) {
   // genuinely non-deterministic delay, and the global addLocatorHandler dismissal never fires
   // before toHaveScreenshot() (see fixtures/regionPrompt.ts and tests/visual/tournaments.spec.ts).
   await dismissRegionPromptBeforeCapture(page);
+  // 2026-11-04 re-run 1425: /es + /gr failed 19–26% on chromium-android / webkit-ios. Hero copy
+  // matched the baselines; the actual captures showed CookieYes covering the lower viewport.
+  // Masking only `div.cky-banner-bottom` misses `.cky-consent-container` on those projects.
+  // Remove the overlay outright (same locale-proof pattern as review-pages.spec.ts) so it can't
+  // bake into the screenshot — banner is fixed-position, so removal doesn't reflow content.
+  await page
+    .locator('.cky-consent-container, .cky-banner-bottom')
+    .evaluateAll((els) => els.forEach((el) => el.remove()))
+    .catch(() => {});
   await expect(page).toHaveScreenshot(`${geo.name}.png`, {
     fullPage: false,
     threshold: 0,

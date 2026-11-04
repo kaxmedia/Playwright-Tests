@@ -40,6 +40,13 @@ for (const geo of GEOS) {
       geo.name === 'at',
       '/at bonus top-card operator lineup rotates between baseline and CI (23–46% pixel diffs, run dashboard 2026-11-02) — GX-region rotation, not a rendering bug; same family as oplist/sub-category skips',
     );
+    // 2026-11-04 re-run 1425: /ie (webkit-ios 19–36%) and /nz (chromium-desktop 21%, webkit-ios 28%).
+    // Baseline IE top cards were Lottoland/888/Snatch; live is Slotrave/Wild Tokyo. NZ baseline was
+    // Slotbox/Lucky Wins/Rocket Riches; live is Big Lucky/Slotrave. Same GX rotation family as /at.
+    test.skip(
+      geo.name === 'ie' || geo.name === 'nz',
+      `/${geo.name} bonus top-card operator lineup rotates between baseline and CI (19–36% pixel diffs, dashboard re-run 1425 / 2026-11-04) — GX-region rotation, not a rendering bug; same family as /at oplist skips`,
+    );
         const response = await page.goto(`${geo.path}${BONUS_PATH}`, { waitUntil: 'domcontentloaded' });
     expect(response?.ok()).toBeTruthy();
     await page.waitForLoadState('load');
