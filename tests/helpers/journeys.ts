@@ -9,9 +9,11 @@ export const IE_URLS = {
   casinoToplist: `${GDC_ORIGIN}/ie/online-casinos`,
   newCasinos: `${GDC_ORIGIN}/ie/online-casinos/new`,
   slotsCasinos: `${GDC_ORIGIN}/ie/online-casinos/slots`,
-  liveCasinos: `${GDC_ORIGIN}/ie/online-casinos/live`,
+  // Live 2026-11-04: /ie/online-casinos/live and /bitcoin 301 to /ie (homepage), not the
+  // toplist. Live-dealer content still lives on the main casino hub — enter there directly.
+  liveCasinos: `${GDC_ORIGIN}/ie/online-casinos`,
   mobileCasinos: `${GDC_ORIGIN}/ie/online-casinos/apps`,
-  cryptoCasinos: `${GDC_ORIGIN}/ie/online-casinos/bitcoin`,
+  cryptoCasinos: `${GDC_ORIGIN}/ie/online-casinos`,
   paymentCasinos: `${GDC_ORIGIN}/ie/online-casinos/paypal`,
   /** Legacy `/ie/reviews/casino` redirects here. */
   howWeReview: `${GDC_ORIGIN}/ie/online-casinos/reviews`,

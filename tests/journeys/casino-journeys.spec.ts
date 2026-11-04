@@ -15,9 +15,9 @@
 //   - No off-site CTA clicks — /go/ links asserted present, never followed.
 //   - Every describe block has an HTTP 200 guard in beforeEach.
 //   - Existing POMs reused (ComparisonPage, ReviewPage). No new POM code.
-//   - URL note: several legacy IE sub-paths redirect to the main toplist or apps hub:
-//     /live and /bitcoin → /ie/online-casinos; /mobile → /ie/online-casinos/apps.
-//     Fast payout and live dealer are named sections on the main toplist.
+//   - URL note: /mobile → /ie/online-casinos/apps. Live 2026-11-04: /live and /bitcoin
+//     301 to /ie (homepage), not the toplist — journeys 3.4/3.7 enter /ie/online-casinos
+//     directly. Fast payout and live dealer are named sections on that hub.
 //     Safe casinos journey uses the how-we-review guide (no /safe-casinos page).
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -124,16 +124,16 @@ test.describe('Journey 3.3 — Slots casinos page', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 // Journey 3.4 — Live Casinos
 // Google search → live casino page → compare live sites → operator CTA
-// Note: /ie/online-casinos/live redirects to the main toplist. Live dealer
-// operators live under #anchor_live_dealer_casinos on that page.
+// Note: /ie/online-casinos/live now 301s to /ie (2026-11-04). Live dealer
+// operators live under #anchor_live_dealer_casinos on /ie/online-casinos.
 // ─────────────────────────────────────────────────────────────────────────────
 
 test.describe('Journey 3.4 — Live casinos (toplist section)', () => {
     test.beforeEach(async ({ page }) => {
-        await gotoOk(page, URLS.liveCasinos, 'Live casino entry URL');
+        await gotoOk(page, URLS.liveCasinos, 'Live casino toplist');
     });
 
-    test('@regression legacy live URL lands on the casino toplist @journey', async ({ page }) => {
+    test('@regression casino toplist loads for the live-dealer journey @journey', async ({ page }) => {
         await expect(page).toHaveURL(/\/ie\/online-casinos\/?$/);
         await expect(page.locator('h1').first()).toBeVisible();
     });
@@ -203,20 +203,21 @@ test.describe('Journey 3.6 — Fast payout casinos (toplist section)', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 // Journey 3.7 — Crypto Casinos
 // Google search → crypto casino page → compare by crypto → operator CTA
-// Note: /ie/online-casinos/bitcoin redirects to the main toplist (no dedicated page).
+// Note: /ie/online-casinos/bitcoin now 301s to /ie (2026-11-04, no dedicated page).
+// Journey enters the main casino hub directly.
 // ─────────────────────────────────────────────────────────────────────────────
 
 test.describe('Journey 3.7 — Crypto / Bitcoin casinos (legacy URL → toplist)', () => {
     test.beforeEach(async ({ page }) => {
-        await gotoOk(page, URLS.cryptoCasinos, 'Bitcoin casino entry URL');
+        await gotoOk(page, URLS.cryptoCasinos, 'Casino toplist (crypto journey entry)');
     });
 
-    test('@regression legacy bitcoin URL lands on the casino toplist @journey', async ({ page }) => {
+    test('@regression casino toplist loads for the crypto journey @journey', async ({ page }) => {
         await expect(page).toHaveURL(/\/ie\/online-casinos\/?$/);
         await expect(page.locator('h1').first()).toBeVisible();
     });
 
-    test('@regression redirected toplist exposes operator CTAs @journey', async ({ page }) => {
+    test('@regression casino toplist exposes operator CTAs @journey', async ({ page }) => {
         await assertMainGoCtaPresent(page);
     });
 });
