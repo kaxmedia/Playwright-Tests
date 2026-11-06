@@ -134,8 +134,13 @@ test.describe('Journey 8.3 — Rewards check (profile page)', () => {
     });
 
     test('@regression profile page exposes a sign-in prompt for unauthenticated users @journey', async ({ page }) => {
-        const signinGate = page.getByText(/get unrestricted access|join now/i).first();
-        await expect(signinGate).toBeAttached();
+        // Live 2026-11-06: the old “Get unrestricted access / Join now” gate copy is gone.
+        // Unauthenticated /profile surfaces header Sign Up + Welcome Rewards modal (DOM-attached;
+        // visibility can race the region-prompt dialog handler, so assert attached).
+        await expect(page.locator('#signup-modal')).toBeAttached({ timeout: 15000 });
+        await expect(page.locator('#authentication-trigger, #gdc-signup-text').first()).toBeAttached({
+            timeout: 15000,
+        });
     });
 });
 

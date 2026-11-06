@@ -15,9 +15,9 @@ export class NewsPage {
   readonly contentCards: Locator;
   readonly seeMoreButtons: Locator;
 
-  // Sidebar
+  // Header auth / Welcome Rewards capture (sidebar “Create a Free Account” promo removed 2026-11-06)
   readonly createAccountCTA: Locator;
-  /** Promo block containing the “free account” email capture (not always a single `<a>`). */
+  /** Signup modal that hosts the free-account / rewards email capture. */
   readonly emailSignupPromo: Locator;
 
   // Footer
@@ -39,9 +39,10 @@ export class NewsPage {
     // Hub links to vertical news listings (e.g. “All Casino News”, “All World Cup 2026 News”).
     this.seeMoreButtons = page.getByRole('link', { name: /^All .+ News$/ });
 
-    // Sidebar CTA
-    this.createAccountCTA = page.locator('text=Create a Free Account').first();
-    this.emailSignupPromo = page.locator('.email-account-signup');
+    // Live 2026-11-06: news sidebar `.email-account-signup` / “Create a Free Account” are gone.
+    // Unauthenticated capture is the header Sign Up control + Welcome Rewards modal.
+    this.createAccountCTA = page.locator('#gdc-signup-text');
+    this.emailSignupPromo = page.locator('#signup-modal');
 
     // Footer
     this.footer = page.locator('footer');

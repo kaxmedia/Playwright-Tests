@@ -125,16 +125,20 @@ test.describe('Global News Page', () => {
 
   });
 
-  // ─── 4. Sidebar CTA ─────────────────────────────────────────────────────────
+  // ─── 4. Account / email capture CTA ─────────────────────────────────────────
+  // Live 2026-11-06: sidebar “Create a Free Account” + `.email-account-signup` removed;
+  // capture is header Sign Up (#gdc-signup-text) + Welcome Rewards modal (#signup-modal).
   test.describe('Sidebar CTA', () => {
 
     test('@regression "Create a Free Account" CTA is visible', async () => {
       await expect(newsPage.createAccountCTA).toBeVisible();
+      await expect(newsPage.createAccountCTA).toContainText(/sign up/i);
     });
 
     test('@regression email signup promo block wraps the account CTA', async () => {
-      await expect(newsPage.emailSignupPromo).toBeVisible();
-      await expect(newsPage.emailSignupPromo).toContainText(/free account/i);
+      // Modal stays in the DOM (often not visible until opened) — assert attached + copy.
+      await expect(newsPage.emailSignupPromo).toBeAttached();
+      await expect(newsPage.emailSignupPromo).toContainText(/free|account|reward/i);
     });
 
   });
