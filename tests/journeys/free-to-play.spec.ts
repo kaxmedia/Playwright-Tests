@@ -22,11 +22,11 @@
 //         within the Cosmo Spins page, not a standalone landing page.
 //       * Journey 7.4 (weekly offers) — no dedicated weekly-offers page exists
 //         on IE; /ie/online-casinos/bonus is the canonical offers hub.
-//       * Journey 7.5 (newsletter signup) — the .email-account-signup element
-//         is present in the DOM but CSS-hidden until auth state triggers it.
-//         IE homepage has no footer email input; lead capture is the header
-//         Welcome Rewards signup modal (#signup-email). Tests assert DOM presence
-//         (toBeAttached), not visibility, and never submit forms.
+//       * Journey 7.5 (newsletter signup) — `.email-account-signup` was removed
+//         (2026-11-06). IE homepage has no footer email input; lead capture is
+//         the header Welcome Rewards signup modal (#signup-modal / #signup-email).
+//         Tests assert DOM presence (toBeAttached), not visibility, and never
+//         submit forms.
 //   - No new POM code — raw locators throughout.
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -171,9 +171,9 @@ test.describe('Journey 7.4 — Weekly offers (bonus hub)', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 // Journey 7.5 — Newsletter Signup
 // Footer / popup → email capture → enter email → submit → confirmation
-// Note: The .email-account-signup element is in the DOM but CSS-hidden until
-// auth state triggers visibility. IE homepage has no footer email input — lead
-// capture is the header Welcome Rewards modal (#signup-email).
+// Note: Live 2026-11-06 — `.email-account-signup` was removed. IE homepage has no
+// footer email input; lead capture is the header Welcome Rewards modal (#signup-modal /
+// #signup-email).
 // ─────────────────────────────────────────────────────────────────────────────
 
 test.describe('Journey 7.5 — Newsletter signup (homepage email capture)', () => {
@@ -184,9 +184,8 @@ test.describe('Journey 7.5 — Newsletter signup (homepage email capture)', () =
     test('@regression homepage loads and email signup element is present in DOM @journey', async ({ page }) => {
         await expect(page).toHaveURL(/gambling\.com\/ie\/?$/);
         await expect(page.locator('h1').first()).toBeVisible();
-        // Element is CSS-hidden until auth state — assert attached (in DOM), not visible
-        const emailSignup = page.locator('.email-account-signup').first();
-        await expect(emailSignup).toBeAttached();
+        // Welcome Rewards signup modal hosts the email field — assert attached (in DOM)
+        await expect(page.locator('#signup-modal')).toBeAttached();
     });
 
     test('@regression sign-up CTA is reachable from homepage for new user lead capture @journey', async ({ page }) => {
