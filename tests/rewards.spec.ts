@@ -61,6 +61,9 @@ test.describe('Rewards — logged-in dashboard smoke', () => {
     let authLock: AuthLockHandle | undefined;
 
     test.beforeEach(async ({ page }) => {
+        // Sign-in alone can take up to 3 password candidates x 26s (fixtures/auth.ts), plus up to 20s for
+        // the dashboard; WebKit in CI ran out of the default 60s inside sign-in (run 42851023022).
+        test.slow();
         // The site-wide market redirect sends visitors from markets with their own site (the office
         // egress geolocates to DE) from /ie to their own homepage ~1s after load; CI's US runners
         // aren't redirected. It skips bot user agents, so append that token in page JS only (same as
