@@ -28,11 +28,21 @@ export interface GeoHomepageConfig {
   // Marks the T2 dropdown-trigger assertion as fixme for that geo.
   skipNavTriggerCheck?: boolean;
 
+  // Per-geo floor for the "nav has at least N real links" check (T4 in global-nav.spec.ts).
+  // Defaults to DEFAULT_MIN_NAV_REAL_LINKS. Only set it for a structural market difference,
+  // and give the reason in a *_NAV_LINK_FLOOR_REASON constant below.
+  minNavRealLinks?: number;
+
   // Set true when the geo homepage is IP-gated (e.g. Norway). Non-local visitors
   // are redirected away from the geo path — content smoke tests are skipped and
   // replaced by a redirect assertion in geo-homepage.spec.ts.
   geoRestricted?: boolean;
 }
+
+export const DEFAULT_MIN_NAV_REAL_LINKS = 20;
+
+export const ICELAND_NAV_LINK_FLOOR_REASON =
+  'Iceland is the most feature-restricted geo on the site (Confluence "Geo Availability Matrix - Free Games & Rewards", GDCC/6640304380): no Cosmo Spins, no PP Slot Tournaments, no Giveaways, no Stable Stars (IUJ Prizes only), so its nav carries far fewer links than other markets. Structural market difference, not a bug. Floors are the live counts, verified 2026-11-10 logged out on chrome/firefox/webkit (two loads each) and in CI: /is/en = 19 real nav links (failed the default 20 in every CI run, 19 on all 3 browsers), /is = 21 (it also has a "Spilaðu ókeypis" free-games link, shown in both the desktop and mobile menus). Same structural cause as the Iceland skipNavTriggerCheck exception.';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // geoHomepages — canonical list of all geo homepages under test.
@@ -69,8 +79,9 @@ export const geoHomepages: GeoHomepageConfig[] = [
   { name: 'BE-FR',   path: '/be/fr',  expectedLang: 'fr-BE' },
   // Iceland geos use a flat nav structure with no href="#" dropdown triggers
   // (verified via recon). Market-specific structural difference, not a content bug.
-  { name: 'IS-IS',   path: '/is',     expectedLang: 'is-IS', skipNavTriggerCheck: true },
-  { name: 'IS-EN',   path: '/is/en',  expectedLang: 'en-IS', skipNavTriggerCheck: true },
+  // They also carry fewer nav links than the default floor allows: see ICELAND_NAV_LINK_FLOOR_REASON.
+  { name: 'IS-IS',   path: '/is',     expectedLang: 'is-IS', skipNavTriggerCheck: true, minNavRealLinks: 21 },
+  { name: 'IS-EN',   path: '/is/en',  expectedLang: 'en-IS', skipNavTriggerCheck: true, minNavRealLinks: 19 },
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -7,7 +7,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { test, expect } from '../fixtures/test';
-import { GeoHomepage, geoHomepages } from '../pages/GeoHomepage';
+import { DEFAULT_MIN_NAV_REAL_LINKS, GeoHomepage, ICELAND_NAV_LINK_FLOOR_REASON, geoHomepages } from '../pages/GeoHomepage';
 import { globalNavLogoLink } from '../pages/globalNavLogo';
 
 const BASE_URL = 'https://www.gambling.com';
@@ -45,8 +45,13 @@ for (const config of geoHomepages) {
     });
 
     // T4 ─ @smoke ─────────────────────────────────────────────────────────────
-    test(`${config.name} — @smoke @regression nav has at least 20 real links`, async () => {
-      expect(await gh.navRealLinks.count()).toBeGreaterThanOrEqual(20);
+    // Floor is per-geo where the market is structurally smaller (see GeoHomepageConfig.minNavRealLinks).
+    const navLinkFloor = config.minNavRealLinks ?? DEFAULT_MIN_NAV_REAL_LINKS;
+    test(`${config.name} — @smoke @regression nav has at least ${navLinkFloor} real links`, async () => {
+      expect(
+        await gh.navRealLinks.count(),
+        config.minNavRealLinks === undefined ? undefined : `${config.name} floor ${navLinkFloor}: ${ICELAND_NAV_LINK_FLOOR_REASON}`,
+      ).toBeGreaterThanOrEqual(navLinkFloor);
     });
 
     // T5 ─ @smoke ─────────────────────────────────────────────────────────────
