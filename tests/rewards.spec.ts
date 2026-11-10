@@ -84,8 +84,18 @@ test.describe('Rewards — logged-in dashboard smoke', () => {
         await signInAsTestUserUnlocked(authPage);
 
         await page.goto('/ie/rewards-overview', { waitUntil: 'domcontentloaded' });
-        await expect(page.getByRole('main').getByRole('heading', { level: 1 })).toBeVisible({ timeout: 20000 });
-        // Still on the dashboard, not bounced by the market redirect or to a signed-out page.
+        // US visitors can't reach the dashboard: /ie/rewards-overview loads (200), then the page itself
+        // navigates to /us, and /us/rewards-overview is a 404 (confirmed from CI run 42848437635's trace,
+        // 2026-11-10). CI's GitHub runners are US, so this block only really runs from non-US IPs (local
+        // runs). The skip is limited to that exact bounce; any other outcome still fails.
+        const dashboardHeading = page.getByRole('main').getByRole('heading', { level: 1 });
+        const outcome = await Promise.race([
+            dashboardHeading.waitFor({ state: 'visible', timeout: 20000 }).then(() => 'dashboard' as const),
+            page.waitForURL((url) => /^\/us(\/|$)/.test(url.pathname), { timeout: 20000 }).then(() => 'us' as const),
+        ]).catch(() => 'neither' as const);
+        test.skip(outcome === 'us', 'Rewards dashboard bounces US visitors to /us (no US dashboard); CI runners are US');
+        await expect(dashboardHeading).toBeVisible();
+        // Still on the dashboard, not bounced elsewhere or to a signed-out page.
         await expect(page).toHaveURL(/\/ie\/rewards-overview/);
     });
 
