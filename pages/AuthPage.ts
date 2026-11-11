@@ -17,8 +17,13 @@ export const WEAK_PASSWORDS = {
 };
 
 /** Gmail plus-addressing so registrations aren't rejected as reserved/disposable domains. */
+// No "+" alias: since the Rewards V2 sign-up relaunch (GDCU-9509, live 2026-11-10) Step 1 rejects ANY
+// address containing "+" ("Please enter a valid email address"; live-verified 2026-11-11 with
+// +gmail/+outlook/+example.com addresses, while the same address without "+" reaches Step 2), so every
+// sign-up test stalled at Step 1. Reported as a site bug: "+" addresses are valid. Gmail ignores dots,
+// so a dotted alias still delivers to the testpot209 inbox like the "+" one did.
 export function generateTestEmail(): string {
-    return `testpot209+gctest${Date.now()}@gmail.com`;
+    return `testpot209.gctest${Date.now()}@gmail.com`;
 }
 
 export class AuthPage {
@@ -141,10 +146,17 @@ export class AuthPage {
         this.ruleSpecialChar = this.modal.getByText(/special\s+character/i);
         this.letsGoBtn = this.modal.locator('#supabase-signup-details-button');
 
+        // Live 2026-11-11: Step 2 no longer shows an "Almost there!" heading (no headings at all), from the
+        // header on /, /ie and /uk and from the form embedded on /rewards. Kept only as an alternative:
+        // stepThreeReady is satisfied by the age checkbox alone.
         this.almostThereHeading = this.modal.getByRole('heading', { name: /almost there/i });
+        // Live 2026-11-11 the checkbox is still #age-confirm-inline, labelled "I confirm I am over 18 years
+        // old *". The label regex also accepts the "I confirm I am 18+" wording reported for the GDCU-9509
+        // relaunch (not seen on production yet), in case the id changes with it. No stable
+        // data-testid / gdc_* key exists on the Step 2 markup to match instead.
         this.ageConfirmCheckbox = this.modal
             .locator('#age-confirm-inline')
-            .or(this.modal.getByRole('checkbox', { name: /confirm I am over|over 18 years old/i }))
+            .or(this.modal.getByRole('checkbox', { name: /confirm i am (over 18 years old|18\+)/i }))
             .first();
         this.stepThreeReady = this.almostThereHeading.or(this.ageConfirmCheckbox);
         this.marketingCheckbox = this.modal
