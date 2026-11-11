@@ -76,6 +76,35 @@ async function openRewardsPage(page: Page, path: string): Promise<void> {
     await expect(page).toHaveURL(new RegExp(`${path}(\\?|$)`));
 }
 
+// Store and notification writes that no test may ever send (see the store tests' BROWSE ONLY note).
+const STORE_WRITES = /cart|checkout|order|redeem|purchase/i;
+const NOTIFICATION_WRITES = /notification/i;
+
+/**
+ * Abort every non-GET request whose URL matches `pattern`, and return the list of what was aborted, so a
+ * test can assert nothing (or only an expected request) was attempted. GETs pass through.
+ */
+async function blockWrites(page: Page, pattern: RegExp): Promise<string[]> {
+    const blocked: string[] = [];
+    await page.route(pattern, async (route) => {
+        if (route.request().method() === 'GET') return route.continue();
+        blocked.push(`${route.request().method()} ${route.request().url()}`);
+        await route.abort();
+    });
+    return blocked;
+}
+
+/** The store's per-item chip prices: paragraphs whose whole text is "N Chips" (not "Balance N Chips"). */
+const storePrices = (page: Page) =>
+    page.getByRole('main').getByRole('paragraph').filter({ hasText: /^\s*\d[\d,]*\s+chips\s*$/i });
+const chipNumber = (text: string) => Number(text.replace(/[^\d]/g, ''));
+
+/** Open the store and wait for real catalog items (it loads ~4s after the page, behind skeleton cards). */
+async function openStoreCatalog(page: Page): Promise<void> {
+    await openRewardsPage(page, '/ie/reward-store');
+    await expect(storePrices(page).first(), 'catalog items never loaded').toBeVisible({ timeout: 30000 });
+}
+
 // Logged in, the Rewards V2 pages for the shared E2E account (IE). All display-only.
 // Live-verified 2026-11-10 (chrome, firefox, webkit, two loads each):
 //   - /ie/rewards-overview: a Chips card (<article> with a "Chips" label and the balance, e.g. "208") and
@@ -175,12 +204,7 @@ test.describe('Rewards — logged-in dashboard smoke', () => {
         // CatalogAPI): this test never adds to cart, opens the cart, checks out or orders, and no test ever
         // may. Safety net: any non-GET request to a cart/checkout/order/redeem/purchase URL is aborted and
         // fails the test, so an accidental click in a future edit can't place an order.
-        const blocked: string[] = [];
-        await page.route(/cart|checkout|order|redeem|purchase/i, async (route) => {
-            if (route.request().method() === 'GET') return route.continue();
-            blocked.push(`${route.request().method()} ${route.request().url()}`);
-            await route.abort();
-        });
+        const blocked = await blockWrites(page, STORE_WRITES);
 
         await openRewardsPage(page, '/ie/reward-store');
         const main = page.getByRole('main');
@@ -195,6 +219,162 @@ test.describe('Rewards — logged-in dashboard smoke', () => {
         expect(await chipPrices.count(), 'no catalog items with a chip price').toBeGreaterThan(0);
 
         expect(blocked, 'store test must not send any cart/checkout/order request').toEqual([]);
+    });
+
+    // ── Phase 3 (GDCU-9156 / GDCU-9305): store UI, Earn detail, referral, notifications ──────────────
+    // Store tests are BROWSE ONLY like the one above: they use search/sort/filters and open the (empty)
+    // cart view, but never add to cart, check out or order, and the same guard fails the test if any
+    // cart/checkout/order/redeem/purchase write is attempted. Live-verified 2026-11-11 (store layout:
+    // Search, Sort with "Chips: low to high" / "Chips: high to low" / "A - Z", Filters panel with Brand /
+    // Category / Type of Product / Affordability dropdowns plus "Apply filters" / "Clear"; each item shows
+    // name, brand, "N Chips" and an action button).
+
+    test('@regression Store search narrows the catalog to matching items (browse only)', async ({ page }) => {
+        const blocked = await blockWrites(page, STORE_WRITES);
+        await openStoreCatalog(page);
+        const prices = storePrices(page);
+        const main = page.getByRole('main');
+        const before = await prices.count();
+
+        await main.getByPlaceholder(/search products/i).fill('adidas');
+        // Each item's brand line is its own paragraph ("Adidas"); every remaining item must be an Adidas one.
+        const adidasBrand = main.getByRole('paragraph').filter({ hasText: /^\s*adidas\s*$/i });
+        await expect.poll(async () => (await prices.count()) > 0 && (await prices.count()) < before, { timeout: 15000 }).toBe(true);
+        await expect.poll(async () => (await adidasBrand.count()) === (await prices.count()), { timeout: 15000 }).toBe(true);
+
+        await main.getByPlaceholder(/search products/i).fill('');
+        await expect.poll(() => prices.count(), { timeout: 15000 }).toBe(before);
+        expect(blocked, 'store test must not send any cart/checkout/order request').toEqual([]);
+    });
+
+    test('@regression Store sort orders items by chip price both ways (browse only)', async ({ page }) => {
+        const blocked = await blockWrites(page, STORE_WRITES);
+        await openStoreCatalog(page);
+        const main = page.getByRole('main');
+        const prices = storePrices(page);
+        const values = async () => (await prices.allInnerTexts()).map(chipNumber);
+        const isSorted = (v: number[], dir: 1 | -1) => v.length > 1 && v.every((x, i) => i === 0 || (x - v[i - 1]) * dir >= 0);
+
+        // High-to-low first: the default order is already low-to-high, so this proves the sort really applied.
+        await main.getByRole('button', { name: /^sort$/i }).click();
+        await main.getByRole('button', { name: /chips:\s*high to low/i }).click();
+        await expect.poll(async () => isSorted(await values(), -1), { message: 'prices not high-to-low', timeout: 15000 }).toBe(true);
+
+        await main.getByRole('button', { name: /chips:\s*high to low/i }).click(); // the Sort control now shows the active option
+        await main.getByRole('button', { name: /chips:\s*low to high/i }).click();
+        await expect.poll(async () => isSorted(await values(), 1), { message: 'prices not low-to-high', timeout: 15000 }).toBe(true);
+        expect(blocked, 'store test must not send any cart/checkout/order request').toEqual([]);
+    });
+
+    test('@regression Store filters panel filters by brand and clears (browse only)', async ({ page }) => {
+        const blocked = await blockWrites(page, STORE_WRITES);
+        await openStoreCatalog(page);
+        const main = page.getByRole('main');
+        const prices = storePrices(page);
+        const before = await prices.count();
+
+        await main.getByRole('button', { name: /^filters$/i }).click();
+        for (const name of ['Brand', 'Category', 'Type of Product', 'Affordability']) {
+            await expect(main.getByRole('combobox', { name }), `${name} filter`).toBeVisible();
+        }
+        // Pick the first real brand (data-driven: options read "<Brand> (<count>)"), apply, expect that count.
+        const brand = main.getByRole('combobox', { name: 'Brand' });
+        const option = (await brand.getByRole('option').allInnerTexts()).find((o) => !/^all brands/i.test(o) && /\(\d+\)\s*$/.test(o));
+        expect(option, 'no brand option with a count').toBeTruthy();
+        const [, brandName, brandCount] = option!.match(/^(.*?)\s*\((\d+)\)\s*$/)!;
+        await brand.selectOption({ label: option! });
+        await main.getByRole('button', { name: /^apply filters$/i }).click();
+        await expect.poll(() => prices.count(), { message: `Brand=${brandName} should list ${brandCount} item(s)`, timeout: 15000 })
+            .toBe(Math.min(Number(brandCount), before));
+
+        await main.getByRole('button', { name: /^clear$/i }).click();
+        await expect.poll(() => prices.count(), { timeout: 15000 }).toBe(before);
+        expect(blocked, 'store test must not send any cart/checkout/order request').toEqual([]);
+    });
+
+    test('@regression Store blocks unaffordable items and the cart shows no checkout when empty (browse only)', async ({ page }) => {
+        const blocked = await blockWrites(page, STORE_WRITES);
+        await openStoreCatalog(page);
+        const main = page.getByRole('main');
+
+        // Overspend protection: every item priced above the balance has a disabled "Not Enough Chips"
+        // button, so it can't be added at all. Computed from the live balance (the account earns daily).
+        const balance = chipNumber(await main.getByText(/^balance\s+[\d,]+\s+chips$/i).first().innerText());
+        const unaffordable = (await storePrices(page).allInnerTexts()).map(chipNumber).filter((p) => p > balance).length;
+        const notEnough = main.getByRole('button', { name: /not enough chips/i });
+        await expect(notEnough, `items priced above the ${balance}-chip balance`).toHaveCount(unaffordable);
+        for (let i = 0; i < unaffordable; i++) await expect(notEnough.nth(i)).toBeDisabled();
+
+        // Cart view (opening it is a read): the shared account's cart is empty and offers no checkout.
+        // This assumes nobody leaves items in the shared E2E account's cart by hand.
+        await main.getByRole('button', { name: /view cart/i }).click();
+        await expect(page.getByText('My Cart', { exact: true })).toBeVisible();
+        await expect(page.getByText(/^0 items$/i)).toBeVisible();
+        await expect(page.getByText(/your cart is empty/i)).toBeVisible();
+        await expect(page.getByRole('button', { name: /checkout|place order/i }), 'no checkout control on an empty cart').toHaveCount(0);
+        expect(blocked, 'store test must not send any cart/checkout/order request').toEqual([]);
+    });
+
+    // Earn page values are the documented ones (Confluence "Rewards V2 — How the system works", section 6,
+    // Challenges table), which matched live on 2026-11-11.
+    test('@regression Earn page lists the streak milestones with their documented chip values, in order', async ({ page }) => {
+        await openRewardsPage(page, '/ie/user-missions');
+        const text = await page.getByRole('main').innerText();
+        const streaks: Array<[number, string]> = [[3, '4'], [7, '13'], [30, '65'], [60, '130'], [90, '250'], [120, '380'], [365, '1,250']];
+        for (const [day, chips] of streaks) {
+            expect(text, `${day} Day Streak: progress x/${day} and +${chips}`).toMatch(new RegExp(`${day} Day Streak\\s+\\d+\\s*/\\s*${day}\\s+\\+${chips}(?![\\d,])`));
+        }
+        // Grouped: the milestones appear as one consecutive run, shortest first.
+        const order = streaks.map(([day]) => text.indexOf(`${day} Day Streak`));
+        expect(order.every((pos, i) => pos >= 0 && (i === 0 || pos > order[i - 1])), 'streak milestones out of order').toBe(true);
+    });
+
+    test('@regression Earn page review mission shows +20 chips and the 3-per-week cap', async ({ page }) => {
+        await openRewardsPage(page, '/ie/user-missions');
+        // Documented: t_review_submit = 20 chips, max 3 rewards per rolling 7 days. Display-only, never clicked.
+        await expect(page.getByRole('main').getByRole('button', { name: /^submit a review\s+\d+\s*\/\s*3\s*\(3 max\.? per week[^)]*\)\s*\+20$/i })).toBeVisible();
+    });
+
+    test('@regression Refer & Earn shows the referrer reward of 85 chips', async ({ page }) => {
+        await page.goto('/profile/refer', { waitUntil: 'domcontentloaded' });
+        // /profile/refer isn't under openRewardsPage's /us bounce check. Skip the same way for visitors the
+        // site places outside Rewards V2 (GB/IE/CA), e.g. CI's US runners; profile.spec.ts skips this page in
+        // CI for the same reason. Only when the country is known: otherwise the test runs and fails loudly.
+        const country = await page.evaluate(() => (window as unknown as { getIpConfig?: () => { ipcountry?: string } }).getIpConfig?.()?.ipcountry?.toUpperCase()).catch(() => undefined);
+        test.skip(country !== undefined && !['GB', 'IE', 'CA'].includes(country), `Refer & Earn is Rewards V2 content; site places this visitor in ${country} (outside GB/IE/CA)`);
+        await expect(page).toHaveURL(/\/profile\/refer/);
+        const main = page.getByRole('main').first();
+        // Documented: t_referral = 85 chips to BOTH sides. Only the referrer's 85 is asserted: the referee's
+        // 85 is only visible to the referred user after they sign up.
+        await expect(main.getByText(/refer friends and earn 85 chips/i)).toBeVisible({ timeout: 20000 });
+        await expect(main.getByText(/receive \+85 chips/i)).toBeVisible();
+        // Unlock condition asserted as rendered, not as documented: the doc says the referral triggers when
+        // the referred user reaches 50 XP, but live copy (2026-11-11) says "your friend must gain 200 chips".
+        // Flagged as a doc-vs-live discrepancy; this only checks that a numeric unlock condition is shown.
+        await expect(main.getByText(/friend must (gain|reach) \d[\d,]*\s*(chips|xp)/i)).toBeVisible();
+    });
+
+    // Notifications: opening the bell POSTs /rewards/notifications/clear-badge, which would clear the shared
+    // account's unread badge. That request is aborted here (account state untouched), and the test never
+    // clicks "Mark all as read". Unread count is only checked for format: it depends on real account activity.
+    test('@regression notification bell opens a panel listing notifications (read-only)', async ({ page }) => {
+        const blocked = await blockWrites(page, NOTIFICATION_WRITES);
+        await openRewardsPage(page, '/ie/rewards-overview');
+        const bell = page.getByRole('button', { name: /^notifications(,\s*\d+\s+new)?$/i }).filter({ visible: true }).first();
+        await expect(bell).toBeVisible();
+        await bell.click();
+
+        const panel = page.getByRole('dialog', { name: 'Notifications' });
+        await expect(panel.getByRole('heading', { name: 'Notifications' })).toBeVisible();
+        await expect(panel.getByRole('button', { name: /^all$/i })).toBeVisible();
+        await expect(panel.getByRole('button', { name: /^unread(\s+\d+)?$/i })).toBeVisible();
+        // A notification entry is a button carrying a title and an age ("15h", "1d", "107d"); the panel's
+        // other controls (All / Unread tabs, "Mark all as read") have no age.
+        const entries = panel.getByRole('button').filter({ hasText: /\b\d+\s*(m|h|d|w)\s*$/ });
+        await expect(entries.first(), 'no notifications listed').toBeVisible();
+        await expect(entries.first(), 'notification entry has a title').toHaveText(/[a-z]{3,}/i);
+
+        expect(blocked.every((r) => /notifications\/clear-badge/.test(r)), `unexpected notification write: ${blocked.join(', ')}`).toBe(true);
     });
 });
 
