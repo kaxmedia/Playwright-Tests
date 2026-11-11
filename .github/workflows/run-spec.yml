@@ -34,7 +34,21 @@ jobs:
 
     steps:
       - name: Install git-lfs
-        run: apt-get update && apt-get install -y git-lfs
+        # git-lfs comes from the official GitHub release (pinned + SHA-256 checked), not Ubuntu apt: the
+        # Playwright container image does not ship it, and apt needs archive.ubuntu.com, whose DNS failed
+        # from these runners on 2026-11-11 (every job died here). Skips the download if git-lfs is present.
+        run: |
+          echo "[diag] $(git --version 2>&1) | git-lfs: $(git lfs version 2>&1 || true)"
+          echo "[diag] curl=$(command -v curl || echo none) wget=$(command -v wget || echo none)"
+          echo "[diag] github.com=$(getent hosts github.com | head -1 || echo FAIL) ubuntu=$(getent hosts archive.ubuntu.com | head -1 || echo FAIL)"
+          if git lfs version >/dev/null 2>&1; then git lfs version; exit 0; fi
+          v=3.6.1
+          sha=2138d2e405a12f1a088272e06790b76699b79cb90d0317b77aafaf35de908d76
+          curl -fsSL --retry 3 -o /tmp/git-lfs.tgz "https://github.com/git-lfs/git-lfs/releases/download/v${v}/git-lfs-linux-amd64-v${v}.tar.gz"
+          echo "${sha}  /tmp/git-lfs.tgz" | sha256sum -c -
+          tar -xzf /tmp/git-lfs.tgz -C /tmp
+          /tmp/git-lfs-${v}/install.sh
+          git lfs version
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -72,7 +86,21 @@ jobs:
 
     steps:
       - name: Install git-lfs
-        run: apt-get update && apt-get install -y git-lfs
+        # git-lfs comes from the official GitHub release (pinned + SHA-256 checked), not Ubuntu apt: the
+        # Playwright container image does not ship it, and apt needs archive.ubuntu.com, whose DNS failed
+        # from these runners on 2026-11-11 (every job died here). Skips the download if git-lfs is present.
+        run: |
+          echo "[diag] $(git --version 2>&1) | git-lfs: $(git lfs version 2>&1 || true)"
+          echo "[diag] curl=$(command -v curl || echo none) wget=$(command -v wget || echo none)"
+          echo "[diag] github.com=$(getent hosts github.com | head -1 || echo FAIL) ubuntu=$(getent hosts archive.ubuntu.com | head -1 || echo FAIL)"
+          if git lfs version >/dev/null 2>&1; then git lfs version; exit 0; fi
+          v=3.6.1
+          sha=2138d2e405a12f1a088272e06790b76699b79cb90d0317b77aafaf35de908d76
+          curl -fsSL --retry 3 -o /tmp/git-lfs.tgz "https://github.com/git-lfs/git-lfs/releases/download/v${v}/git-lfs-linux-amd64-v${v}.tar.gz"
+          echo "${sha}  /tmp/git-lfs.tgz" | sha256sum -c -
+          tar -xzf /tmp/git-lfs.tgz -C /tmp
+          /tmp/git-lfs-${v}/install.sh
+          git lfs version
 
       - name: Checkout
         uses: actions/checkout@v4
