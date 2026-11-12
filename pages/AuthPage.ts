@@ -17,8 +17,20 @@ export const WEAK_PASSWORDS = {
 };
 
 /** Gmail plus-addressing so registrations aren't rejected as reserved/disposable domains. */
+// No "+" alias: since the Rewards V2 sign-up relaunch (GDCU-9509, live 2026-11-10) Step 1 rejects ANY
+// address containing "+" ("Please enter a valid email address"; live-verified 2026-11-11 with
+// +gmail/+outlook/+example.com addresses, while the same address without "+" reaches Step 2), so every
+// sign-up test stalled at Step 1. Reported as a site bug: "+" addresses are valid. Gmail ignores dots,
+// so a dotted alias still delivers to the testpot209 inbox like the "+" one did.
+// Rewards V2 is live only for GB/IE/CA visitors (CA: ON/AB); the site decides by the visitor's country
+// as it sees it (getIpConfig().ipcountry, the same value its market-redirect script uses).
+export const REWARDS_V2_COUNTRIES = ['GB', 'IE', 'CA'];
+
+export const NON_REWARDS_VISITOR_SKIP_REASON =
+  'Visitor is outside the Rewards V2 countries (GB/IE/CA), so the site serves the plain sign-up/account experience: the sign-up modal has no "Welcome Rewards" header and no "Step N of 2" indicator, sign-up finishes without the "You\'re in!" Rewards success screen, and the signed-in profile dropdown has no "Go to Rewards" link. CI\'s GitHub runners are US (getIpConfig().ipcountry = "US"), so these Rewards-flow tests skip in CI and run for real from GB/IE/CA IPs (the office is seen as IE). Confirmed 2026-11-11 from the CI failure screenshots of run 43004662257 (same fresh browser profile, same / page, all 3 browsers; only the IP differs from local runs). Not a cookie-banner overlap: the banner sits below the modal. Same root cause as the Rewards dashboard /us bounce in rewards.spec.ts.';
+
 export function generateTestEmail(): string {
-    return `testpot209+gctest${Date.now()}@gmail.com`;
+    return `testpot209.gctest${Date.now()}@gmail.com`;
 }
 
 export class AuthPage {
@@ -141,10 +153,17 @@ export class AuthPage {
         this.ruleSpecialChar = this.modal.getByText(/special\s+character/i);
         this.letsGoBtn = this.modal.locator('#supabase-signup-details-button');
 
+        // Live 2026-11-11: Step 2 no longer shows an "Almost there!" heading (no headings at all), from the
+        // header on /, /ie and /uk and from the form embedded on /rewards. Kept only as an alternative:
+        // stepThreeReady is satisfied by the age checkbox alone.
         this.almostThereHeading = this.modal.getByRole('heading', { name: /almost there/i });
+        // Live 2026-11-11 the checkbox is still #age-confirm-inline, labelled "I confirm I am over 18 years
+        // old *". The label regex also accepts the "I confirm I am 18+" wording reported for the GDCU-9509
+        // relaunch (not seen on production yet), in case the id changes with it. No stable
+        // data-testid / gdc_* key exists on the Step 2 markup to match instead.
         this.ageConfirmCheckbox = this.modal
             .locator('#age-confirm-inline')
-            .or(this.modal.getByRole('checkbox', { name: /confirm I am over|over 18 years old/i }))
+            .or(this.modal.getByRole('checkbox', { name: /confirm i am (over 18 years old|18\+)/i }))
             .first();
         this.stepThreeReady = this.almostThereHeading.or(this.ageConfirmCheckbox);
         this.marketingCheckbox = this.modal
@@ -347,6 +366,16 @@ export class AuthPage {
     }
 
     /** Opens the profile dropdown by clicking the avatar in the nav bar. */
+    /** The visitor's country as the site sees it (getIpConfig().ipcountry), or undefined if unavailable. */
+    async visitorCountry(): Promise<string | undefined> {
+        return this.page
+            .evaluate(() => {
+                const w = window as unknown as { getIpConfig?: () => { ipcountry?: string } };
+                return w.getIpConfig?.()?.ipcountry?.toUpperCase();
+            })
+            .catch(() => undefined);
+    }
+
     async openProfileDropdown(): Promise<void> {
         await this.profileAvatar.waitFor({ state: 'visible', timeout: 20_000 });
         await this.profileAvatar.click();

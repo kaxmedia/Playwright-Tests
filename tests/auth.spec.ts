@@ -1,6 +1,8 @@
 import { test, expect, type Locator } from '../fixtures/test';
 import {
     AuthPage,
+    NON_REWARDS_VISITOR_SKIP_REASON,
+    REWARDS_V2_COUNTRIES,
     SIGN_IN_USER,
     VALID_PASSWORD,
     WEAK_PASSWORDS,
@@ -11,6 +13,19 @@ import {
     signInAsTestUserUnlocked,
     type AuthLockHandle,
 } from '../fixtures/auth';
+
+/**
+ * Skip a Rewards-flow test (step indicator, "You're in!" success screen, "Go to Rewards") when the site
+ * reports a visitor country outside Rewards V2; see NON_REWARDS_VISITOR_SKIP_REASON. Only skips when the
+ * country is known: if getIpConfig() is missing the test runs and fails loudly instead.
+ */
+async function skipUnlessRewardsVisitor(authPage: AuthPage): Promise<void> {
+    const country = await authPage.visitorCountry();
+    test.skip(
+        country !== undefined && !REWARDS_V2_COUNTRIES.includes(country),
+        `${NON_REWARDS_VISITOR_SKIP_REASON} (site reports ipcountry=${country})`,
+    );
+}
 
 /** App often uses `opacity-50` / `pointer-events` instead of the `disabled` attribute for I’m In. */
 async function expectImInBlocked(imIn: Locator): Promise<void> {
@@ -99,6 +114,7 @@ test.describe('Authentication — Sign Up & Sign In', () => {
     });
 
     test('@smoke @regression modal shows Step 1 of 2 indicator', async () => {
+        await skipUnlessRewardsVisitor(authPage);
         await authPage.openSignUpModal();
         const text = await authPage.stepIndicator.innerText();
         expect(text).toMatch(/step 1 of 2/i);
@@ -175,6 +191,7 @@ test.describe('Authentication — Sign Up & Sign In', () => {
     });
 
     test('@smoke @regression step indicator updates to Step 2 of 2 after valid details', async () => {
+        await skipUnlessRewardsVisitor(authPage);
         await authPage.openSignUpModal();
         await authPage.fillSignUpForm('Test User', generateTestEmail(), VALID_PASSWORD);
         const text = await authPage.stepIndicator.innerText();
@@ -182,6 +199,7 @@ test.describe('Authentication — Sign Up & Sign In', () => {
     });
 
     test('@regression closing and reopening modal resets to step 1', async ({ page }) => {
+        await skipUnlessRewardsVisitor(authPage);
         await authPage.openSignUpModal();
         await authPage.fillSignUpForm('Test User', generateTestEmail(), VALID_PASSWORD);
         await authPage.modalCloseBtn.click();
@@ -301,6 +319,7 @@ test.describe('Authentication — Sign Up & Sign In', () => {
     });
 
     test('@smoke @regression step indicator updates to Step 2 of 2 on consent step', async () => {
+        await skipUnlessRewardsVisitor(authPage);
         await authPage.openSignUpModal();
         await authPage.fillSignUpForm('Test User', generateTestEmail(), VALID_PASSWORD);
         await expect(authPage.stepThreeReady).toBeVisible({ timeout: 8000 });
@@ -351,6 +370,7 @@ test.describe('Authentication — Sign Up & Sign In', () => {
     // ══════════════════════════════════════════════════════════════════════════
 
     test('@smoke @regression success screen appears after sign up — "You\'re in!" heading visible', async () => {
+        await skipUnlessRewardsVisitor(authPage);
         await authPage.openSignUpModal();
         await authPage.fillSignUpForm('GC Test', generateTestEmail(), VALID_PASSWORD);
         await authPage.ageConfirmCheckbox.check({ force: true });
@@ -361,6 +381,7 @@ test.describe('Authentication — Sign Up & Sign In', () => {
     });
 
     test('@smoke @regression success screen shows Complete Your Profile button and Continue to Site link', async () => {
+        await skipUnlessRewardsVisitor(authPage);
         await authPage.openSignUpModal();
         await authPage.fillSignUpForm('GC Test', generateTestEmail(), VALID_PASSWORD);
         await authPage.ageConfirmCheckbox.check({ force: true });
@@ -372,6 +393,7 @@ test.describe('Authentication — Sign Up & Sign In', () => {
     });
 
     test('@regression Complete Your Profile navigates to /profile/additional', async ({ page }) => {
+        await skipUnlessRewardsVisitor(authPage);
         await authPage.openSignUpModal();
         await authPage.fillSignUpForm('GC Test', generateTestEmail(), VALID_PASSWORD);
         await authPage.ageConfirmCheckbox.check({ force: true });
@@ -385,6 +407,7 @@ test.describe('Authentication — Sign Up & Sign In', () => {
     });
 
     test('@regression Continue to Site closes modal and stays on current URL', async ({ page }) => {
+        await skipUnlessRewardsVisitor(authPage);
         const urlBeforeSignUp = page.url();
 
         await authPage.openSignUpModal();
@@ -401,6 +424,7 @@ test.describe('Authentication — Sign Up & Sign In', () => {
     });
 
     test('@regression after Continue to Site — Sign Up button replaced by profile avatar', async () => {
+        await skipUnlessRewardsVisitor(authPage);
         await authPage.openSignUpModal();
         await authPage.fillSignUpForm('GC Test', generateTestEmail(), VALID_PASSWORD);
         await authPage.ageConfirmCheckbox.check({ force: true });
@@ -452,6 +476,7 @@ test.describe('Authentication — Sign Up & Sign In', () => {
         });
 
         test('@smoke @regression profile dropdown shows Go to Rewards link', async () => {
+            await skipUnlessRewardsVisitor(authPage);
             await authPage.openProfileDropdown();
             await expect(authPage.goToRewardsLink).toBeVisible();
         });
@@ -476,6 +501,7 @@ test.describe('Authentication — Sign Up & Sign In', () => {
         });
 
         test('@regression Go to Rewards link has valid href', async ({}, testInfo) => {
+            await skipUnlessRewardsVisitor(authPage);
             await authPage.openProfileDropdown();
             const href = await authPage.goToRewardsLink.evaluate((el) => {
                 const n = el as HTMLElement;
@@ -490,6 +516,7 @@ test.describe('Authentication — Sign Up & Sign In', () => {
         });
 
         test('@regression Go to Rewards shows chip count', async () => {
+            await skipUnlessRewardsVisitor(authPage);
             await authPage.openProfileDropdown();
             const text = await authPage.goToRewardsLink.innerText();
             expect(text).toMatch(/\d+\s*chips?/i);
@@ -512,6 +539,7 @@ test.describe('Authentication — Sign Up & Sign In', () => {
     // ══════════════════════════════════════════════════════════════════════════
 
     test('@regression full sign up E2E — success screen → Continue to Site → user logged in', async ({ page }, testInfo) => {
+        await skipUnlessRewardsVisitor(authPage);
         await authPage.openSignUpModal();
         await authPage.fillSignUpForm('GC Test User', generateTestEmail(), VALID_PASSWORD);
         await authPage.ageConfirmCheckbox.check({ force: true });
