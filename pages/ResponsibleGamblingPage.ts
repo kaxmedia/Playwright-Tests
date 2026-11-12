@@ -24,6 +24,20 @@ export const responsibleGamblingGeos: Record<string, ResponsibleGamblingGeoConfi
   nl: { name: 'NL', path: '/nl/verantwoord-gokken', urlPattern: /\/nl\/verantwoord-gokken/ },
   es: { name: 'ES', path: '/es/juego-responsable', urlPattern: /\/es\/juego-responsable/ },
   gr: { name: 'GR', path: '/gr/ypefthino-paixnidi', urlPattern: /\/gr\/ypefthino-paixnidi/ },
+  // BE added for GDCU-9302 (footer age-logo geo coverage) — shares NL's Dutch-language
+  // RG slug, verified live (Nov 2026): https://www.gambling.com/be/verantwoord-gokken
+  be: { name: 'BE', path: '/be/verantwoord-gokken', urlPattern: /\/be\/verantwoord-gokken/ },
+};
+
+/**
+ * Expected minimum-age logo per geo, per the Jira ticket's "Correct Age" field
+ * (GDCU-9302: GR 21+, BE 21+, NL 24+). Keyed by the digits only, since the live
+ * alt text format is inconsistent between geos ("21+" on BE, "+21" on GR/NL).
+ */
+export const footerAgeLogoExpectedAge: Partial<Record<string, string>> = {
+  gr: '21',
+  be: '21',
+  nl: '24',
 };
 
 /** @audit HTTP 200 sweep — derived from {@link responsibleGamblingGeos} (no manual duplicate list). */
@@ -42,6 +56,8 @@ export class ResponsibleGamblingPage {
   /** Core safeguarding content block (localised “stay in control” / protection headings). */
   readonly safeguardingSection: Locator;
   readonly footer: Locator;
+  /** Disclaimer paragraph above the footer regulatory/age logos (GDCU-9302). */
+  readonly footerDisclaimer: Locator;
 
   private readonly geoConfig: ResponsibleGamblingGeoConfig;
 
@@ -53,6 +69,7 @@ export class ResponsibleGamblingPage {
     this.heading = this.main.locator('h1').first();
     this.safeguardingSection = this.sectionHeading(SAFEGUARDING_HEADING_PATTERN);
     this.footer = page.locator('footer, [role="contentinfo"]').last();
+    this.footerDisclaimer = page.locator('p.disclaimer').first();
   }
 
   get config(): ResponsibleGamblingGeoConfig {
@@ -78,6 +95,37 @@ export class ResponsibleGamblingPage {
     const response = await this.page.goto(path, { waitUntil: 'domcontentloaded' });
     this.assertOkResponse(response, path);
     await this.dismissCookieBanner();
+  }
+
+  /**
+   * Navigate to this geo's RG page with a `?ipcountry=` override applied.
+   *
+   * GDCU-9302: the footer age logo and the disclaimer above it used to follow
+   * the *visitor's* IP-geolocated country instead of the page's own geo. The
+   * fix (Sept 2026) makes both always reflect the page's own geo regardless
+   * of `ipcountry` — confirmed live Nov 2026 via `?ipcountry=<other geo>`.
+   */
+  async gotoWithIpCountryOverride(geo: string, ipcountry: string): Promise<void> {
+    const cfg = responsibleGamblingGeos[geo] ?? responsibleGamblingGeos[''];
+    const path = `${cfg.path}?ipcountry=${encodeURIComponent(ipcountry)}`;
+    const response = await this.page.goto(path, { waitUntil: 'domcontentloaded' });
+    this.assertOkResponse(response, path);
+    await this.dismissCookieBanner();
+  }
+
+  /**
+   * Alt text of the footer's minimum-age logo (e.g. "21+", "+24"), or null if
+   * no such image is found. Format (prefix vs suffix "+") varies by geo, so
+   * callers should compare digits only — see {@link footerAgeLogoExpectedAge}.
+   */
+  async footerAgeLogoAlt(): Promise<string | null> {
+    const imgs = this.page.locator('img[alt]');
+    const count = await imgs.count();
+    for (let i = 0; i < count; i++) {
+      const alt = ((await imgs.nth(i).getAttribute('alt')) ?? '').trim();
+      if (/^\+?\d{2}\+?$/.test(alt)) return alt;
+    }
+    return null;
   }
 
   externalOrganisationLink(domainFragment: string): Locator {
