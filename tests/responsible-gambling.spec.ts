@@ -13,6 +13,7 @@ import {
   ResponsibleGamblingPage,
   responsibleGamblingAuditPaths,
   responsibleGamblingGeos,
+  footerAgeLogoExpectedAge,
 } from '../pages/ResponsibleGamblingPage';
 
 const BASE_URL = 'https://www.gambling.com';
@@ -286,6 +287,51 @@ test.describe('Responsible Gambling — ES', () => {
   });
 
 });
+
+// ─── Footer age logo geo-integrity (GDCU-9302) ───────────────────────────────
+//
+// Bug: the footer age-restriction logo (and the disclaimer above it) on RG
+// pages was respecting the *visiting user's* IP-geolocated country rather
+// than the geo of the page itself — a GR visitor on a VPN could be shown an
+// 18+ logo on a 21+-market page. Fixed Sept 2026 by no longer deriving the
+// footer logo/disclaimer from IP country at all.
+//
+// Regression guard: load each affected geo's RG page once normally, and once
+// with a `?ipcountry=` override pointing at a *different* geo's age bracket.
+// The age logo must not change between the two loads (GDCU-9302 comment
+// thread documents `?ipcountry=` as the supported way to test this live,
+// without a VPN).
+for (const geo of ['gr', 'be', 'nl'] as const) {
+  const expectedAge = footerAgeLogoExpectedAge[geo]!;
+  // Any geo whose correct age differs from this one works as the "wrong"
+  // override to prove the page doesn't follow it.
+  const overrideGeo = Object.keys(footerAgeLogoExpectedAge).find(
+    (g) => footerAgeLogoExpectedAge[g] !== expectedAge,
+  )!;
+
+  test.describe(`Responsible Gambling — footer age logo geo-integrity (${geo.toUpperCase()}) @regression`, () => {
+    test('@regression GDCU-9302 footer age logo matches this geo, with no ipcountry override', async ({ page }) => {
+      const rgPage = new ResponsibleGamblingPage(page, geo);
+      await rgPage.goto(geo);
+
+      const alt = await rgPage.footerAgeLogoAlt();
+      expect(alt, `${geo.toUpperCase()} footer age logo should be present`).not.toBeNull();
+      expect(alt, `${geo.toUpperCase()} footer age logo should show ${expectedAge}+`).toContain(expectedAge);
+    });
+
+    test(`@regression GDCU-9302 footer age logo ignores ?ipcountry=${overrideGeo} override`, async ({ page }) => {
+      const rgPage = new ResponsibleGamblingPage(page, geo);
+      await rgPage.gotoWithIpCountryOverride(geo, overrideGeo);
+
+      const alt = await rgPage.footerAgeLogoAlt();
+      expect(alt, `${geo.toUpperCase()} footer age logo should still be present under ipcountry override`).not.toBeNull();
+      expect(
+        alt,
+        `${geo.toUpperCase()} footer age logo must stay ${expectedAge}+ and not follow ipcountry=${overrideGeo} (${footerAgeLogoExpectedAge[overrideGeo]}+)`,
+      ).toContain(expectedAge);
+    });
+  });
+}
 
 // ─── Multi-geo HTTP 200 audit ────────────────────────────────────────────────
 
