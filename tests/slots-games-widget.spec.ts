@@ -263,6 +263,32 @@ test.describe('Slots Games Widget — UK', () => {
         }
     });
 
+    test('@regression GDCU-9317 Play for Real buttons use real query-string tracking params, not a hash fragment', async () => {
+        const count = await slotsPage.playRealButtons.count();
+        expect(count).toBeGreaterThanOrEqual(1);
+
+        // GDCU-9317 regression guard: a missing ktag.reRender() container
+        // argument previously caused tracking params on exit links (ct,
+        // listid, …) to be appended after a `#` instead of as real
+        // query-string params, so the ktag pipeline silently dropped them.
+        // URLSearchParams can't read past a `#`, so assert any tracking
+        // params present here are real, readable query params.
+        const limit = Math.min(count, 5);
+        for (let i = 0; i < limit; i++) {
+            const href = await slotsPage.playRealButtons.nth(i).getAttribute('href');
+            expect(href, `Play for Real button ${i} should have an href`).toBeTruthy();
+
+            const url = new URL(href!, 'https://www.gambling.com');
+            expect(url.hash, `Play for Real button ${i} href should not carry a hash fragment`).toBe('');
+            if (href!.includes('ct=') || href!.includes('listid=')) {
+                expect(
+                    url.searchParams.get('ct'),
+                    `Play for Real button ${i} ct should be a real query param, not appended after a #`,
+                ).not.toBeNull();
+            }
+        }
+    });
+
     test('@regression Play for Real buttons do not use dead # hrefs', async () => {
         const count = await slotsPage.playRealButtons.count();
         const limit = Math.min(count, 5);

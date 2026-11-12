@@ -180,6 +180,22 @@ for (const config of geoHomepages) {
         const href = await cta.getAttribute('href');
         expect(href, `card ${i} Play Now href`).toMatch(/^\/go\//);
 
+        // GDCU-9317 regression guard: a missing ktag.reRender() container
+        // argument on this carousel previously caused tracking params (ct,
+        // listid, …) to be appended after a `#` instead of as real
+        // query-string params, so the ktag pipeline silently dropped them
+        // before the event ever fired. A `#` fragment is invisible to
+        // URLSearchParams, so assert any tracking params present are real,
+        // readable query params — never stuck behind a hash.
+        const ctaUrl = new URL(href!, 'https://www.gambling.com');
+        expect(ctaUrl.hash, `card ${i} Play Now href should not carry a hash fragment`).toBe('');
+        if (href!.includes('ct=') || href!.includes('listid=')) {
+          expect(
+            ctaUrl.searchParams.get('ct'),
+            `card ${i} Play Now ct should be a real query param, not appended after a #`,
+          ).not.toBeNull();
+        }
+
         expect(await cta.getAttribute('target'), `card ${i} Play Now target`).toBe('_blank');
 
         const rel = (await cta.getAttribute('rel')) ?? '';
