@@ -273,19 +273,28 @@ test.describe('Slots Games Widget — UK', () => {
         // query-string params, so the ktag pipeline silently dropped them.
         // URLSearchParams can't read past a `#`, so assert any tracking
         // params present here are real, readable query params.
+        //
+        // This href starts bare in server-rendered markup and is rewritten
+        // client-side, asynchronously, once the button is visible — reading
+        // it once races that rewrite under slower JS engines / loaded CI
+        // runners (confirmed live), so retry until it settles. A genuine
+        // regression still fails this after the timeout below.
         const limit = Math.min(count, 5);
         for (let i = 0; i < limit; i++) {
             const href = await slotsPage.playRealButtons.nth(i).getAttribute('href');
             expect(href, `Play for Real button ${i} should have an href`).toBeTruthy();
 
-            const url = new URL(href!, 'https://www.gambling.com');
-            expect(url.hash, `Play for Real button ${i} href should not carry a hash fragment`).toBe('');
-            if (href!.includes('ct=') || href!.includes('listid=')) {
-                expect(
-                    url.searchParams.get('ct'),
-                    `Play for Real button ${i} ct should be a real query param, not appended after a #`,
-                ).not.toBeNull();
-            }
+            await expect(async () => {
+                const currentHref = await slotsPage.playRealButtons.nth(i).getAttribute('href');
+                const url = new URL(currentHref!, 'https://www.gambling.com');
+                expect(url.hash, `Play for Real button ${i} href should not carry a hash fragment`).toBe('');
+                if (currentHref!.includes('ct=') || currentHref!.includes('listid=')) {
+                    expect(
+                        url.searchParams.get('ct'),
+                        `Play for Real button ${i} ct should be a real query param, not appended after a #`,
+                    ).not.toBeNull();
+                }
+            }).toPass({ timeout: 5000 });
         }
     });
 

@@ -187,14 +187,26 @@ for (const config of geoHomepages) {
         // before the event ever fired. A `#` fragment is invisible to
         // URLSearchParams, so assert any tracking params present are real,
         // readable query params — never stuck behind a hash.
-        const ctaUrl = new URL(href!, 'https://www.gambling.com');
-        expect(ctaUrl.hash, `card ${i} Play Now href should not carry a hash fragment`).toBe('');
-        if (href!.includes('ct=') || href!.includes('listid=')) {
-          expect(
-            ctaUrl.searchParams.get('ct'),
-            `card ${i} Play Now ct should be a real query param, not appended after a #`,
-          ).not.toBeNull();
-        }
+        //
+        // The server-rendered markup ships this href bare (no `?`, no `#`
+        // at all) — the tracking pipeline rewrites it client-side once the
+        // card is visible, asynchronously. Reading it a single time right
+        // after scrollIntoViewIfNeeded() races that rewrite (confirmed live:
+        // slower JS engines / loaded CI runners can catch it mid-flight), so
+        // retry until it settles rather than reading it once. A genuine
+        // regression — the rewrite landing the params behind a `#` — still
+        // fails this after the timeout below.
+        await expect(async () => {
+          const currentHref = await cta.getAttribute('href');
+          const ctaUrl = new URL(currentHref!, 'https://www.gambling.com');
+          expect(ctaUrl.hash, `card ${i} Play Now href should not carry a hash fragment`).toBe('');
+          if (currentHref!.includes('ct=') || currentHref!.includes('listid=')) {
+            expect(
+              ctaUrl.searchParams.get('ct'),
+              `card ${i} Play Now ct should be a real query param, not appended after a #`,
+            ).not.toBeNull();
+          }
+        }).toPass({ timeout: 5000 });
 
         expect(await cta.getAttribute('target'), `card ${i} Play Now target`).toBe('_blank');
 
