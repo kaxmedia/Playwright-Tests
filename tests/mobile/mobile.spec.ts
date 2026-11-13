@@ -10,9 +10,13 @@ import { isOnGamblingComHost } from '../helpers/affiliateUrl';
 // Device emulation is configured per project in playwright.config.ts:
 //   mobile-iphone (WebKit) · mobile-samsung (Chromium)
 
-// Hub has no oplist post-release; CTA / operator-list checks use best-sites.
+// Live-verified 2026-11-12: gambling.com has reversed the Sept-2026 UK restructuring — the
+// oplist is back on the hub URL, and /uk/online-casinos/best-sites now 301s here (see
+// UK_CASINO in pages/UKCasinoPage.ts for the same finding). Both constants now point at the
+// same live page; kept as two names since the comments on each call site below still refer
+// to them distinctly.
 const UK_CASINOS_HUB = '/uk/online-casinos';
-const UK_CASINOS_OPLIST = '/uk/online-casinos/best-sites';
+const UK_CASINOS_OPLIST = '/uk/online-casinos';
 
 async function assertNoHorizontalOverflow(page: Page) {
   const viewportWidth = page.viewportSize()?.width ?? 0;
