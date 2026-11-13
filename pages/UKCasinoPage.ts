@@ -3,8 +3,12 @@ import { acceptCookiesIfShown } from '../fixtures/acceptCookies';
 import { globalNavLogo } from './globalNavLogo';
 
 export const UK_CASINO = {
-            // Live canonical URL as of 2026-09-23: /uk/online-casinos 301s here (verified live).
-            url: 'https://www.gambling.com/uk/online-casinos/best-sites',
+    // Live-verified 2026-11-12 (GDCU — UK restructuring reversal): gambling.com has reversed
+    // the 2026-09-23 split. /uk/online-casinos/best-sites now 301s to /uk/online-casinos, and
+    // the oplist (10 li.operator-item, confirmed live) is back on the base URL. Updated to the
+    // new canonical target — /best-sites still works everywhere else in the suite via the
+    // redirect, so only the exact-URL assertion here needed to change.
+    url: 'https://www.gambling.com/uk/online-casinos',
     geo: 'uk',
     currency: '£',
     language: 'en',
