@@ -274,11 +274,21 @@ test.describe('Slots Games Widget — UK', () => {
         // URLSearchParams can't read past a `#`, so assert any tracking
         // params present here are real, readable query params.
         //
-        // This href starts bare in server-rendered markup and is rewritten
-        // client-side, asynchronously, once the button is visible — reading
-        // it once races that rewrite under slower JS engines / loaded CI
-        // runners (confirmed live), so retry until it settles. A genuine
-        // regression still fails this after the timeout below.
+        // The href starts bare in server-rendered markup and is rewritten
+        // client-side once the button is visible, so this reads it inside
+        // toPass() to give that rewrite a moment to happen. Live CI evidence
+        // (runs #1493/#1497/#1501, 2026-11-13) shows that on this widget the
+        // retry is NOT masking a timing race on Chrome/WebKit — only Firefox
+        // fails, every run, and it fails stably: the href settles to
+        // `#listid=_&listtype=_&listlocation=_&listversion=_&list_position=_&ct=cta&ctalocation=…&cta_id=…`
+        // and never resolves to real query params inside the timeout, while
+        // the same page in Chrome correctly ends up with no hash and a real
+        // `ct` query param. That is a genuine, reproducible Firefox-only
+        // regression in production's ktag pipeline for this widget's Play
+        // for Real buttons (same bug class as the original GDCU-9317, not
+        // test flakiness) — flagged to QA rather than patched here, since
+        // it isn't this repo's code to fix. Leave this assertion as-is; a
+        // true fix on the product side will make it pass on Firefox too.
         const limit = Math.min(count, 5);
         for (let i = 0; i < limit; i++) {
             const href = await slotsPage.playRealButtons.nth(i).getAttribute('href');
