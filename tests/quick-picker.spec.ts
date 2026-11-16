@@ -133,7 +133,20 @@ for (const config of geoHomepages) {
     });
 
     // T8 ─ @smoke ─────────────────────────────────────────────────────────────
-    test(`${config.name} — @smoke @regression pagination: prev disabled, next advances the carousel`, async () => {
+    // NOTE (2026-11-16): this test originally also asserted that the Prev
+    // arrow is `disabled` on initial load, and again once scrolled back to
+    // the start (CI failure first seen Nov 12, reproduced again in run
+    // #1512 on Nov 16). Live verification on production (gambling.com, all
+    // geos) confirmed the Prev arrow is NEVER actually disabled by the
+    // component — not on load, and not after scrolling all the way back to
+    // the start — the carousel just clamps its own scroll position instead
+    // of toggling the `disabled` attribute. Flagged to product owner Chloe
+    // Christie via Slack on 2026-11-16; she confirmed this is expected/
+    // acceptable behaviour, not a bug, so no product fix is coming. The
+    // disabled-state assertions have been removed accordingly — the actual
+    // carousel mechanics (Next/Prev moving the track, Prev returning near
+    // the start) are real behaviour and remain fully asserted below.
+    test(`${config.name} — @smoke @regression pagination: next advances and prev returns the carousel`, async () => {
       const cardCount = await qp.cards.count();
       test.skip(cardCount < 1, `${config.name} quick picker rendered no offer cards`);
       // Fewer than ~4 offers means everything already fits on screen — next
@@ -141,8 +154,6 @@ for (const config of geoHomepages) {
       // as broken (mirrors the geoRestricted / skipNavTriggerCheck pattern).
       test.skip(cardCount <= 4, `${config.name} has only ${cardCount} offer(s) — nothing to page through`);
 
-      // On first load the carousel is at the start — prev has nothing behind it.
-      await expect(qp.prevArrow).toBeDisabled();
       await expect(qp.nextArrow).toBeEnabled();
       const startScroll = await qp.trackScrollLeft();
 
@@ -151,10 +162,9 @@ for (const config of geoHomepages) {
       expect(afterNext.after, 'Next should increase track scrollLeft').toBeGreaterThan(startScroll + 20);
       await expect(qp.prevArrow).toBeEnabled();
 
-      // Prev scrolls back toward the start and re-disables when we reach it.
+      // Prev scrolls back toward the start.
       const afterPrev = await qp.scrollPrev();
       expect(afterPrev.after, 'Prev should decrease track scrollLeft').toBeLessThan(afterNext.after - 20);
-      await expect(qp.prevArrow).toBeDisabled();
       expect(
         Math.abs((await qp.trackScrollLeft()) - startScroll),
         'Prev should return near the starting scroll offset',
