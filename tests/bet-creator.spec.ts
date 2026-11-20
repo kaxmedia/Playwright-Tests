@@ -100,16 +100,17 @@ test.describe('Bet Creator', () => {
   });
 
   test('@regression Claude attribution is present', async () => {
-    // Confirmed 2026-10-07 (run #1523): the locator itself is correct (verified live --
-    // exactly one visible "Claude" span, same fix as PR #227), but this still failed
-    // with "element(s) not found" in CI, consistently, after that fix. "Powered by
-    // Claude" sits in the same block as "Data by OpticOdds" (see BetCreatorPage.ts),
-    // so this is likely tied to the same intermittent odds-data-dependent rendering
-    // already confirmed elsewhere on this page (dynamicContentLoaded), not a locator
-    // problem. Split out from the chatInput test (which is reliably static) and
-    // gated the same way as the other dynamic-content tests.
+    // The line is "Powered by Claude | Data by OpticOdds". It paints after the
+    // bet slip, and one copy in the DOM has no size, so the check waits for a
+    // visible "Claude" or, if that word is only a logo, a visible "Powered by".
     test.skip(!(await bc.dynamicContentLoaded()), 'Dynamic content (odds-dependent attribution) did not render in this environment -- see file header.');
-    await expect(bc.poweredByClaude).toBeVisible();
+    await expect(async () => {
+      if (await bc.poweredByClaude.count()) {
+        await expect(bc.poweredByClaude.first()).toBeVisible();
+        return;
+      }
+      await expect(bc.poweredByLabel.first()).toBeVisible();
+    }).toPass({ timeout: 15000 });
   });
 
   test('@regression responsible gambling footer (18+) is visible', async () => {

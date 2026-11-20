@@ -45,6 +45,18 @@ for (const province of PROVINCES) {
 
 test.describe('Canada — Ontario regulated-market specifics', () => {
   test.beforeEach(async ({ page }) => {
+    // The operator list is chosen by the op_list_region_ca cookie, not by the
+    // /ontario URL alone. A fresh browser (CI's US runners, or any request
+    // without the cookie) is served region CG, whose list starts with
+    // JustCasino. Choosing Ontario in the browser sets this cookie and the
+    // server then sends the regulated list: PartyCasino first, then OLG.
+    // Confirmed 2026-11-19: the same URL with the cookie returns PartyCasino
+    // and OLG; without it, PartyCasino is absent.
+    await page.context().addCookies([{
+      name: 'op_list_region_ca',
+      value: 'ON',
+      url: 'https://www.gambling.com',
+    }]);
     await page.goto('/ca/online-casinos/ontario', { waitUntil: 'domcontentloaded' });
     await expect(page.locator(operatorCards).first()).toBeVisible({ timeout: 15000 });
   });
