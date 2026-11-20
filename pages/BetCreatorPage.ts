@@ -44,6 +44,7 @@ export class BetCreatorPage {
   readonly placeBetsButton: Locator;
   readonly chatInput: Locator;
   readonly poweredByClaude: Locator;
+  readonly poweredByLabel: Locator;
   readonly responsibleGamblingFooter: Locator;
 
   constructor(page: Page) {
@@ -63,11 +64,13 @@ export class BetCreatorPage {
     // which index is visible.
     // Placeholder copy changed 2026-10-27 (see header); the hidden-first duplicate is unchanged.
     this.chatInput = page.getByPlaceholder(/type your prompt/i).and(page.locator(':visible'));
-    // Confirmed live (2026-10-07, run #1522): "Powered by" and "Claude" render in
-    // separate sibling <span> elements (<div><span>Powered by</span><span>Claude</span>...),
-    // not one span with the full phrase -- a regex spanning both fragments doesn't
-    // reliably match via getByText. Targeting the exact "Claude" span directly instead.
+    // "Powered by" and "Claude" are sibling spans, so a locator for "Powered by"
+    // does not contain the word Claude. One copy of the line is in the layout
+    // with zero size; the visible copy sits under the predictions. Target the
+    // visible "Claude" span. poweredByLabel is the same line when the logo is
+    // an image and the word Claude is not painted.
     this.poweredByClaude = page.getByText('Claude', { exact: true }).and(page.locator(':visible'));
+    this.poweredByLabel = page.getByText(/^powered by$/i).and(page.locator(':visible'));
     // :visible, not .first() -- confirmed 2026-10-07 (run #1521): same issue as
     // chatInput above. 3 "18+" text nodes exist (mobile-hidden footer, a promo
     // card disclaimer, and the real footer); the first in DOM order is the
