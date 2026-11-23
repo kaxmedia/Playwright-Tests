@@ -42,88 +42,88 @@
 import { type Page, type Locator } from '@playwright/test';
 
 export class BetCreatorPage {
-    readonly page: Page;
+  readonly page: Page;
 
   readonly basePath = '/bet-creator/';
 
   readonly homeTab: Locator;
-    readonly chatTab: Locator;
-    readonly builderTab: Locator;
-    readonly leagueButtons: Locator;
-    readonly betSlipHeading: Locator;
-    readonly placeBetsButton: Locator;
-    readonly chatInput: Locator;
-    readonly poweredByClaude: Locator;
-    readonly poweredByLabel: Locator;
-    readonly responsibleGamblingFooter: Locator;
+  readonly chatTab: Locator;
+  readonly builderTab: Locator;
+  readonly leagueButtons: Locator;
+  readonly betSlipHeading: Locator;
+  readonly placeBetsButton: Locator;
+  readonly chatInput: Locator;
+  readonly poweredByClaude: Locator;
+  readonly poweredByLabel: Locator;
+  readonly responsibleGamblingFooter: Locator;
 
   constructor(page: Page) {
-        this.page = page;
+    this.page = page;
 
-      this.homeTab = page.getByRole('button', { name: 'Home' }).first();
-        this.chatTab = page.getByRole('button', { name: 'Chat' }).first();
-        this.builderTab = page.getByRole('button', { name: 'Builder' }).first();
-        this.leagueButtons = page.getByRole('button', { name: /^(England|Spain|Germany|Italy|France|USA|UEFA)/ });
-        this.betSlipHeading = page.getByRole('heading', { name: /bet slip/i }).first();
-        this.placeBetsButton = page.getByRole('button', { name: /place bets/i }).first();
-        // :visible, not .first() -- confirmed 2026-10-07 (run #1521): unlike
-      // homeTab/chatTab/builderTab above, the FIRST of the 2 duplicated elements here
-      // is the hidden one (offsetParent null) and the SECOND is the genuinely visible
-      // one -- .first() picked the wrong copy and failed with "Received: hidden".
-      // Filtering on :visible is correct regardless of DOM order, unlike assuming
-      // which index is visible.
-      // Placeholder copy changed 2026-10-27 (see header); the hidden-first duplicate is unchanged.
-      this.chatInput = page.getByPlaceholder(/type your prompt/i).and(page.locator(':visible'));
-        // "Powered by" and "Claude" are sibling spans, so a locator for "Powered by"
-      // does not contain the word Claude. One copy of the line is in the layout
-      // with zero size; the visible copy sits under the predictions. Target the
-      // visible "Claude" span. poweredByLabel is the same line when the logo is
-      // an image and the word Claude is not painted.
-      this.poweredByClaude = page.getByText('Claude', { exact: true }).and(page.locator(':visible'));
-        this.poweredByLabel = page.getByText(/^powered by$/i).and(page.locator(':visible'));
-        // :visible, not .first() -- confirmed 2026-10-07 (run #1521): same issue as
-      // chatInput above. 3 "18+" text nodes exist (mobile-hidden footer, a promo
-      // card disclaimer, and the real footer); the first in DOM order is the
-      // hidden one, so .first() + toBeVisible() timed out waiting on it even at
-      // 20s. This was never a timeout problem, as I'd assumed in the prior fix.
-      this.responsibleGamblingFooter = page.getByText(/18\+/).and(page.locator(':visible')).first();
+    this.homeTab = page.getByRole('button', { name: 'Home' }).first();
+    this.chatTab = page.getByRole('button', { name: 'Chat' }).first();
+    this.builderTab = page.getByRole('button', { name: 'Builder' }).first();
+    this.leagueButtons = page.getByRole('button', { name: /^(England|Spain|Germany|Italy|France|USA|UEFA)/ });
+    this.betSlipHeading = page.getByRole('heading', { name: /bet slip/i }).first();
+    this.placeBetsButton = page.getByRole('button', { name: /place bets/i }).first();
+    // :visible, not .first() -- confirmed 2026-10-07 (run #1521): unlike
+    // homeTab/chatTab/builderTab above, the FIRST of the 2 duplicated elements here
+    // is the hidden one (offsetParent null) and the SECOND is the genuinely visible
+    // one -- .first() picked the wrong copy and failed with "Received: hidden".
+    // Filtering on :visible is correct regardless of DOM order, unlike assuming
+    // which index is visible.
+    // Placeholder copy changed 2026-10-27 (see header); the hidden-first duplicate is unchanged.
+    this.chatInput = page.getByPlaceholder(/type your prompt/i).and(page.locator(':visible'));
+    // "Powered by" and "Claude" are sibling spans, so a locator for "Powered by"
+    // does not contain the word Claude. One copy of the line is in the layout
+    // with zero size; the visible copy sits under the predictions. Target the
+    // visible "Claude" span. poweredByLabel is the same line when the logo is
+    // an image and the word Claude is not painted.
+    this.poweredByClaude = page.getByText('Claude', { exact: true }).and(page.locator(':visible'));
+    this.poweredByLabel = page.getByText(/^powered by$/i).and(page.locator(':visible'));
+    // :visible, not .first() -- confirmed 2026-10-07 (run #1521): same issue as
+    // chatInput above. 3 "18+" text nodes exist (mobile-hidden footer, a promo
+    // card disclaimer, and the real footer); the first in DOM order is the
+    // hidden one, so .first() + toBeVisible() timed out waiting on it even at
+    // 20s. This was never a timeout problem, as I'd assumed in the prior fix.
+    this.responsibleGamblingFooter = page.getByText(/18\+/).and(page.locator(':visible')).first();
   }
 
   async goto(): Promise<void> {
-        // Waiting on betSlipHeading here (the dynamic, odds-dependent part of the page)
-      // timed out consistently in CI across all 3 browsers and all retries (2026-10-07,
-      // run #1517) -- "Received: 0" on fixture/league-count assertions too, in the sibling
-      // BetBuilderAI spec. Not a flaky timing issue (retries didn't help even once), and
-      // not a viewport/duplicate-DOM issue (this project uses Desktop Chrome's standard
-      // viewport, same as manual verification). Waiting on homeTab instead -- a static,
-      // non-data-dependent element -- so goto() itself is reliable; tests that need the
-      // bet slip or match data explicitly wait for those and are skipped where they
-      // can't get past it. See the skips below and in the spec file for what's affected.
-      await this.page.goto(this.basePath, { waitUntil: 'domcontentloaded' });
-        await this.homeTab.waitFor({ state: 'visible', timeout: 20_000 });
+    // Waiting on betSlipHeading here (the dynamic, odds-dependent part of the page)
+    // timed out consistently in CI across all 3 browsers and all retries (2026-10-07,
+    // run #1517) -- "Received: 0" on fixture/league-count assertions too, in the sibling
+    // BetBuilderAI spec. Not a flaky timing issue (retries didn't help even once), and
+    // not a viewport/duplicate-DOM issue (this project uses Desktop Chrome's standard
+    // viewport, same as manual verification). Waiting on homeTab instead -- a static,
+    // non-data-dependent element -- so goto() itself is reliable; tests that need the
+    // bet slip or match data explicitly wait for those and are skipped where they
+    // can't get past it. See the skips below and in the spec file for what's affected.
+    await this.page.goto(this.basePath, { waitUntil: 'domcontentloaded' });
+    await this.homeTab.waitFor({ state: 'visible', timeout: 20_000 });
   }
 
   /** League button by its visible label, e.g. "England - Premier League". */
   league(label: string | RegExp): Locator {
-        return this.page.getByRole('button', { name: label }).first();
+    return this.page.getByRole('button', { name: label }).first();
   }
 
   /**
-     * True if the dynamic, odds-dependent part of the page (bet slip, league
-     * list) actually rendered within a generous timeout. CI has shown this
-     * consistently NOT rendering (2026-10-07, run #1517) while the static
-     * shell (tabs, chat input, footer) loads fine -- tests that depend on
-     * this content check it first and skip if it's absent, rather than
-     * hard-failing on something this environment may not reliably have.
-     */
+   * True if the dynamic, odds-dependent part of the page (bet slip, league
+   * list) actually rendered within a generous timeout. CI has shown this
+   * consistently NOT rendering (2026-10-07, run #1517) while the static
+   * shell (tabs, chat input, footer) loads fine -- tests that depend on
+   * this content check it first and skip if it's absent, rather than
+   * hard-failing on something this environment may not reliably have.
+   */
   async dynamicContentLoaded(timeout = 25_000): Promise<boolean> {
-        return this.betSlipHeading.isVisible({ timeout }).catch(() => false);
+    return this.betSlipHeading.isVisible({ timeout }).catch(() => false);
   }
 
   /** The "UPCOMING MATCHES" section heading shown after selecting a league. */
   get upcomingMatchesHeading(): Locator {
-        // :visible, not a bare .first() -- confirmed 2026-10-27: same hidden-first duplicate as
-      // chatInput (4 matches; the first in DOM order is hidden), so .first() never became visible.
-      return this.page.getByText(/upcoming matches/i).and(this.page.locator(':visible')).first();
+    // :visible, not a bare .first() -- confirmed 2026-10-27: same hidden-first duplicate as
+    // chatInput (4 matches; the first in DOM order is hidden), so .first() never became visible.
+    return this.page.getByText(/upcoming matches/i).and(this.page.locator(':visible')).first();
   }
 }
