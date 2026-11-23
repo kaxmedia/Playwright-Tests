@@ -1,4 +1,4 @@
-// ────────────────────────────────────────────────────────────────────────────
+// ──────────────────────────────────────────────────────────────────────────────────
 // Bet Creator Tests -- gambling.com
 //
 // New product, not previously covered by this suite (confirmed zero mentions
@@ -57,90 +57,90 @@
 // Run with:
 //   npx playwright test tests/bet-creator.spec.ts --project=chrome
 //   npx playwright test tests/bet-creator.spec.ts --grep @regression
-// ─────────────────────────────────────────────────────────────────────────────
+// ───────────────────────────────────────────────────────────────────────────
 
 import { test, expect } from '../fixtures/test';
 import { BetCreatorPage } from '../pages/BetCreatorPage';
 
 test.describe('Bet Creator', () => {
-    let bc: BetCreatorPage;
+  let bc: BetCreatorPage;
 
-                test.beforeEach(async ({ page }) => {
-                      bc = new BetCreatorPage(page);
-                      await bc.goto();
-                });
+  test.beforeEach(async ({ page }) => {
+    bc = new BetCreatorPage(page);
+    await bc.goto();
+  });
 
-                test('@smoke @regression page loads with correct URL and title', async ({ page }) => {
-                      await expect(page).toHaveURL(/\/bet-creator\/?$/);
-                      await expect(page).toHaveTitle(/bet builder|accumulator/i);
-                });
+  test('@smoke @regression page loads with correct URL and title', async ({ page }) => {
+    await expect(page).toHaveURL(/\/bet-creator\/?$/);
+    await expect(page).toHaveTitle(/bet builder|accumulator/i);
+  });
 
-                test('@smoke @regression Home, Chat, and Builder tabs are visible', async () => {
-                      await expect(bc.homeTab).toBeVisible();
-                      await expect(bc.chatTab).toBeVisible();
-                      await expect(bc.builderTab).toBeVisible();
-                });
+  test('@smoke @regression Home, Chat, and Builder tabs are visible', async () => {
+    await expect(bc.homeTab).toBeVisible();
+    await expect(bc.chatTab).toBeVisible();
+    await expect(bc.builderTab).toBeVisible();
+  });
 
-                test('@smoke @regression league list shows at least 5 leagues', async () => {
-                      test.skip(!(await bc.dynamicContentLoaded()), 'Dynamic content (league list) did not render in this environment -- see file header.');
-                      // Polled, not a one-shot count(): the league list renders ~1s AFTER the bet slip that
-                         // dynamicContentLoaded() waits on, so an immediate count() read 0 (confirmed 2026-10-27).
-                         await expect.poll(() => bc.leagueButtons.count(), { timeout: 15_000 }).toBeGreaterThanOrEqual(5);
-                });
+  test('@smoke @regression league list shows at least 5 leagues', async () => {
+    test.skip(!(await bc.dynamicContentLoaded()), 'Dynamic content (league list) did not render in this environment -- see file header.');
+    // Polled, not a one-shot count(): the league list renders ~1s AFTER the bet slip that
+    // dynamicContentLoaded() waits on, so an immediate count() read 0 (confirmed 2026-10-27).
+    await expect.poll(() => bc.leagueButtons.count(), { timeout: 15_000 }).toBeGreaterThanOrEqual(5);
+  });
 
-                test('@regression selecting a league reveals upcoming matches', async () => {
-                      test.skip(!(await bc.dynamicContentLoaded()), 'Dynamic content (league list) did not render in this environment -- see file header.');
-                      await bc.league('England - Premier League').click();
-                      await expect(bc.upcomingMatchesHeading).toBeVisible({ timeout: 15_000 });
-                });
+  test('@regression selecting a league reveals upcoming matches', async () => {
+    test.skip(!(await bc.dynamicContentLoaded()), 'Dynamic content (league list) did not render in this environment -- see file header.');
+    await bc.league('England - Premier League').click();
+    await expect(bc.upcomingMatchesHeading).toBeVisible({ timeout: 15_000 });
+  });
 
-                test('@smoke @regression bet slip is visible and lists known operators', async () => {
-                      test.skip(!(await bc.dynamicContentLoaded()), 'Dynamic content (bet slip) did not render in this environment -- see file header.');
-                      await expect(bc.betSlipHeading).toBeVisible();
-                      // "Betfair" removed 2026-11-23 -- see file header. The other 4 originally
-                         // hardcoded here are independently confirmed still live.
-                         for (const operator of ['BetMGM', 'Paddy Power', 'Bet365', 'Bwin']) {
-                                 await expect(bc.page.getByText(operator, { exact: false }).first()).toBeVisible();
-                         }
-                });
+  test('@smoke @regression bet slip is visible and lists known operators', async () => {
+    test.skip(!(await bc.dynamicContentLoaded()), 'Dynamic content (bet slip) did not render in this environment -- see file header.');
+    await expect(bc.betSlipHeading).toBeVisible();
+    // "Betfair" removed 2026-11-23 -- see file header. The other 4 originally
+    // hardcoded here are independently confirmed still live.
+    for (const operator of ['BetMGM', 'Paddy Power', 'Bet365', 'Bwin']) {
+      await expect(bc.page.getByText(operator, { exact: false }).first()).toBeVisible();
+    }
+  });
 
-                test('@regression Place Bets button is present and starts with nothing selected', async () => {
-                      test.skip(!(await bc.dynamicContentLoaded()), 'Dynamic content (bet slip) did not render in this environment -- see file header.');
-                      await expect(bc.placeBetsButton).toBeVisible();
-                      await expect(bc.placeBetsButton).toContainText(/0\s*\/\s*0/);
-                });
+  test('@regression Place Bets button is present and starts with nothing selected', async () => {
+    test.skip(!(await bc.dynamicContentLoaded()), 'Dynamic content (bet slip) did not render in this environment -- see file header.');
+    await expect(bc.placeBetsButton).toBeVisible();
+    await expect(bc.placeBetsButton).toContainText(/0\s*\/\s*0/);
+  });
 
-                test('@smoke @regression AI chat input is present', async () => {
-                      await expect(bc.chatInput).toBeVisible();
-                });
+  test('@smoke @regression AI chat input is present', async () => {
+    await expect(bc.chatInput).toBeVisible();
+  });
 
-                test('@regression Claude attribution is present', async () => {
-                      // The line is "Powered by Claude | Data by OpticOdds". It paints after the
-                         // bet slip, and one copy in the DOM has no size, so the check waits for a
-                         // visible "Claude" or, if that word is only a logo, a visible "Powered by".
-                         test.skip(!(await bc.dynamicContentLoaded()), 'Dynamic content (odds-dependent attribution) did not render in this environment -- see file header.');
-                      await expect(async () => {
-                              if (await bc.poweredByClaude.count()) {
-                                        await expect(bc.poweredByClaude.first()).toBeVisible();
-                                        return;
-                              }
-                              await expect(bc.poweredByLabel.first()).toBeVisible();
-                      }).toPass({ timeout: 15000 });
-                });
+  test('@regression Claude attribution is present', async () => {
+    // The line is "Powered by Claude | Data by OpticOdds". It paints after the
+    // bet slip, and one copy in the DOM has no size, so the check waits for a
+    // visible "Claude" or, if that word is only a logo, a visible "Powered by".
+    test.skip(!(await bc.dynamicContentLoaded()), 'Dynamic content (odds-dependent attribution) did not render in this environment -- see file header.');
+    await expect(async () => {
+      if (await bc.poweredByClaude.count()) {
+        await expect(bc.poweredByClaude.first()).toBeVisible();
+        return;
+      }
+      await expect(bc.poweredByLabel.first()).toBeVisible();
+    }).toPass({ timeout: 15000 });
+  });
 
-                test('@regression responsible gambling footer (18+) is visible', async () => {
-                      // Was never a timeout issue (confirmed 2026-10-07, run #1521: still failed at a
-                         // 20s timeout) -- the locator itself was matching a hidden duplicate. Fixed in
-                         // BetCreatorPage.ts (responsibleGamblingFooter now filters on :visible).
-                         //
-                         // That fix was necessary but not sufficient: confirmed 2026-10-08 (run #1565)
-                         // this still fails with "element(s) not found" on its own, consistently
-                         // alongside the other dynamic-content tests being skipped (dynamicContentLoaded()
-                         // false that run) -- the same pattern as the Claude attribution test. All 3 "18+"
-                         // occurrences checked live are apparently tied to the same odds-data-dependent
-                         // block, not a genuinely independent static page footer as originally assumed.
-                         // Gating the same way.
-                         test.skip(!(await bc.dynamicContentLoaded()), 'Dynamic content (odds-dependent footer) did not render in this environment -- see file header.');
-                      await expect(bc.responsibleGamblingFooter).toBeVisible();
-                });
+  test('@regression responsible gambling footer (18+) is visible', async () => {
+    // Was never a timeout issue (confirmed 2026-10-07, run #1521: still failed at a
+    // 20s timeout) -- the locator itself was matching a hidden duplicate. Fixed in
+    // BetCreatorPage.ts (responsibleGamblingFooter now filters on :visible).
+    //
+    // That fix was necessary but not sufficient: confirmed 2026-10-08 (run #1565)
+    // this still fails with "element(s) not found" on its own, consistently
+    // alongside the other dynamic-content tests being skipped (dynamicContentLoaded()
+    // false that run) -- the same pattern as the Claude attribution test. All 3 "18+"
+    // occurrences checked live are apparently tied to the same odds-data-dependent
+    // block, not a genuinely independent static page footer as originally assumed.
+    // Gating the same way.
+    test.skip(!(await bc.dynamicContentLoaded()), 'Dynamic content (odds-dependent footer) did not render in this environment -- see file header.');
+    await expect(bc.responsibleGamblingFooter).toBeVisible();
+  });
 });
