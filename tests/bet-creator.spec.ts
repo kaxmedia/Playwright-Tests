@@ -1,4 +1,4 @@
-// ────────────────────────────────────────────────────────────────────────────
+// ──────────────────────────────────────────────────────────────────────────────────
 // Bet Creator Tests -- gambling.com
 //
 // New product, not previously covered by this suite (confirmed zero mentions
@@ -17,8 +17,21 @@
 //   - No H1 -- page identity is carried by document.title instead
 //   - Home / Chat / Builder tabs; league selection is client-side (no URL
 //     change) and reveals an "UPCOMING MATCHES" section with live odds
-//   - Bet slip lists 5 operators (BetMGM, Betfair, Paddy Power, Bet365, Bwin)
-//     and a "PLACE BETS (0/0)" button
+//   - Bet slip lists multiple operators and a "PLACE BETS (0/0)" button.
+//     The operator roster is business content and churns -- confirmed
+//     2026-11-23 (CI run #2780 / dashboard run #1542) that "Betfair" (one
+//     of the 5 originally hardcoded below) was removed from the live
+//     roster, while BetMGM, Paddy Power, Bet365, and Bwin are all still
+//     present (verified both in that run's logs and by live manual
+//     browsing of the current "Bet Slip" -> "Full list" view, which now
+//     shows 15 operators). See BetCreatorPage.ts header for the full
+//     current roster. Checking specific operator names is inherently
+//     fragile here; kept narrow (4 known-good names) rather than
+//     switched to a count-based check, since no locator for the operator
+//     carousel that's stable across the page's hashed/utility CSS classes
+//     was confirmed working in this investigation -- a future failure
+//     here should first be re-verified live, the same way, before
+//     assuming it's just another dropped operator.
 //   - Live odds and match fixtures change constantly, so this spec checks
 //     structural presence (headings, tabs, operator names, league list,
 //     chat input) rather than asserting on specific matches/odds values,
@@ -44,7 +57,7 @@
 // Run with:
 //   npx playwright test tests/bet-creator.spec.ts --project=chrome
 //   npx playwright test tests/bet-creator.spec.ts --grep @regression
-// ─────────────────────────────────────────────────────────────────────────────
+// ───────────────────────────────────────────────────────────────────────────
 
 import { test, expect } from '../fixtures/test';
 import { BetCreatorPage } from '../pages/BetCreatorPage';
@@ -81,10 +94,12 @@ test.describe('Bet Creator', () => {
     await expect(bc.upcomingMatchesHeading).toBeVisible({ timeout: 15_000 });
   });
 
-  test('@smoke @regression bet slip is visible and lists all 5 operators', async () => {
+  test('@smoke @regression bet slip is visible and lists known operators', async () => {
     test.skip(!(await bc.dynamicContentLoaded()), 'Dynamic content (bet slip) did not render in this environment -- see file header.');
     await expect(bc.betSlipHeading).toBeVisible();
-    for (const operator of ['BetMGM', 'Betfair', 'Paddy Power', 'Bet365', 'Bwin']) {
+    // "Betfair" removed 2026-11-23 -- see file header. The other 4 originally
+    // hardcoded here are independently confirmed still live.
+    for (const operator of ['BetMGM', 'Paddy Power', 'Bet365', 'Bwin']) {
       await expect(bc.page.getByText(operator, { exact: false }).first()).toBeVisible();
     }
   });

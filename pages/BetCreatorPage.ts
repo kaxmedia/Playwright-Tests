@@ -19,9 +19,19 @@
 //     showing both teams, kickoff time, and 1/X/2 odds buttons, plus a
 //     "More bets" expand link per card
 //   - Right rail: "BET SLIP" with a horizontally-scrollable operator
-//     selector (BetMGM, Betfair, Paddy Power, Bet365, Bwin) and a
-//     "PLACE BETS (0/0)" button that is disabled/inert until selections
-//     are made -- tests should not attempt to actually place a bet
+//     selector and a "PLACE BETS (0/0)" button that is disabled/inert
+//     until selections are made -- tests should not attempt to actually
+//     place a bet
+//   - Operator roster is business content, not static markup, and churns:
+//     confirmed 2026-11-23 (CI run #2780 / dashboard run #1542, job
+//     137572859441 chrome + job 137572859602 firefox, both failing
+//     identically on `getByText('Betfair')` not found) that Betfair has
+//     been removed from the live roster. Live verification the same day
+//     (manual browse, "Bet Slip" tab -> "Full list") showed the current
+//     roster as: 888sport, BetMGM, BetVictor, Betfred, Betway, Coral,
+//     Grosvenor, Ladbrokes, Lottoland, Paddy Power, Sportingbet,
+//     William Hill, Bet365, Bwin, Partypoker (15 operators, no Betfair).
+//     Don't hardcode the full roster in assertions -- it can change again.
 //   - Bottom: an AI chat input, with "Powered by Claude" / "Data by OpticOdds"
 //     attribution nearby. Copy changed 2026-10-27: the input is now a <textarea>
 //     with placeholder "Type your prompt..." (was "What would you like to ask?"),
