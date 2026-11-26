@@ -1,5 +1,6 @@
 import { Page, Locator } from '@playwright/test';
 import { acceptCookiesIfShown } from '../fixtures/acceptCookies';
+import { dismissComplianceDialogIfShown } from '../fixtures/complianceDialog';
 import { globalNavLogo } from './globalNavLogo';
 
 export const AGE_VERIFICATION_GEOS = {
@@ -126,6 +127,7 @@ export class AgeVerificationPage {
      */
     async tickFooterOptOut(): Promise<void> {
         await acceptCookiesIfShown(this.page, 4000);
+        await dismissComplianceDialogIfShown(this.page);
         await this.footer.scrollIntoViewIfNeeded();
         await this.page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
         await this.footerCheckbox.waitFor({ state: 'visible', timeout: 10000 });
