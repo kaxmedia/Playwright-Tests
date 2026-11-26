@@ -19,6 +19,7 @@
 
 import { test, expect } from '../fixtures/test';
 import { acceptCookiesIfShown } from '../fixtures/acceptCookies';
+import { dismissComplianceDialogIfShown } from '../fixtures/complianceDialog';
 import { registerAgeVerificationHandler } from '../fixtures/ageVerification';
 import { GeoHomepage, geoHomepages } from '../pages/GeoHomepage';
 import { QuickPicker } from '../pages/QuickPicker';
@@ -49,6 +50,13 @@ for (const config of geoHomepages) {
       qp = new QuickPicker(page);
       await gh.goto(config.path);
       await acceptCookiesIfShown(page);
+      // ES only: a full-screen "responsible gambling" compliance dialog
+      // (div.es-cp) can render on first visit in a fresh browser context and
+      // intercept every click underneath it, including the filter pills this
+      // suite clicks below -- confirmed live 2026-11-26 against the
+      // `<div class="es-cp">...</div> intercepts pointer events` failures in
+      // CI. Safe no-op on every other geo.
+      await dismissComplianceDialogIfShown(page);
       await qp.waitForReady();
     });
 
