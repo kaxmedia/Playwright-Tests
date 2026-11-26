@@ -45,7 +45,19 @@ export class UKCasinoPage {
     readonly compareModal: Locator; // the modal overlay itself
     readonly compareModalLogos: Locator; // operator logos inside the modal
     readonly compareModalCTAs: Locator; // CTA buttons inside the modal
-    readonly compareModalSections: Locator; // expandable attribute sections inside the modal
+    // Attribute rows inside the modal (Minimum Deposit, Free Spins, Wagering
+    // Requirement, Our Rating, ...). Confirmed live 2026-11-26 (CI run #2822 /
+    // dashboard "Casino Category Landing" Functional failures, shards 1/3/5, all
+    // failing with "Compare modal must include at least one expandable attribute
+    // section" -- sectionCount 0): the modal's accordion UX (collapsible
+    // `button[id^="category-header-"]` toggles) has been removed. The comparison
+    // modal now renders every attribute row flat/always-visible (verified live:
+    // 0 buttons with that id prefix anywhere in the modal, and labels like
+    // "Minimum Deposit to Qualify" / "Wagering Requirement" / "Our Rating" are
+    // plain always-visible text nodes, not inside a collapsible). There is
+    // nothing left to expand or collapse -- this locator now targets the visible
+    // attribute-row labels themselves rather than a toggle button.
+    readonly compareModalAttributeLabels: Locator;
     readonly compareModalCloseBtn: Locator; // close / dismiss button
 
     // ── FAQ ─────────────────────────────────────────────────────────────────────
@@ -108,8 +120,10 @@ export class UKCasinoPage {
         // any /go/ link that lives inside a t-and-c-text container. (Live-verified 2026-08: this
         // leaves the 6 real CTAs — logos, bonus links, Visit Casino buttons — all visible.)
         this.compareModalCTAs = this.compareModal.locator('a[href*="/go/"]:not([id^="t-and-c-text"] a)');
-        // Accordion section toggles in the comparison modal (IDs/list IDs vary by deployment)
-        this.compareModalSections = this.compareModal.locator('button[id^="category-header-"]');
+        // Flat comparison-grid row labels (no accordion anymore -- see field comment above).
+        this.compareModalAttributeLabels = this.compareModal.getByText(
+            /Minimum Deposit to Qualify|Wagering Requirement|Our Rating/i,
+        );
         this.compareModalCloseBtn = this.compareModal.getByRole('button', { name: /close modal/i });
 
         // Editorial explainer / FAQ block. Live DOM (verified 2026-09-23) is an accordion --
@@ -168,14 +182,6 @@ export class UKCasinoPage {
      */
     async closeCompareModal(): Promise<void> {
         await this.compareModalCloseBtn.evaluate((el: HTMLElement) => el.click());
-    }
-
-    /** Clicks the nth expandable section inside the compare modal (0-indexed) */
-    async expandModalSection(index: number): Promise<void> {
-        const section = this.compareModalSections.nth(index);
-        await section.scrollIntoViewIfNeeded();
-        await section.click({ force: true });
-        await this.page.waitForTimeout(500);
     }
 
     /** Clicks the nth `dt` toggle to expand it, then returns the revealed `dd` answer's body copy. */
