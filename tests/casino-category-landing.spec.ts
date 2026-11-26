@@ -126,7 +126,16 @@ test.describe('Category Landing — UK Online Casinos — geo specifics', () => 
         }
     });
 
-    test('@regression expanding an attribute section in the compare modal reveals content', async () => {
+    test('@regression compare modal shows attribute comparison rows', async () => {
+        // Was an accordion (toggle a section open/closed) until the comparison modal's
+        // UI was reworked -- confirmed live 2026-11-26 (CI run #2822, dashboard "Casino
+        // Category Landing" failures, shards 1/3/5, all on "Compare modal must include
+        // at least one expandable attribute section" / sectionCount 0): the
+        // `button[id^="category-header-"]` toggles are gone entirely (0 in the live
+        // modal), and every attribute row (Minimum Deposit to Qualify, Wagering
+        // Requirement, Our Rating, ...) now renders flat and always-visible instead.
+        // There's nothing left to expand/collapse, so this just asserts the rows
+        // are present and visible, matching current site behaviour.
         await ukPage.goto();
         const cbCount = await ukPage.compareCheckboxes.count();
         expect(
@@ -136,17 +145,11 @@ test.describe('Category Landing — UK Online Casinos — geo specifics', () => 
 
         await ukPage.openCompareModal();
 
-        const sectionCount = await ukPage.compareModalSections.count();
-        expect(sectionCount, 'Compare modal must include at least one expandable attribute section').toBeGreaterThan(0);
+        const labelCount = await ukPage.compareModalAttributeLabels.count();
+        expect(labelCount, 'Compare modal must include at least one attribute comparison row').toBeGreaterThan(0);
 
         const bonusGridLabel = ukPage.compareModal.getByText(/Minimum Deposit to Qualify/i);
         await expect(bonusGridLabel).toBeVisible();
-
-        await ukPage.expandModalSection(0);
-        await expect(bonusGridLabel).toBeHidden({ timeout: 8000 });
-
-        await ukPage.expandModalSection(0);
-        await expect(bonusGridLabel).toBeVisible({ timeout: 8000 });
     });
 
     test('@regression compare modal exposes a dismiss control', async () => {
