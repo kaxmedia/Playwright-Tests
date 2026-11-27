@@ -3,8 +3,15 @@ import type { Page } from '@playwright/test';
 import { ReviewPage } from '../../pages/ReviewPage';
 import { dismissAgeGateForGeo } from '../../fixtures/ageGate';
 
-const PROS_CONS_GEOS = ['ie', 'nz', 'nl'];
-const RATING_GEOS = ['uk', 'ie', 'us', 'nz', 'gr', 'nl'];
+// NZ deliberately excluded: Bet365 has no published Casino or Betting review for the NZ market —
+// every /nz/online-casinos/bet365 (and /nz/betting-sites/bet365) variant soft-redirects to a generic
+// category hub page (200 OK, no bet365-specific content), confirmed live 2026-11-27. That's why
+// `.pros-and-cons-table-component` and the rating widget never render for NZ: there's no review page
+// behind that URL to find them on, not a flaky locator or a slow-loading bug. Other NZ casino reviews
+// do exist (e.g. william-hill renders fine), so this is operator-specific editorial content, not a
+// market-wide gap. If GDC ever publishes a Bet365 NZ review, 'nz' can be re-added here.
+const PROS_CONS_GEOS = ['ie', 'nl'];
+const RATING_GEOS = ['uk', 'ie', 'us', 'gr', 'nl'];
 
 // Clear the geo overlays that otherwise bake into a capture. Order matters: dismiss the age gate
 // FIRST (on gated geos like NL it sits on top of everything else), THEN clear the CookieYes banner.
