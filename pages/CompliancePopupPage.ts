@@ -52,7 +52,9 @@ export class CompliancePopupPage {
   // Minimum time the popup must stay up before it can be closed (GDCU-9469: "at least 5 seconds").
   static readonly MIN_DWELL_MS = 5000;
 
-  static readonly TARGET_URL = 'https://www.juegoseguro.es/';
+  // No trailing slash — confirmed against the real rendered href in CI (2026-11-27); the
+  // earlier reconnaissance note assumed one, which is what the first CI run caught.
+  static readonly TARGET_URL = 'https://www.juegoseguro.es';
   static readonly AGE_LINE_TEXT = 'Solo para mayores de 18 años';
   static readonly URL_LINE_TEXT = 'www.juegoseguro.es';
 
