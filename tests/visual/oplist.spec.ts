@@ -1,5 +1,6 @@
 import { test, expect } from '../../fixtures/test';
 import { dismissAgeGateForGeo } from '../../fixtures/ageGate';
+import { dismissComplianceDialogIfShown } from '../../fixtures/complianceDialog';
 import { CLIP_HEIGHTS } from './clip-heights.generated';
 
 const GEOS = [
@@ -78,6 +79,12 @@ for (const geo of GEOS) {
     // non-deterministic. Waits for the modal, accepts (webkit-hardened), waits for it gone. No-op
     // on non-gated geos.
     await dismissAgeGateForGeo(page, geo.name);
+    // GDCU-9469 (2026-11-27): on a fresh CI browser context, the ES "responsible gambling"
+    // compliance popup (div.es-cp) renders right after the age gate clears and sits full-viewport
+    // above everything -- confirmed live as the cause of the /es and /es-oplist visual regression
+    // failures on run #687 (~71% pixel diff, deterministic across all 3 retries: the popup, not
+    // genuine content drift). No-op on every other geo/on repeat visits in the same context.
+    await dismissComplianceDialogIfShown(page);
     await page.addStyleTag({
       content: '*, *::before, *::after { animation-duration: 0s !important; animation-delay: 0s !important; transition-duration: 0s !important; transition-delay: 0s !important; }',
     });
