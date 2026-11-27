@@ -1,6 +1,7 @@
 import { test, expect } from '../../fixtures/test';
 import { dismissRegionPromptBeforeCapture } from '../../fixtures/regionPrompt';
 import { dismissAgeGateForGeo } from '../../fixtures/ageGate';
+import { dismissComplianceDialogIfShown } from '../../fixtures/complianceDialog';
 
 // 'root' is handled separately below (test.describe, its own retry policy) -- see the comment
 // there for why.
@@ -91,6 +92,13 @@ async function captureHomepage(geo, { page }, testInfo) {
   // region-prompt poll below: the age gate is a hard block that likely prevents the
   // region-prompt from even appearing while it's up.
   await dismissAgeGateForGeo(page, geo.name);
+  // GDCU-9469 (2026-11-27): on a fresh CI browser context, the ES "responsible gambling"
+  // compliance popup (div.es-cp) renders right after the age gate clears and sits full-viewport
+  // above everything -- confirmed live as the cause of the /es homepage visual regression failure
+  // on run #687 (~71% pixel diff, deterministic across all 3 retries: the popup, not genuine
+  // content drift). No-op on every other geo/on repeat visits in the same context. Dismissed
+  // before the region-prompt poll below, same ordering rationale as the age gate above.
+  await dismissComplianceDialogIfShown(page);
   // Poll for and dismiss the region-switch modal before capturing -- it appears on a
   // genuinely non-deterministic delay, and the global addLocatorHandler dismissal never fires
   // before toHaveScreenshot() (see fixtures/regionPrompt.ts and tests/visual/tournaments.spec.ts).
